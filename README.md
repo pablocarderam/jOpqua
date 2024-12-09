@@ -1,2 +1,2 @@
 # jOpqua
-Julia implementation of Opqua
+Julia implementation of [Opqua](https://github.com/pablocarderam/opqua).
