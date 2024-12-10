@@ -1,7 +1,8 @@
 module jOpqua
 
 include("simulation/constants.jl")
-include("simulation/model.jl")
+
+include("parameters/parameters.jl")
 
 include("simulation/pathogen.jl")
 include("simulation/immunity.jl")
@@ -10,7 +11,7 @@ include("simulation/class.jl")
 include("simulation/population.jl")
 include("simulation/simulation.jl")
 
-include("parameters/parameters.jl")
+include("simulation/model.jl")
 
 include("analysis/data.jl")
 include("analysis/plots.jl")
