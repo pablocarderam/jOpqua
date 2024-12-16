@@ -13,6 +13,6 @@ struct ClassParameters
     pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
     immunity_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
 
-    immunityDominance::Function # Takes two seq arguments (infecting pathogen, immunity), returns Float64
+    immunityDominance::Function # Takes two arguments (vector of all pathogen sequences in host, immunity sequence), returns Float64
     immunity_coefficient_effect_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes two seq arguments (infecting pathogen, immunity), returns Float64
 end

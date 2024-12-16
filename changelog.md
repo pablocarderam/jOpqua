@@ -3,6 +3,7 @@
 ## 16 Dec 2024
 - Some quick bug fixes
 - Added quick rundown of model structure to README
+To do: `Immunity` is currently just a sequence, can be just a reference to the corresponding pathogen.
 
 ## 15 Dec 2024
 - Made fitness into a pathogen-level coefficient
