@@ -8,20 +8,20 @@ mutable struct Class
 
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
     host_weights_receive::Matrix{Float64}
-        # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
+    # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
 end
 
 function hostWeightsPathogen!(class::Class)
     for evt in PATHOGEN_EVENTS
         for h in 1:length(class.hosts)
-            class.host_weights[evt, h] = sum(@views class.hosts[h].pathogen_weights[evt+PATHOGEN_EVENTS[1]-1,:])
-                # pathogen weights have already accounted for pathogen fraction
+            class.host_weights[evt, h] = sum(@views class.hosts[h].pathogen_weights[evt+PATHOGEN_EVENTS[1]-1, :])
+            # pathogen weights have already accounted for pathogen fraction
             if length(class.hosts[h].immunities) > 0
                 class.host_weights[evt, h] =
                     class.host_weights[evt, h] *
                     sum([
                         class.hosts[h].immunity_fractions[im] *
-                        class.parameters.immunity_coefficient_functions[evt](host.immunities[im].sequence)
+                        class.parameters.immunity_coefficient_functions[evt](class.hosts[h].immunities[im].sequence)
                         for im in 1:length(class.hosts[h].immunities)
                     ])
             end
@@ -32,14 +32,14 @@ end
 function hostWeightsImmunity!(class::Class)
     for evt in IMMUNITY_EVENTS
         for h in 1:length(class.hosts)
-            class.host_weights[evt, h] = sum(@views class.hosts[h].immunity_weights[evt+IMMUNITY_EVENTS[1]-1,:])
-                # immunity weights have already accounted for immunity fraction
+            class.host_weights[evt, h] = sum(@views class.hosts[h].immunity_weights[evt+IMMUNITY_EVENTS[1]-1, :])
+            # immunity weights have already accounted for immunity fraction
             if length(class.hosts[h].pathogens) > 0
                 class.host_weights[evt, h] =
                     class.host_weights[evt, h] *
                     sum([
                         class.hosts[h].pathogen_fractions[p] *
-                        class.parameters.pathogen_coefficient_functions[evt](host.pathogens[p].sequence)
+                        class.parameters.pathogen_coefficient_functions[evt](class.hosts[h].pathogens[p].sequence)
                         for p in 1:length(class.hosts[h].pathogens)
                     ])
             end
@@ -56,7 +56,7 @@ function hostWeightsHost!(class::Class)
                     class.host_weights[evt, h] *
                     sum([
                         class.hosts[h].pathogen_fractions[p] *
-                        class.parameters.pathogen_coefficient_functions[evt](host.pathogens[p].sequence)
+                        class.parameters.pathogen_coefficient_functions[evt](class.hosts[h].pathogens[p].sequence)
                         for p in 1:length(class.hosts[h].pathogens)
                     ])
             end
@@ -65,7 +65,7 @@ function hostWeightsHost!(class::Class)
                     class.host_weights[evt, h] *
                     sum([
                         class.hosts[h].immunity_fractions[im] *
-                        class.parameters.immunity_coefficient_functions[evt](host.immunities[im].sequence)
+                        class.parameters.immunity_coefficient_functions[evt](class.hosts[h].immunities[im].sequence)
                         for im in 1:length(class.hosts[h].immunities)
                     ])
             end
@@ -82,7 +82,7 @@ function hostWeightsReceive!(class::Class)
                     class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
                     sum([
                         class.hosts[h].pathogen_fractions[p] *
-                        class.parameters.pathogen_coefficient_functions[evt](host.pathogens[p].sequence)
+                        class.parameters.pathogen_coefficient_functions[evt](class.hosts[h].pathogens[p].sequence)
                         for p in 1:length(class.hosts[h].pathogens)
                     ])
             end
@@ -91,7 +91,7 @@ function hostWeightsReceive!(class::Class)
                     class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
                     sum([
                         class.hosts[h].immunity_fractions[im] *
-                        class.parameters.immunity_coefficient_functions[evt](host.immunities[im].sequence)
+                        class.parameters.immunity_coefficient_functions[evt](class.hosts[h].immunities[im].sequence)
                         for im in 1:length(class.hosts[h].immunities)
                     ])
             end
@@ -115,7 +115,7 @@ function newClass!(id::String, parameters::ClassParameters, population::Populati
         id, parameters,
         Vector{Pathogen}(undef, 0), Vector{Immunity}(undef, 0), Vector{Host}(undef, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
-        Vector{Float64}(undef, 0),
+        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
     )
     push!(population.classes, class)
 end

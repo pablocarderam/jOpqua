@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 16 Dec 2024
+- Some quick bug fixes
+- Added quick rundown of model structure to README
+
 ## 15 Dec 2024
 - Made fitness into a pathogen-level coefficient
 - Renamed "transmission" language to "contact"
