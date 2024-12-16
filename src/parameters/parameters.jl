@@ -1,26 +1,18 @@
 using StaticArrays
 
-struct ModelParameters
-    id::String
-
-    num_populations::Int64
-end
-
-struct PopulationParameters
-    id::String
-
-    num_classes::Int64
-end
-
 struct ClassParameters
     id::String
 
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
-    pathogenFitness::Function
-    pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function}
-    immunityDominance::Function
-    immunity_coefficient_functions::SVector{NUM_COEFFICIENTS,Function}
-    immunityEffectOnFitness::Function
-    immunity_coefficient_effect_functions::SVector{NUM_COEFFICIENTS,Function}
+    class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
+
+    inter_population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
+    migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
+
+    pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+    immunity_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+
+    immunityDominance::Function # Takes two seq arguments (infecting pathogen, immunity), returns Float64
+    immunity_coefficient_effect_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes two seq arguments (infecting pathogen, immunity), returns Float64
 end
