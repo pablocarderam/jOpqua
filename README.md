@@ -1,5 +1,9 @@
 # jOpqua
-Julia implementation of [Opqua](https://github.com/pablocarderam/opqua).
+Julia implementation of [Opqua](https://github.com/pablocarderam/opqua), with
+two particular improvements:
+- groups of hosts with different parameters but within the same population
+(`Class`, equivalent to compartments in epidemiological models)
+- an overhauled, flexible, and nuanced handling of host acquired immunity
 This is work in progress.
 
 ## Here's a rundown of the model.
@@ -96,6 +100,15 @@ sequences along with all other static base parameters describing event rates and
 likelihoods are defined at the level of the `Class`. This means that `Class`
 weights within a `Population` not only are weighted according to the sum of `Host`
 weights, but are also multiplied by `Class`-specific rates.
+
+The structs corresponding to `Pathogen`, `Immunity`, `Host`, `Class`, `Population`,
+and `Model` represent the fundamental entities that are simulated in jOpqua. It
+is worth pointing out that each `Immunity` is associated to a specific
+`ImmunityType` defining the functions by which immunity affects functions in the
+model. Similarly, each `Class` is associated to a `ClassParameters` entity,
+which defines all parameters corresponding to entities within the `Class`
+(including `ImmunityTypes` available within the `Class`) as well as parameters
+of the `Class` itself.
 
 This model structure is pretty flexible: we can accommodate metapopulation
 structures, host compartments with different epidemiological parameters (not

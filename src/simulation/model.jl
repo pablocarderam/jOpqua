@@ -1,25 +1,3 @@
-using StaticArrays
-
-# struct Model
-#     id::Int64
-#     populations::MVector{POPULATIONS,Population}
-#     pathogen_rates::MVector{POPULATIONS,Float64}
-#     immunity_rates::MVector{POPULATIONS,Float64}
-#     host_rates::MVector{POPULATIONS,Float64}
-# end
-
-mutable struct Model
-    id::Int64
-
-    populations::Vector{Population} # size POPULATIONS
-
-    population_weights::Matrix{Float64} # size NUM_EVENTS x POPULATIONS
-    population_weights_receive::Matrix{Float64}
-    # size NUM_CHOICE_MODIFIERS-3 x POPULATIONS; -3 excludes intrahost fitness, host receive contact rates, and class change
-
-    event_rates::SVector{NUM_EVENTS,Float64}
-end
-
 function populationWeights!(model::Model)
     for evt in EVENTS
         for p in 1:length(model.populations)

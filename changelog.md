@@ -1,5 +1,36 @@
 # jOpqua Changelog
 
+## 31 Dec 2024
+Central change here is implementing a system for handling immunity through
+`Immunity` entities that store references to the `Pathogen` sequences that were
+imprinted and affinity matured to generate them and a reference to an `ImmunityType`
+entity that defines how the immunity affects coefficients based on its imprinted
+and matured sequences, as well as any infecting pathogens.
+More changes:
+- Moved struct definitions into `structs.jl` to compile before methods
+- Changed `Pathogen` and `Immunity` vectors within `Hosts` to be vectors of keys
+ used to access those objects within `Class` dictionaries instead
+- Remove immune priority and the previous scheme used for weighting the effect of
+different immunities; now, effect of immunities is not dependent on other pathogens
+present
+- Added `ImmunityType` struct to store "epitope types"; `Immunity` entities now
+ have an associated `ImmunityType` that defines their coefficient functions and
+ immunodominance; `ImmunityType` entities are stored inside `ClassParameters`
+- Added `acquireImmunities` function field to `ClassParameters` to define which and
+ how many `Immunity` entities (with corresponding `ImmunityTypes`) are acquired during
+ immunization
+- Changed `Immunity` to store the index of a `Pathogen` within the pathogen vector
+in `Class` rather than storing a sequence
+- Added coefficient vector to `Immunity`, make those coefficients affect weights
+(these are coefficients that are "statically" active, i.e. they don't compare
+sequences)
+- Change `Immunity` to store both imprinted and matured `Pathogen` indexes, then
+change immunity functions such that they use up to three pathogen sequences (imprinted,
+matured, and infecting) instead of only comparing two (immunized and infecting); in
+this logic, imprinted immunity would have an imprinted pathogen sequence, but not a
+matured one
+
+
 ## 16 Dec 2024
 - Some quick bug fixes
 - Added quick rundown of model structure to README

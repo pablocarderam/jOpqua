@@ -1,21 +1,21 @@
 module jOpqua
 
 include("simulation/constants.jl")
+include("simulation/structs.jl")
 
-include("parameters/parameters.jl")
+include("simulation/ImmunityType.jl")
+include("parameters/Parameters.jl")
 
-include("simulation/pathogen.jl")
-include("simulation/immunity.jl")
-include("simulation/host.jl")
-include("simulation/class.jl")
-include("simulation/population.jl")
-include("simulation/simulation.jl")
+include("simulation/Pathogen.jl")
+include("simulation/Immunity.jl")
+include("simulation/Host.jl")
+include("simulation/Class.jl")
+include("simulation/Population.jl")
+include("simulation/Simulation.jl")
 
-include("simulation/model.jl")
+include("simulation/Model.jl")
 
 include("analysis/data.jl")
 include("analysis/plots.jl")
-
-greet() = print("Hello World!")
 
 end # module jOpqua
