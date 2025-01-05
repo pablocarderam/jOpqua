@@ -1,19 +1,16 @@
 module jOpqua
 
+include("utils.jl")
+
 include("simulation/constants.jl")
 include("simulation/structs.jl")
 
-include("simulation/ImmunityType.jl")
-include("parameters/Parameters.jl")
+include("parameters/parameters.jl")
 
-include("simulation/Pathogen.jl")
-include("simulation/Immunity.jl")
-include("simulation/Host.jl")
-include("simulation/Class.jl")
-include("simulation/Population.jl")
-include("simulation/Simulation.jl")
-
-include("simulation/Model.jl")
+include("simulation/initializers.jl")
+include("simulation/weights.jl")
+include("simulation/events.jl")
+include("simulation/simulation.jl")
 
 include("analysis/data.jl")
 include("analysis/plots.jl")

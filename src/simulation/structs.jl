@@ -18,12 +18,11 @@ struct ClassParameters
     migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
 
     pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
-    # immunity_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+
     immunity_types::Dict{String,ImmunityType}
     acquireImmunities::Function # takes in Pathogen, Host, Class as arguments, returns Immunity objects to be added
     # (this handles how many and which immunities to choose when immunizing a host)
 
-    # immunity_coefficient_effect_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes two seq arguments (infecting pathogen, immunity), returns Float64
 end
 
 struct Pathogen
@@ -36,7 +35,7 @@ struct Immunity
     id::Int64
     imprinted_pathogen::Int64
     matured_pathogen::Int64
-    coefficients::Float64 # static coefficients
+    coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     type::String
 end
 
@@ -47,7 +46,6 @@ mutable struct Host
     immunities::Vector{Int64} # size MAX_IMMUNITIES
 
     pathogen_fractions::Vector{Float64} # size MAX_PATHOGENS
-    # immunity_fractions::Vector{Float64} # size MAX_IMMUNITIES
 
     pathogen_weights::Matrix{Float64} # size NUM_PATHOGEN_EVENTS x MAX_PATHOGENS
     immunity_weights::Matrix{Float64} # size NUM_IMMUNITY_EVENTS x MAX_IMMUNITIES
@@ -63,10 +61,8 @@ mutable struct Class
     id::String
     parameters::ClassParameters
 
-    pathogens::Dict{Int64,Pathogen}
-    immunities::Dict{Int64,Immunity}
-    pathogen_count::Int64
-    immunity_count::Int64
+    pathogens::Vector{Pathogen}
+    immunities::Vector{Immunity}
     hosts::Vector{Host} # size MAX_HOSTS
 
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
@@ -95,13 +91,13 @@ end
 # end
 
 mutable struct Model
-    id::Int64
-
     populations::Vector{Population} # size POPULATIONS
+    population_dict::Dict{String,Int64}
+    # Holds Population ids => Population indexes, used for migration to get matching Population
 
     population_weights::Matrix{Float64} # size NUM_EVENTS x POPULATIONS
     population_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-3 x POPULATIONS; -3 excludes intrahost fitness, host receive contact rates, and class change
 
-    event_rates::SVector{NUM_EVENTS,Float64}
+    event_rates::MVector{NUM_EVENTS,Float64}
 end

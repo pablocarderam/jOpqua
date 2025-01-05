@@ -1,5 +1,14 @@
 # jOpqua Changelog
 
+## 4 Jan 2025
+- Reorganized functions into new file structure
+- Add and first debug struct creation methods
+- Change `Pathogen` and `Immunity` entity storage within `Class` to use a simple vector
+of entities, rather than a dictionary with their associated ID
+- Change `Pathogen` and `Immunity` entity storage within `Host` to use vectors of entities
+(references to them), rather than their indexes in another matrix
+To do: Code to sample events and entities based on rates and weights
+
 ## 31 Dec 2024
 Central change here is implementing a system for handling immunity through
 `Immunity` entities that store references to the `Pathogen` sequences that were
@@ -24,7 +33,7 @@ in `Class` rather than storing a sequence
 - Added coefficient vector to `Immunity`, make those coefficients affect weights
 (these are coefficients that are "statically" active, i.e. they don't compare
 sequences)
-- Change `Immunity` to store both imprinted and matured `Pathogen` indexes, then
+- Changed `Immunity` to store both imprinted and matured `Pathogen` indexes, then
 change immunity functions such that they use up to three pathogen sequences (imprinted,
 matured, and infecting) instead of only comparing two (immunized and infecting); in
 this logic, imprinted immunity would have an imprinted pathogen sequence, but not a
