@@ -1,4 +1,5 @@
 using StaticArrays
+
 ## Coefficient and weight calculation (from bottom to top):
 
 # Bottom-level coefficients (Immunity and Pathogen)
@@ -97,7 +98,6 @@ function pathogenWeights!(host::Host, class::Class)
 end
 
 function immunityWeights!(host::Host, class::Class)
-    # host.immunity_weights = Matrix{Float64}(undef, NUM_IMMUNITY_EVENTS, length(host.immunities))
     for evt in IMMUNITY_EVENTS
         for im in 1:length(host.immunities)
             host.immunity_weights[evt-IMMUNITY_EVENTS[1]+1, im] =
@@ -307,26 +307,25 @@ function setRates!(model::Model)
     rates!(model)
 end
 
-
 # Weight change propagation:
 
 function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, population::Population, model::Model)
-    model.population_weights[:,model.population_dict[population.id]] .+= change[begin:NUM_EVENTS]
-    model.population_weights_receive[:,model.population_dict[population.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-3]
+    model.population_weights[:, model.population_dict[population.id]] .+= change[begin:NUM_EVENTS]
+    model.population_weights_receive[:, model.population_dict[population.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-3]
 
     model.event_rates .+= change[begin:NUM_EVENTS]
 end
 
 function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, class::Class, population::Population, model::Model)
-    population.class_weights[:,population.class_dict[class.id]] .+= change[begin:NUM_EVENTS]
-    population.class_weights_receive[:,population.class_dict[class.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-2]
+    population.class_weights[:, population.class_dict[class.id]] .+= change[begin:NUM_EVENTS]
+    population.class_weights_receive[:, population.class_dict[class.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-2]
 
     propagateWeightChanges!(change, population, model)
 end
 
 function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, host_idx::Int64, class::Class, population::Population, model::Model)
-    class.host_weights[:,host_idx] .+= class.parameters.base_coefficients[begin:NUM_EVENTS] .* change[begin:NUM_EVENTS] #class.host_weights[:,host_idx]
-    class.host_weights_receive[:,host_idx] .+= class.parameters.base_coefficients[end-NUM_CHOICE_MODIFIERS+1:end-1] .* change[end-NUM_CHOICE_MODIFIERS+1:end-1] #class.host_weights_receive[begin:end-1,host_idx]
+    class.host_weights[:, host_idx] .+= class.parameters.base_coefficients[begin:NUM_EVENTS] .* change[begin:NUM_EVENTS] #class.host_weights[:,host_idx]
+    class.host_weights_receive[:, host_idx] .+= class.parameters.base_coefficients[end-NUM_CHOICE_MODIFIERS+1:end-1] .* change[end-NUM_CHOICE_MODIFIERS+1:end-1] #class.host_weights_receive[begin:end-1,host_idx]
 
     propagateWeightChanges!(class.parameters.base_coefficients .* change, class, population, model)
 end

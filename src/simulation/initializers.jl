@@ -1,8 +1,7 @@
 using StaticArrays
 
 function newPathogen!(sequence::String, class::Class)
-    # class.pathogen_count += 1
-    push!(class.pathogens,Pathogen(
+    push!(class.pathogens, Pathogen(
         length(class.pathogens) + 1, sequence, pathogenSequenceCoefficients(sequence, class)
     ))
 
@@ -10,7 +9,6 @@ function newPathogen!(sequence::String, class::Class)
 end
 
 function newImmunity!(imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, class::Class, type::ImmunityType)
-    # class.immunity_count += 1
     push!(class.immunities, Immunity(
         length(class.immunities) + 1, imprinted_pathogen.id, matured_pathogen.id,
         immunityStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type, class),
@@ -20,7 +18,7 @@ function newImmunity!(imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, 
     return class.immunities[end]
 end
 
-function newHost!(class::Class,population::Population,model::Model)
+function newHost!(class::Class, population::Population, model::Model)
     push!(class.hosts, Host(
         length(class.hosts) + 1,
         Vector{Int64}(undef, 0), Vector{Int64}(undef, 0),
@@ -28,21 +26,17 @@ function newHost!(class::Class,population::Population,model::Model)
         Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
         Matrix{Float64}(undef, NUM_IMMUNITY_EVENTS, 0),
     ))
-    class.host_weights = catCol(
-        class.host_weights,
-        [
-            0.0,0.0,0.0,0.0,0.0,
-            0.0,1.0,1.0,1.0,1.0,
+    class.host_weights = catCol(class.host_weights, zeros(Float64, NUM_EVENTS))
+    class.host_weights_receive = catCol(class.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
+
+    propagateWeightChanges!(
+        SVector{NUM_COEFFICIENTS,Float64}(
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0] .*
             # class change, inter-population contact and migration numbers per class or
             # population are fractions that sum to one, so no need to account for in here
-        ] .* class.parameters.base_coefficients[begin:NUM_EVENTS]
+            class.parameters.base_coefficients
+        ), length(class.hosts), class, population, model
     )
-    class.host_weights_receive = catCol(
-        class.host_weights_receive,
-        [0.0,0.0,0.0,1.0] .* class.parameters.base_coefficients[end-NUM_CHOICE_MODIFIERS+1:end-1]
-    )
-
-    propagateWeightChanges!(SVector{NUM_COEFFICIENTS,Float64}([class.host_weights[:,length(class.hosts)]...,class.host_weights_receive[:,length(class.hosts)]...,0.0]), length(class.hosts), class, population, model)
 
     return class.hosts[end]
 end

@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 5 Jan 2025
+- Debugged `Host` weight initialization
+TODO: Adding infection and immunization functions
+
 ## 4 Jan 2025
 - Reorganized functions into new file structure
 - Add and first debug struct creation methods
