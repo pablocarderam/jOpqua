@@ -33,8 +33,8 @@ end
 
 struct Immunity
     id::Int64
-    imprinted_pathogen::Int64
-    matured_pathogen::Int64
+    imprinted_pathogen::Pathogen
+    matured_pathogen::Pathogen
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     type::String
 end
@@ -42,8 +42,8 @@ end
 mutable struct Host
     id::Int64
 
-    pathogens::Vector{Int64} # size MAX_PATHOGENS
-    immunities::Vector{Int64} # size MAX_IMMUNITIES
+    pathogens::Vector{Pathogen} # size MAX_PATHOGENS
+    immunities::Vector{Immunity} # size MAX_IMMUNITIES
 
     pathogen_fractions::Vector{Float64} # size MAX_PATHOGENS
 

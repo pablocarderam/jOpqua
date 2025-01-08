@@ -1,5 +1,11 @@
 # jOpqua Changelog
 
+## 6 Jan 2025
+- Added infection, immunization, clearance, deimmunization functions
+- Changed all `Pathogen`, `Immunity`, and `ImmuneType` arrays to be arrays of
+(references to) the entities, rather than arrays of their integer indexes
+TODO: revise coefficient/weight/event nomenclature, clean up `weights.jl` in particular
+
 ## 5 Jan 2025
 - Debugged `Host` weight initialization
 TODO: Adding infection and immunization functions

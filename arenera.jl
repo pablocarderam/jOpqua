@@ -47,3 +47,9 @@ class = jOpqua.newClass!("class", class_parameters, pop)
 host = jOpqua.newHost!(class, pop, model)
 pat = jOpqua.newPathogen!("ATCG", class)
 imm = jOpqua.newImmunity!(pat, pat, class, im_type)
+
+jOpqua.infect!(pat, host, class, pop, model)
+jOpqua.immunize!(imm, host, class, pop, model)
+
+jOpqua.clear!(1, host, class, pop, model)
+jOpqua.deimmunize!(1, host, class, pop, model)

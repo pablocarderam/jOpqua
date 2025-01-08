@@ -10,8 +10,8 @@ end
 
 function newImmunity!(imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, class::Class, type::ImmunityType)
     push!(class.immunities, Immunity(
-        length(class.immunities) + 1, imprinted_pathogen.id, matured_pathogen.id,
-        immunityStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type, class),
+        length(class.immunities) + 1, imprinted_pathogen, matured_pathogen,
+        immunityStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type),
         type.id
     ))
 
@@ -21,7 +21,7 @@ end
 function newHost!(class::Class, population::Population, model::Model)
     push!(class.hosts, Host(
         length(class.hosts) + 1,
-        Vector{Int64}(undef, 0), Vector{Int64}(undef, 0),
+        Vector{Pathogen}(undef, 0), Vector{Immunity}(undef, 0),
         Vector{Float64}(undef, 0),
         Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
         Matrix{Float64}(undef, NUM_IMMUNITY_EVENTS, 0),
