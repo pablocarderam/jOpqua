@@ -1,6 +1,9 @@
 # jOpqua Changelog
 
-## 6 Jan 2025
+## 12 Jan 2025
+- Fixed many weight computation bugs
+
+## 8 Jan 2025
 - Added infection, immunization, clearance, deimmunization functions
 - Changed all `Pathogen`, `Immunity`, and `ImmuneType` arrays to be arrays of
 (references to) the entities, rather than arrays of their integer indexes

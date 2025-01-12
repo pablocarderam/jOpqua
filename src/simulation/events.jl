@@ -3,14 +3,14 @@ using StaticArrays
 function infect!(pathogen::Pathogen, host::Host, class::Class, population::Population, model::Model)
     push!(host.pathogens, pathogen)
     push!(host.pathogen_fractions, 0.0)
-    catCol(host.pathogen_weights, zeros(Float64,NUM_PATHOGEN_EVENTS))
+    host.pathogen_weights = catCol(host.pathogen_weights, zeros(Float64,NUM_PATHOGEN_EVENTS))
 
     hostWeights!(host.id, class, population, model)
 end
 
 function immunize!(immunity::Immunity, host::Host, class::Class, population::Population, model::Model)
     push!(host.immunities, immunity)
-    catCol(host.immunity_weights, zeros(Float64,NUM_IMMUNITY_EVENTS))
+    host.immunity_weights = catCol(host.immunity_weights, zeros(Float64,NUM_IMMUNITY_EVENTS))
 
     hostWeights!(host.id, class, population, model)
 end

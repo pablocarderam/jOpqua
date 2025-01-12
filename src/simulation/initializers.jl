@@ -31,10 +31,9 @@ function newHost!(class::Class, population::Population, model::Model)
 
     propagateWeightChanges!(
         SVector{NUM_COEFFICIENTS,Float64}(
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0] .*
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
             # class change, inter-population contact and migration numbers per class or
             # population are fractions that sum to one, so no need to account for in here
-            class.parameters.base_coefficients
         ), length(class.hosts), class, population, model
     )
 

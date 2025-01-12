@@ -71,7 +71,7 @@ end
 function pathogenWeights!(p::Int64, host::Host, class::Class, evt::Int64)
     host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] =
         class.parameters.pathogen_coefficient_functions[evt](
-            class.pathogens[host.pathogens[p]].sequence
+            host.pathogens[p].sequence
         )
     if evt == CLEARANCE
         # Clearance likelihoods are not proportional to intrahost fraction,
@@ -117,16 +117,16 @@ function immunityWeights!(im::Int64, host::Host, class::Class, evt::Int64)
     host.immunity_weights[evt-IMMUNITY_EVENTS[1]+1, im] =
     # No immunity fraction here, just presence of immunity is enough
         class.parameters.immunity_types[
-            im.type
+            host.immunities[im].type
         ].static_coefficient_functions[evt](
-            im.imprinted_pathogen.sequence,
-            im.matured_pathogen.sequence
+            host.immunities[im].imprinted_pathogen.sequence,
+            host.immunities[im].matured_pathogen.sequence
         )
 end
 
 function immunityWeights!(im::Int64, host::Host, class::Class)
     for evt in IMMUNITY_EVENTS
-        immunityWeights!(p, host, class, evt)
+        immunityWeights!(im, host, class, evt)
     end
 end
 
@@ -286,13 +286,15 @@ end
 
 function hostWeights!(host_idx::Int64, class::Class, population::Population, model::Model)
     pathogenFractions!(class.hosts[host_idx], class)
+    pathogenWeights!(class.hosts[host_idx], class)
+    immunityWeights!(class.hosts[host_idx], class)
     prev = 0.0
     for weight in PATHOGEN_EVENTS
         prev = class.host_weights[weight]
         hostWeightsPathogen!(host_idx, class, weight)
         if prev != class.host_weights[weight]
             propagateWeightChanges!(
-                prev - class.host_weights[weight],
+                class.parameters.base_coefficients[weight] * (class.host_weights[weight] - prev),
                 class, population, weight, model
             )
         end
@@ -302,7 +304,7 @@ function hostWeights!(host_idx::Int64, class::Class, population::Population, mod
         hostWeightsImmunity!(host_idx, class, weight)
         if prev != class.host_weights[weight]
             propagateWeightChanges!(
-                prev - class.host_weights[weight],
+                class.parameters.base_coefficients[weight] * (class.host_weights[weight] - prev),
                 class, population, weight, model
             )
         end
@@ -312,7 +314,7 @@ function hostWeights!(host_idx::Int64, class::Class, population::Population, mod
         hostWeightsHost!(host_idx, class, weight)
         if prev != class.host_weights[weight]
             propagateWeightChanges!(
-                prev - class.host_weights[weight],
+                class.parameters.base_coefficients[weight] * (class.host_weights[weight] - prev),
                 class, population, weight, model
             )
         end
@@ -322,7 +324,8 @@ function hostWeights!(host_idx::Int64, class::Class, population::Population, mod
         hostWeightsReceive!(host_idx, class, weight)
         if prev != class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1] && weight < NUM_COEFFICIENTS - 2
             propagateWeightReceiveChanges!(
-                prev - class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1],
+                class.parameters.base_coefficients[weight] *
+                (class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1] - prev),
                 class, population, weight, model
             )
         end
@@ -425,8 +428,8 @@ function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, clas
 end
 
 function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, host_idx::Int64, class::Class, population::Population, model::Model)
-    class.host_weights[:, host_idx] .+= class.parameters.base_coefficients[begin:NUM_EVENTS] .* change[begin:NUM_EVENTS] #class.host_weights[:,host_idx]
-    class.host_weights_receive[:, host_idx] .+= class.parameters.base_coefficients[end-NUM_CHOICE_MODIFIERS+1:end-1] .* change[end-NUM_CHOICE_MODIFIERS+1:end-1] #class.host_weights_receive[begin:end-1,host_idx]
+    class.host_weights[:, host_idx] .+= change[begin:NUM_EVENTS]
+    class.host_weights_receive[:, host_idx] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
 
     propagateWeightChanges!(class.parameters.base_coefficients .* change, class, population, model)
 end
@@ -444,7 +447,7 @@ function propagateWeightChanges!(change::Float64, class::Class, population::Popu
 end
 
 function propagateWeightChanges!(change::Float64, host_idx::Int64, class::Class, population::Population, evt::Int64, model::Model)
-    class.host_weights[evt, host_idx] += class.parameters.base_coefficients[evt] * change #class.host_weights[:,host_idx]
+    class.host_weights[evt, host_idx] += change
 
     propagateWeightChanges!(class.parameters.base_coefficients[evt] * change, class, population, evt, model)
 end
@@ -462,7 +465,7 @@ function propagateWeightReceiveChanges!(change::Float64, class::Class, populatio
 end
 
 function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, class::Class, population::Population, evt::Int64, model::Model)
-    class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] += class.parameters.base_coefficients[evt] * change #class.host_weights_receive[begin:end-1,host_idx]
+    class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] += change
 
     if evt < NUM_COEFFICIENTS - 2
         propagateWeightReceiveChanges!(class.parameters.base_coefficients[evt] * change, class, population, evt, model)
