@@ -14,8 +14,8 @@ function immunityStaticCoefficients(
     ]
 end
 
-function immunitySpecificCoefficient(pathogen::Pathogen, immunity::Immunity, class::Class, coefficient::Int64)
-    return class.parameters.immunity_types[immunity.type].specific_coefficient_functions[coefficient](
+function immunitySpecificCoefficient(pathogen::Pathogen, immunity::Immunity, coefficient::Int64)
+    return immunity.type.specific_coefficient_functions[coefficient](
         immunity.imprinted_pathogen.sequence,
         immunity.matured_pathogen.sequence,
         pathogen.sequence
@@ -31,7 +31,7 @@ end
 
 # Intrahost-level representation
 
-function pathogenFractions!(host::Host, class::Class)
+function pathogenFractions!(host::Host)
     # Currently, we assume pathogen population fraction (share in total fitness)
     # impacts all events equally regardless of event; this is not necessarilly the case, however.
     # We also assume only the most fit pathogen affects events.
@@ -44,9 +44,7 @@ function pathogenFractions!(host::Host, class::Class)
             for p in 1:length(host.pathogens)
                 fracs[p] =
                     host.pathogens[p].coefficients[INTRAHOST_FITNESS] * sum([
-                        class.parameters.immunity_types[
-                            im.type
-                        ].specific_coefficient_functions[INTRAHOST_FITNESS](
+                        im.type.specific_coefficient_functions[INTRAHOST_FITNESS](
                             im.imprinted_pathogen.sequence,
                             im.matured_pathogen.sequence,
                             host.pathogens[p].sequence
@@ -89,9 +87,7 @@ function pathogenWeights!(p::Int64, host::Host, class::Class, evt::Int64)
         host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] =
             host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] *
             sum([
-                class.parameters.immunity_types[
-                    im.type
-                ].specific_coefficient_functions[evt](
+                im.type.specific_coefficient_functions[evt](
                     im.imprinted_pathogen.sequence,
                     im.matured_pathogen.sequence,
                     host.pathogens[p].sequence
@@ -109,30 +105,28 @@ end
 
 function pathogenWeights!(host::Host, class::Class)
     for p in 1:length(host.pathogens)
-        pathogenWeights!(p,host,class)
+        pathogenWeights!(p, host, class)
     end
 end
 
-function immunityWeights!(im::Int64, host::Host, class::Class, evt::Int64)
+function immunityWeights!(im::Int64, host::Host, evt::Int64)
     host.immunity_weights[evt-IMMUNITY_EVENTS[1]+1, im] =
     # No immunity fraction here, just presence of immunity is enough
-        class.parameters.immunity_types[
-            host.immunities[im].type
-        ].static_coefficient_functions[evt](
+        host.immunities[im].type.static_coefficient_functions[evt](
             host.immunities[im].imprinted_pathogen.sequence,
             host.immunities[im].matured_pathogen.sequence
         )
 end
 
-function immunityWeights!(im::Int64, host::Host, class::Class)
+function immunityWeights!(im::Int64, host::Host)
     for evt in IMMUNITY_EVENTS
-        immunityWeights!(im, host, class, evt)
+        immunityWeights!(im, host, evt)
     end
 end
 
 function immunityWeights!(host::Host, class::Class)
     for im in 1:length(host.immunities)
-        immunityWeights!(im, host, class)
+        immunityWeights!(im, host)
     end
 end
 
@@ -151,8 +145,8 @@ function hostWeightsPathogen!(h::Int64, class::Class)
 end
 
 function hostWeightsPathogen!(class::Class)
-    for h in 1:length(class.hosts)!
-        hostWeightsPathogen!(h,class)
+    for h in 1:length(class.hosts)
+        hostWeightsPathogen!(h, class)
     end
 end
 
@@ -170,7 +164,7 @@ end
 
 function hostWeightsImmunity!(class::Class)
     for h in 1:length(class.hosts)
-        hostWeightsImmunity!(h,class)
+        hostWeightsImmunity!(h, class)
     end
 end
 
@@ -191,9 +185,7 @@ function hostWeightsHost!(h::Int64, class::Class, evt::Int64)
                 class.host_weights[evt, h] *
                 sum([
                     class.hosts[h].pathogen_fractions[p] *
-                    class.parameters.immunity_types[
-                        im.type
-                    ].specific_coefficient_functions[evt](
+                    im.type.specific_coefficient_functions[evt](
                         im.imprinted_pathogen.sequence,
                         im.matured_pathogen.sequence,
                         class.hosts[h].pathogens[p].sequence
@@ -206,9 +198,7 @@ function hostWeightsHost!(h::Int64, class::Class, evt::Int64)
         class.host_weights[evt, h] =
             class.host_weights[evt, h] *
             sum([
-                class.parameters.immunity_types[
-                    im.type
-                ].static_coefficient_functions[evt](
+                im.type.static_coefficient_functions[evt](
                     im.imprinted_pathogen.sequence,
                     im.matured_pathogen.sequence
                 )
@@ -225,7 +215,7 @@ end
 
 function hostWeightsHost!(class::Class)
     for h in 1:length(class.hosts)
-        hostWeightsHost!(h,class)
+        hostWeightsHost!(h, class)
     end
 end
 
@@ -246,9 +236,7 @@ function hostWeightsReceive!(h::Int64, class::Class, evt::Int64)
                 class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
                 sum([
                     class.hosts[h].pathogen_fractions[p] *
-                    class.parameters.immunity_types[
-                        im.type
-                    ].specific_coefficient_functions[evt](
+                    im.type.specific_coefficient_functions[evt](
                         class.hosts[h].pathogens[p].sequence,
                         im.imprinted_pathogen.sequence,
                         im.matured_pathogen.sequence
@@ -261,9 +249,7 @@ function hostWeightsReceive!(h::Int64, class::Class, evt::Int64)
         class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] =
             class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
             sum([
-                class.parameters.immunity_types[
-                    im.type
-                ].static_coefficient_functions[evt](
+                im.type.static_coefficient_functions[evt](
                     im.imprinted_pathogen.sequence,
                     im.matured_pathogen.sequence
                 )
@@ -280,12 +266,12 @@ end
 
 function hostWeightsReceive!(class::Class)
     for h in 1:length(class.hosts)
-        hostWeightsReceive!(h,class)
+        hostWeightsReceive!(h, class)
     end
 end
 
 function hostWeights!(host_idx::Int64, class::Class, population::Population, model::Model)
-    pathogenFractions!(class.hosts[host_idx], class)
+    pathogenFractions!(class.hosts[host_idx])
     pathogenWeights!(class.hosts[host_idx], class)
     immunityWeights!(class.hosts[host_idx], class)
     prev = 0.0

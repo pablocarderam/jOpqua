@@ -36,7 +36,7 @@ struct Immunity
     imprinted_pathogen::Pathogen
     matured_pathogen::Pathogen
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
-    type::String
+    type::ImmunityType
 end
 
 mutable struct Host

@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 17 Jan 2025
+- Change `type` field within `Immunity` to be a reference to the `ImmunityType`,
+not an index
+
 ## 12 Jan 2025
 - Fixed many weight computation bugs
 
