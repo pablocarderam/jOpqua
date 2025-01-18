@@ -4,7 +4,6 @@ struct ImmunityType
     id::String
     static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured sequences and returns Float64 coefficient
     specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-    immunodominance::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
 struct ClassParameters

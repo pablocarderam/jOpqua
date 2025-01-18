@@ -4,54 +4,61 @@ using StaticArrays
 # Single pathogen, single host
 const MUTANT_ESTABLISHMENT = 1
 const CLEARANCE = 2
+const IMMUNIZATION = 3
 # Two pathogens, single host
-const RECOMBINATION = 3
+const RECOMBINATION = 4
 # Single pathogen, two hosts
-const INTRA_POPULATION_CONTACT = 4
-const INTER_POPULATION_CONTACT = 5
+const INTRA_POPULATION_CONTACT = 5
+const INTER_POPULATION_CONTACT = 6
 
 # Immunity events
 # Single immunity, single host
-const IMMUNITY_LOSS = 6
+const IMMUNITY_LOSS = 7
 
 # Host events
 # Single host, single class
-const BIRTH = 7
-const DEATH = 8
+const BIRTH = 8
+const DEATH = 9
 # Single host, two classes
-const CLASS_CHANGE = 9
+const CLASS_CHANGE = 10
 # Single host, two populations
-const MIGRATION = 10
+const MIGRATION = 11
 
 # Choice modifiers, zooming in in scale (order matters)
 # Event choice
-const MUTATION_AT_CONTACT = 11
+const MUTATION_AT_CONTACT = 12
 # Population choice
-const RECEIVE_MIGRATION = 12
+const RECEIVE_MIGRATION = 13
 # Class choice
-const RECEIVE_CLASS_CHANGE = 13
+const RECEIVE_CLASS_CHANGE = 14
 # Host choice
-const RECEIVE_CONTACT = 14
+const RECEIVE_CONTACT = 15
 # Pathogen choice
-const INTRAHOST_FITNESS = 15
+const INTRAHOST_FITNESS = 16
 
 # Global trackers
-const PATHOGEN_EVENTS = SA[1, 2, 3, 4, 5]
+const PATHOGEN_EVENTS = SA[
+    MUTANT_ESTABLISHMENT, CLEARANCE, IMMUNIZATION,
+    RECOMBINATION, INTRA_POPULATION_CONTACT, INTER_POPULATION_CONTACT
+]
 const NUM_PATHOGEN_EVENTS = length(PATHOGEN_EVENTS)
 
-const IMMUNITY_EVENTS = SA[6]
+const IMMUNITY_EVENTS = SA[IMMUNITY_LOSS]
 const NUM_IMMUNITY_EVENTS = length(IMMUNITY_EVENTS)
 
-const HOST_EVENTS = SA[7, 8, 9, 10]
+const HOST_EVENTS = SA[BIRTH, DEATH, CLASS_CHANGE, MIGRATION]
 const NUM_HOST_EVENTS = length(HOST_EVENTS)
 
-const EVENTS = SA[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const EVENTS = SA[PATHOGEN_EVENTS..., IMMUNITY_EVENTS..., HOST_EVENTS...]
 const NUM_EVENTS = length(EVENTS)
 
-const CHOICE_MODIFIERS = SA[11, 12, 13, 14, 15]
+const CHOICE_MODIFIERS = SA[
+    MUTATION_AT_CONTACT, RECEIVE_MIGRATION,
+    RECEIVE_CLASS_CHANGE, RECEIVE_CONTACT, INTRAHOST_FITNESS
+]
 const NUM_CHOICE_MODIFIERS = length(CHOICE_MODIFIERS)
 
-const COEFFICIENTS = SA[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+const COEFFICIENTS = SA[EVENTS..., CHOICE_MODIFIERS...]
 const NUM_COEFFICIENTS = length(COEFFICIENTS)
 
 # Array sizes
