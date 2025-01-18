@@ -1,11 +1,13 @@
 # jOpqua Changelog
 
 ## 18 January 2025
+- Changed language such that all concepts relating to "immunity" now use "response"
 - Renamed functions to add and remove pathogens and immunities from hosts
-- Added new event, `IMMUNIZATION`
-- Removed `immunodominance` from `ImmunityType`; this can be handled through
-user-defined functions specifying how `Immunity` elements are acquired during
-an `IMMUNIZATION` event
+- Added new event, `RESPONSE_ACQUISITION`
+- Removed `immunodominance` from `ResponseType`; this can be handled through
+user-defined functions specifying how `Response` elements are acquired during
+an `RESPONSE_ACQUISITION` event
+
 
 ## 17 Jan 2025
 - Change `type` field within `Immunity` to be a reference to the `ImmunityType`,

@@ -8,14 +8,14 @@ function addPathogenToHost!(pathogen::Pathogen, host::Host, class::Class, popula
     hostWeights!(host.id, class, population, model)
 end
 
-function addImmunityToHost!(immunity::Immunity, host::Host, class::Class, population::Population, model::Model)
-    push!(host.immunities, immunity)
-    host.immunity_weights = catCol(host.immunity_weights, zeros(Float64, NUM_IMMUNITY_EVENTS))
+function addResponseToHost!(response::Response, host::Host, class::Class, population::Population, model::Model)
+    push!(host.responses, response)
+    host.response_weights = catCol(host.response_weights, zeros(Float64, NUM_RESPONSE_EVENTS))
 
     hostWeights!(host.id, class, population, model)
 end
 
-function removePathogenToHost!(pathogen_idx::Int64, host::Host, class::Class, population::Population, model::Model)
+function removePathogenFromHost!(pathogen_idx::Int64, host::Host, class::Class, population::Population, model::Model)
     deleteat!(host.pathogens, pathogen_idx)
     deleteat!(host.pathogen_fractions, pathogen_idx)
     host.pathogen_weights = host.pathogen_weights[:, begin:end.!=pathogen_idx]
@@ -23,9 +23,9 @@ function removePathogenToHost!(pathogen_idx::Int64, host::Host, class::Class, po
     hostWeights!(host.id, class, population, model)
 end
 
-function removeImmunityToHost!(immunity_idx::Int64, host::Host, class::Class, population::Population, model::Model)
-    deleteat!(host.immunities, immunity_idx)
-    host.immunity_weights = host.immunity_weights[:, begin:end.!=immunity_idx]
+function removeResponseFromHost!(response_idx::Int64, host::Host, class::Class, population::Population, model::Model)
+    deleteat!(host.responses, response_idx)
+    host.response_weights = host.response_weights[:, begin:end.!=response_idx]
 
     hostWeights!(host.id, class, population, model)
 end

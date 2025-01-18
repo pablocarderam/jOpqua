@@ -8,23 +8,23 @@ function newPathogen!(sequence::String, class::Class)
     return class.pathogens[end]
 end
 
-function newImmunity!(imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, class::Class, type::ImmunityType)
-    push!(class.immunities, Immunity(
-        length(class.immunities) + 1, imprinted_pathogen, matured_pathogen,
-        immunityStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type),
+function newResponse!(imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, class::Class, type::ResponseType)
+    push!(class.responses, Response(
+        length(class.responses) + 1, imprinted_pathogen, matured_pathogen,
+        responseStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type),
         type
     ))
 
-    return class.immunities[end]
+    return class.responses[end]
 end
 
 function newHost!(class::Class, population::Population, model::Model)
     push!(class.hosts, Host(
         length(class.hosts) + 1,
-        Vector{Pathogen}(undef, 0), Vector{Immunity}(undef, 0),
+        Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
         Vector{Float64}(undef, 0),
         Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
-        Matrix{Float64}(undef, NUM_IMMUNITY_EVENTS, 0),
+        Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
     ))
     class.host_weights = catCol(class.host_weights, zeros(Float64, NUM_EVENTS))
     class.host_weights_receive = catCol(class.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
@@ -43,7 +43,7 @@ end
 function newClass!(id::String, parameters::ClassParameters, population::Population)
     push!(population.classes, Class(
         id, parameters,
-        Vector{Pathogen}(undef, 0), Vector{Immunity}(undef, 0),
+        Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
         Vector{Host}(undef, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),

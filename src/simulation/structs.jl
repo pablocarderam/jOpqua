@@ -1,6 +1,6 @@
 using StaticArrays
 
-struct ImmunityType
+struct ResponseType
     id::String
     static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured sequences and returns Float64 coefficient
     specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
@@ -18,9 +18,9 @@ struct ClassParameters
 
     pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
 
-    immunity_types::Dict{String,ImmunityType}
-    acquireImmunities::Function # takes in Pathogen, Host, Class as arguments, returns Immunity objects to be added
-    # (this handles how many and which immunities to choose when immunizing a host)
+    response_types::Dict{String,ResponseType}
+    acquireResponses::Function # takes in Pathogen, Host, Class as arguments, returns Response objects to be added
+    # (this handles how many and which responses to choose when adding a response to a host)
 
 end
 
@@ -30,24 +30,24 @@ struct Pathogen
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
 end
 
-struct Immunity
+struct Response
     id::Int64
     imprinted_pathogen::Pathogen
     matured_pathogen::Pathogen
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
-    type::ImmunityType
+    type::ResponseType
 end
 
 mutable struct Host
     id::Int64
 
     pathogens::Vector{Pathogen} # size MAX_PATHOGENS
-    immunities::Vector{Immunity} # size MAX_IMMUNITIES
+    responses::Vector{Response} # size MAX_RESPONSES
 
     pathogen_fractions::Vector{Float64} # size MAX_PATHOGENS
 
     pathogen_weights::Matrix{Float64} # size NUM_PATHOGEN_EVENTS x MAX_PATHOGENS
-    immunity_weights::Matrix{Float64} # size NUM_IMMUNITY_EVENTS x MAX_IMMUNITIES
+    response_weights::Matrix{Float64} # size NUM_RESPONSE_EVENTS x MAX_RESPONSES
 
     # We could handle receiving rates at this level, but the only one relevant
     # to entities within hosts is recombination, and that uses the same rates
@@ -61,7 +61,7 @@ mutable struct Class
     parameters::ClassParameters
 
     pathogens::Vector{Pathogen}
-    immunities::Vector{Immunity}
+    responses::Vector{Response}
     hosts::Vector{Host} # size MAX_HOSTS
 
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
@@ -85,7 +85,7 @@ end
 #     id::Int64
 #     populations::MVector{POPULATIONS,Population}
 #     pathogen_rates::MVector{POPULATIONS,Float64}
-#     immunity_rates::MVector{POPULATIONS,Float64}
+#     response_rates::MVector{POPULATIONS,Float64}
 #     host_rates::MVector{POPULATIONS,Float64}
 # end
 

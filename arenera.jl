@@ -4,8 +4,8 @@ using jOpqua
 using StaticArrays
 
 # Parameters
-im_type = jOpqua.ImmunityType(
-    "im_type", # id::String,
+re_type = jOpqua.ResponseType(
+    "re_type", # id::String,
     SA[ # static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
         (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
         (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
@@ -18,7 +18,6 @@ im_type = jOpqua.ImmunityType(
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
         (imp_g, mat_g, pat_g)->1.0,
     ],
-    # (imp_g, mat_g, pat_g) -> 1.0, # immunodominance::Function,
 )
 
 class_parameters = jOpqua.ClassParameters(
@@ -38,8 +37,8 @@ class_parameters = jOpqua.ClassParameters(
         g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
         g->1.0,
     ],
-    Dict(im_type.id => im_type), # immunity_types::Dict{String,ImmunityType}
-    (p, h, c) -> Nothing # acquireImmunities::Function
+    Dict(re_type.id => re_type), # response_types::Dict{String,ResponseType}
+    (p, h, c) -> Nothing # acquireResponses::Function
 )
 
 # Model setup
@@ -50,10 +49,10 @@ pop = jOpqua.newPopulation!("pop", model)
 class = jOpqua.newClass!("class", class_parameters, pop)
 host = jOpqua.newHost!(class, pop, model)
 pat = jOpqua.newPathogen!("ATCG", class)
-imm = jOpqua.newImmunity!(pat, pat, class, im_type)
+res = jOpqua.newResponse!(pat, pat, class, re_type)
 
 jOpqua.addPathogenToHost!(pat, host, class, pop, model)
-jOpqua.addImmunityToHost!(imm, host, class, pop, model)
+jOpqua.addResponseToHost!(res, host, class, pop, model)
 
-jOpqua.removePathogenToHost!(1, host, class, pop, model)
-jOpqua.removeImmunityToHost!(1, host, class, pop, model)
+jOpqua.removePathogenFromHost!(1, host, class, pop, model)
+jOpqua.removeResponseFromHost!(1, host, class, pop, model)
