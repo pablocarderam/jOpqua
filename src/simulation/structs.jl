@@ -40,7 +40,7 @@ struct Pathogen
 end
 
 struct Response
-    id::Int64
+    id::Tuple{Int64,Int64} #TODO: this is redundant and unnecessary I think
     imprinted_pathogen::Pathogen
     matured_pathogen::Pathogen
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
@@ -69,9 +69,11 @@ mutable struct Class
     id::String
     parameters::ClassParameters
 
-    pathogens::Vector{Pathogen}
-    responses::Vector{Response}
+    pathogens::Dict{Int64,Pathogen}
+    responses::Dict{Tuple{Int64,Int64},Response}
     hosts::Vector{Host} # size MAX_HOSTS
+
+    pathogens_idx::Int64
 
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
     host_weights_receive::Matrix{Float64}

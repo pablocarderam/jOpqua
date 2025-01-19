@@ -1,21 +1,22 @@
 using StaticArrays
 
 function newPathogen!(sequence::String, class::Class, type::PathogenType)
-    push!(class.pathogens, Pathogen(
-        length(class.pathogens) + 1, sequence, pathogenSequenceCoefficients(sequence, type), type
-    ))
+    class.pathogens_idx += 1
+    class.pathogens[class.pathogens_idx] = Pathogen(
+        class.pathogens_idx, sequence, pathogenSequenceCoefficients(sequence, type), type
+    )
 
-    return class.pathogens[end]
+    return class.pathogens[class.pathogens_idx]
 end
 
 function newResponse!(imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, class::Class, type::ResponseType)
-    push!(class.responses, Response(
-        length(class.responses) + 1, imprinted_pathogen, matured_pathogen,
+    class.responses[(imprinted_pathogen.id,matured_pathogen.id)] = Response(
+        (imprinted_pathogen.id,matured_pathogen.id), imprinted_pathogen, matured_pathogen,
         responseStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type),
         type
-    ))
+    )
 
-    return class.responses[end]
+    return class.responses[(imprinted_pathogen.id,matured_pathogen.id)]
 end
 
 function newHost!(class::Class, population::Population, model::Model)
@@ -43,8 +44,9 @@ end
 function newClass!(id::String, parameters::ClassParameters, population::Population)
     push!(population.classes, Class(
         id, parameters,
-        Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
+        Dict{Int64,Pathogen}(), Dict{Int64,Response}(),
         Vector{Host}(undef, 0),
+        0,
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
     ))

@@ -1,5 +1,11 @@
 # jOpqua Changelog
 
+## 19 January 2025
+- Changed `pathogens` and `responses` vectors in `Class` to be dictionaries instead,
+with keys corresponding to the assigned `Pathogen` integer code in the case of
+`pathogens` and a tuple with the codes for imprinted and matured pathogens
+in the case of `responses`
+
 ## 18 January 2025
 - Changed language such that all concepts relating to "immunity" now use "response"
 - Renamed functions to add and remove pathogens and immunities from hosts
