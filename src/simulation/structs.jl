@@ -41,7 +41,8 @@ end
 
 struct Response
     id::Tuple{Int64,Int64} #TODO: this is redundant and unnecessary I think
-    imprinted_pathogen::Pathogen
+    parent::Tuple{Int64,Int64} # This is only useful for response lineage tracing, but not the simulation?
+    imprinted_pathogen::Pathogen # This will track the Pathogen imprinted in the naive response
     matured_pathogen::Pathogen
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     type::ResponseType

@@ -56,7 +56,7 @@ pop = jOpqua.newPopulation!("pop", model)
 class = jOpqua.newClass!("class", class_parameters, pop)
 host = jOpqua.newHost!(class, pop, model)
 pat = jOpqua.newPathogen!("ATCG", class, pa_type)
-res = jOpqua.newResponse!(pat, pat, class, re_type)
+res = jOpqua.newResponse!(pat, pat, (0,0), class, re_type)
 
 jOpqua.addPathogenToHost!(pat, host, class, pop, model)
 jOpqua.addResponseToHost!(res, host, class, pop, model)

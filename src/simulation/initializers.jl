@@ -9,9 +9,12 @@ function newPathogen!(sequence::String, class::Class, type::PathogenType)
     return class.pathogens[class.pathogens_idx]
 end
 
-function newResponse!(imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, class::Class, type::ResponseType)
+function newResponse!(
+    imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, parent::Tuple{Int64,Int64},
+    class::Class, type::ResponseType)
     class.responses[(imprinted_pathogen.id,matured_pathogen.id)] = Response(
-        (imprinted_pathogen.id,matured_pathogen.id), imprinted_pathogen, matured_pathogen,
+        (imprinted_pathogen.id,matured_pathogen.id), parent::Tuple{Int64,Int64},
+        imprinted_pathogen, matured_pathogen,
         responseStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type),
         type
     )

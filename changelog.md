@@ -5,6 +5,10 @@
 with keys corresponding to the assigned `Pathogen` integer code in the case of
 `pathogens` and a tuple with the codes for imprinted and matured pathogens
 in the case of `responses`
+- Add `parent` as a new field of `Response`, storing a tuple referencing the
+`Response` that this `Response` was derived from within its `Class`; this is only
+useful for response lineage tracing, but not the simulation itself (at least at
+the moment), so we may remove it
 
 ## 18 January 2025
 - Changed language such that all concepts relating to "immunity" now use "response"
