@@ -4,6 +4,18 @@ using jOpqua
 using StaticArrays
 
 # Parameters
+pa_type = jOpqua.PathogenType(
+    "pa_type",
+    10,
+    "ARNDCEQGHILKMFPSTWYV*",
+    SA[ # pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
+        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
+        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
+        g->1.0,
+    ],
+)
+
 re_type = jOpqua.ResponseType(
     "re_type", # id::String,
     SA[ # static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
@@ -31,12 +43,7 @@ class_parameters = jOpqua.ClassParameters(
     Dict(), # class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
     Dict(), # inter_population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(), # migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
-    SA[ # pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
-        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0,
-    ],
+    Dict(pa_type.id => pa_type), # response_types::Dict{String,ResponseType}
     Dict(re_type.id => re_type), # response_types::Dict{String,ResponseType}
     (p, h, c) -> Nothing # acquireResponses::Function
 )
@@ -48,7 +55,7 @@ model = jOpqua.newModel()
 pop = jOpqua.newPopulation!("pop", model)
 class = jOpqua.newClass!("class", class_parameters, pop)
 host = jOpqua.newHost!(class, pop, model)
-pat = jOpqua.newPathogen!("ATCG", class)
+pat = jOpqua.newPathogen!("ATCG", class, pa_type)
 res = jOpqua.newResponse!(pat, pat, class, re_type)
 
 jOpqua.addPathogenToHost!(pat, host, class, pop, model)

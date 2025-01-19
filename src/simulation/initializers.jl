@@ -1,8 +1,8 @@
 using StaticArrays
 
-function newPathogen!(sequence::String, class::Class)
+function newPathogen!(sequence::String, class::Class, type::PathogenType)
     push!(class.pathogens, Pathogen(
-        length(class.pathogens) + 1, sequence, pathogenSequenceCoefficients(sequence, class)
+        length(class.pathogens) + 1, sequence, pathogenSequenceCoefficients(sequence, type), type
     ))
 
     return class.pathogens[end]

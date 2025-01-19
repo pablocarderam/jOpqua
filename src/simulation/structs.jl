@@ -1,5 +1,14 @@
 using StaticArrays
 
+struct PathogenType
+    id::String
+
+    num_loci::Int64
+    possible_alleles::String
+
+    coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+end
+
 struct ResponseType
     id::String
     static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured sequences and returns Float64 coefficient
@@ -16,8 +25,7 @@ struct ClassParameters
     inter_population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
 
-    pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
-
+    pathogen_types::Dict{String,PathogenType}
     response_types::Dict{String,ResponseType}
     acquireResponses::Function # takes in Pathogen, Host, Class as arguments, returns Response objects to be added
     # (this handles how many and which responses to choose when adding a response to a host)
@@ -28,6 +36,7 @@ struct Pathogen
     id::Int64
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
+    type::PathogenType
 end
 
 struct Response

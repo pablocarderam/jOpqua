@@ -7,7 +7,7 @@
 - Removed `immunodominance` from `ResponseType`; this can be handled through
 user-defined functions specifying how `Response` elements are acquired during
 an `RESPONSE_ACQUISITION` event
-
+- Added `PathogenType` to store `Pathogen`-specific parameters
 
 ## 17 Jan 2025
 - Change `type` field within `Immunity` to be a reference to the `ImmunityType`,

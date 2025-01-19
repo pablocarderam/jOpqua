@@ -1,5 +1,14 @@
 using StaticArrays
 
+# Basic actions
+
+# function mutantPathogen(pathogen::Pathogen, host::Host, class::Class)
+
+#     mut = newPathogen!(sequence, class)
+
+#     return mut
+# end
+
 function addPathogenToHost!(pathogen::Pathogen, host::Host, class::Class, population::Population, model::Model)
     push!(host.pathogens, pathogen)
     push!(host.pathogen_fractions, 0.0)
@@ -29,3 +38,5 @@ function removeResponseFromHost!(response_idx::Int64, host::Host, class::Class, 
 
     hostWeights!(host.id, class, population, model)
 end
+
+# Model events

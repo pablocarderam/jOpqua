@@ -5,10 +5,10 @@ using StaticArrays
 # Bottom-level coefficients (Response and Pathogen)
 
 function responseStaticCoefficients(
-    imprinted_pathogen::String, matured_pathogen::String, type::ResponseType)
+    imprinted_pathogen_genome::String, matured_pathogen_genome::String, type::ResponseType)
     return [
         type.static_coefficient_functions[evt_id](
-            imprinted_pathogen, matured_pathogen
+            imprinted_pathogen_genome, matured_pathogen_genome
         )
         for evt_id in 1:NUM_COEFFICIENTS
     ]
@@ -22,9 +22,9 @@ function responseSpecificCoefficient(pathogen::Pathogen, response::Response, coe
     )
 end
 
-function pathogenSequenceCoefficients(sequence::String, class::Class)
+function pathogenSequenceCoefficients(sequence::String, type::PathogenType)
     return [
-        class.parameters.pathogen_coefficient_functions[evt_id](sequence)
+        type.coefficient_functions[evt_id](sequence)
         for evt_id in 1:NUM_COEFFICIENTS
     ]
 end
@@ -68,7 +68,7 @@ end
 
 function pathogenWeights!(p::Int64, host::Host, class::Class, evt::Int64)
     host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] =
-        class.parameters.pathogen_coefficient_functions[evt](
+        host.pathogens[p].type.coefficient_functions[evt](
             host.pathogens[p].sequence
         )
     if evt == CLEARANCE
@@ -175,7 +175,7 @@ function hostWeightsHost!(h::Int64, class::Class, evt::Int64)
             class.host_weights[evt, h] *
             sum([
                 class.hosts[h].pathogen_fractions[p] *
-                class.parameters.pathogen_coefficient_functions[evt](
+                class.hosts[h].pathogens[p].type.coefficient_functions[evt](
                     class.hosts[h].pathogens[p].sequence
                 )
                 for p in 1:length(class.hosts[h].pathogens)
@@ -226,7 +226,7 @@ function hostWeightsReceive!(h::Int64, class::Class, evt::Int64)
             class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
             sum([
                 class.hosts[h].pathogen_fractions[p] *
-                class.parameters.pathogen_coefficient_functions[evt](
+                class.hosts[h].pathogens[p].type.coefficient_functions[evt](
                     class.hosts[h].pathogens[p].sequence
                 )
                 for p in 1:length(class.hosts[h].pathogens)
