@@ -9,6 +9,11 @@ in the case of `responses`
 `Response` that this `Response` was derived from within its `Class`; this is only
 useful for response lineage tracing, but not the simulation itself (at least at
 the moment), so we may remove it
+- Added base function to create a mutant `Pathogen`
+- Added vector to track population receive weight sums in `Model`
+- Changed weight calculation to update sum of weights in next level of hierarchy as
+you iterate through the current level
+- Added `Choice.jl` with functions to sample different entities based on their weights
 
 ## 18 January 2025
 - Changed language such that all concepts relating to "immunity" now use "response"

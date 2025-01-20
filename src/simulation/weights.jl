@@ -66,26 +66,26 @@ end
 
 # Intrahost-level weights
 
-function pathogenWeights!(p::Int64, host::Host, class::Class, evt::Int64)
-    host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] =
+function pathogenWeights!(p::Int64, host::Host, evt::Int64)
+    host.pathogen_weights[evt, p] =
         host.pathogens[p].type.coefficient_functions[evt](
             host.pathogens[p].sequence
         )
     if evt == CLEARANCE
         # Clearance likelihoods are not proportional to intrahost fraction,
         # instead, we assume they are uniform (could be inversely proportional?)
-        host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] =
-            host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] /
+        host.pathogen_weights[evt, p] =
+            host.pathogen_weights[evt, p] /
             length(host.pathogens)
     else
         # All other pathogen event likelihoods are proportional to intrahost fraction
-        host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] =
-            host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] *
+        host.pathogen_weights[evt, p] =
+            host.pathogen_weights[evt, p] *
             host.pathogen_fractions[p]
     end
     if length(host.responses) > 0
-        host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] =
-            host.pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, p] *
+        host.pathogen_weights[evt, p] =
+            host.pathogen_weights[evt, p] *
             sum([
                 re.type.specific_coefficient_functions[evt](
                     re.imprinted_pathogen.sequence,
@@ -97,15 +97,17 @@ function pathogenWeights!(p::Int64, host::Host, class::Class, evt::Int64)
     end
 end
 
-function pathogenWeights!(p::Int64, host::Host, class::Class)
-    for evt in PATHOGEN_EVENTS
-        pathogenWeights!(p, host, class, evt)
+function pathogenWeights!(host_idx::Int64, class::Class, evt::Int64)
+    class.host_weights[evt,host_idx] = 0
+    for p in 1:length(class.hosts[host_idx].pathogens)
+        pathogenWeights!(p, class.hosts[host_idx], evt)
+        class.host_weights[evt,host_idx] += class.hosts[host_idx].pathogen_weights[evt, p]
     end
 end
 
-function pathogenWeights!(host::Host, class::Class)
-    for p in 1:length(host.pathogens)
-        pathogenWeights!(p, host, class)
+function pathogenWeights!(host_idx::Int64, class::Class)
+    for evt in PATHOGEN_EVENTS
+        pathogenWeights!(host_idx, class, evt)
     end
 end
 
@@ -118,55 +120,57 @@ function responseWeights!(re::Int64, host::Host, evt::Int64)
         )
 end
 
-function responseWeights!(re::Int64, host::Host)
-    for evt in RESPONSE_EVENTS
-        responseWeights!(re, host, evt)
+function responseWeights!(host_idx::Int64, class::Class, evt::Int64)
+    class.host_weights[evt-RESPONSE_EVENTS[1]+1,host_idx] = 0
+    for re in 1:length(class.hosts[host_idx].responses)
+        responseWeights!(re, class.hosts[host_idx], evt)
+        class.host_weights[evt-RESPONSE_EVENTS[1]+1,host_idx] += class.hosts[host_idx].response_weights[evt-RESPONSE_EVENTS[1]+1, re]
     end
 end
 
-function responseWeights!(host::Host, class::Class)
-    for re in 1:length(host.responses)
-        responseWeights!(re, host)
+function responseWeights!(host_idx::Int64, class::Class)
+    for evt in RESPONSE_EVENTS
+        responseWeights!(host_idx, class, evt)
     end
 end
 
 # Intra-Class level
 
-function hostWeightsPathogen!(h::Int64, class::Class, evt::Int64)
-    class.host_weights[evt, h] = sum(
-        @views class.hosts[h].pathogen_weights[evt-PATHOGEN_EVENTS[1]+1, :]
-    )
-end
+# function hostWeightsPathogen!(h::Int64, class::Class, evt::Int64)
+#     class.host_weights[evt, h] = sum(
+#         @views class.hosts[h].pathogen_weights[evt, :]
+#     )
+# end
 
-function hostWeightsPathogen!(h::Int64, class::Class)
-    for evt in PATHOGEN_EVENTS
-        hostWeightsPathogen!(h, class, evt)
-    end
-end
+# function hostWeightsPathogen!(h::Int64, class::Class)
+#     for evt in PATHOGEN_EVENTS
+#         hostWeightsPathogen!(h, class, evt)
+#     end
+# end
 
-function hostWeightsPathogen!(class::Class)
-    for h in 1:length(class.hosts)
-        hostWeightsPathogen!(h, class)
-    end
-end
+# function hostWeightsPathogen!(class::Class)
+#     for h in 1:length(class.hosts)
+#         hostWeightsPathogen!(h, class)
+#     end
+# end
 
-function hostWeightsResponse!(h::Int64, class::Class, evt::Int64)
-    class.host_weights[evt, h] = sum(
-        @views class.hosts[h].response_weights[evt-RESPONSE_EVENTS[1]+1, :]
-    )
-end
+# function hostWeightsResponse!(h::Int64, class::Class, evt::Int64)
+#     class.host_weights[evt, h] = sum(
+#         @views class.hosts[h].response_weights[evt-RESPONSE_EVENTS[1]+1, :]
+#     )
+# end
 
-function hostWeightsResponse!(h::Int64, class::Class)
-    for evt in RESPONSE_EVENTS
-        hostWeightsResponse!(h, class, evt)
-    end
-end
+# function hostWeightsResponse!(h::Int64, class::Class)
+#     for evt in RESPONSE_EVENTS
+#         hostWeightsResponse!(h, class, evt)
+#     end
+# end
 
-function hostWeightsResponse!(class::Class)
-    for h in 1:length(class.hosts)
-        hostWeightsResponse!(h, class)
-    end
-end
+# function hostWeightsResponse!(class::Class)
+#     for h in 1:length(class.hosts)
+#         hostWeightsResponse!(h, class)
+#     end
+# end
 
 function hostWeightsHost!(h::Int64, class::Class, evt::Int64)
     class.host_weights[evt, h] = 1.0
@@ -207,17 +211,17 @@ function hostWeightsHost!(h::Int64, class::Class, evt::Int64)
     end
 end
 
-function hostWeightsHost!(h::Int64, class::Class)
-    for evt in HOST_EVENTS
-        hostWeightsHost!(h, class, evt)
-    end
-end
+# function hostWeightsHost!(h::Int64, class::Class)
+#     for evt in HOST_EVENTS
+#         hostWeightsHost!(h, class, evt)
+#     end
+# end
 
-function hostWeightsHost!(class::Class)
-    for h in 1:length(class.hosts)
-        hostWeightsHost!(h, class)
-    end
-end
+# function hostWeightsHost!(class::Class, population::Population)
+#     for h in 1:length(class.hosts)
+#         hostWeightsHost!(h, class)
+#     end
+# end
 
 function hostWeightsReceive!(h::Int64, class::Class, evt::Int64)
     class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] = 1.0
@@ -258,26 +262,26 @@ function hostWeightsReceive!(h::Int64, class::Class, evt::Int64)
     end
 end
 
-function hostWeightsReceive!(h::Int64, class::Class)
-    for evt in CHOICE_MODIFIERS[begin:end-1] # excludes intrahost fitness
-        hostWeightsReceive!(h, class, evt)
-    end
-end
+# function hostWeightsReceive!(h::Int64, class::Class)
+#     for evt in CHOICE_MODIFIERS[begin:end-1] # excludes intrahost fitness
+#         hostWeightsReceive!(h, class, evt)
+#     end
+# end
 
-function hostWeightsReceive!(class::Class)
-    for h in 1:length(class.hosts)
-        hostWeightsReceive!(h, class)
-    end
-end
+# function hostWeightsReceive!(class::Class)
+#     for h in 1:length(class.hosts)
+#         hostWeightsReceive!(h, class)
+#     end
+# end
 
 function hostWeights!(host_idx::Int64, class::Class, population::Population, model::Model)
     pathogenFractions!(class.hosts[host_idx])
-    pathogenWeights!(class.hosts[host_idx], class)
-    responseWeights!(class.hosts[host_idx], class)
+    pathogenWeights!(host_idx, class)
+    responseWeights!(host_idx, class)
     prev = 0.0
     for weight in PATHOGEN_EVENTS
         prev = class.host_weights[weight]
-        hostWeightsPathogen!(host_idx, class, weight)
+        # hostWeightsPathogen!(host_idx, class, weight)
         if prev != class.host_weights[weight]
             propagateWeightChanges!(
                 class.parameters.base_coefficients[weight] * (class.host_weights[weight] - prev),
@@ -287,7 +291,7 @@ function hostWeights!(host_idx::Int64, class::Class, population::Population, mod
     end
     for weight in RESPONSE_EVENTS
         prev = class.host_weights[weight]
-        hostWeightsResponse!(host_idx, class, weight)
+        # hostWeightsResponse!(host_idx, class, weight)
         if prev != class.host_weights[weight]
             propagateWeightChanges!(
                 class.parameters.base_coefficients[weight] * (class.host_weights[weight] - prev),
@@ -320,82 +324,82 @@ end
 
 # Intra-Population level
 
-function classWeights!(population::Population)
-    for evt in EVENTS
-        for c in 1:length(population.classes)
-            population.class_weights[evt, c] =
-                sum(@views population.classes[c].host_weights[evt, :]) *
-                population.classes[c].parameters.base_coefficients[evt]
-        end
-    end
-end
+# function classWeights!(population::Population)
+#     for evt in EVENTS
+#         for c in 1:length(population.classes)
+#             population.class_weights[evt, c] =
+#                 sum(@views population.classes[c].host_weights[evt, :]) *
+#                 population.classes[c].parameters.base_coefficients[evt]
+#         end
+#     end
+# end
 
-function classWeightsReceive!(population::Population)
-    for evt in CHOICE_MODIFIERS[begin:end-2]
-        for c in 1:length(population.classes)
-            population.class_weights_receive[evt-CHOICE_MODIFIERS[1]+1, c] =
-                sum(@views population.classes[c].host_weights_receive[evt, :]) *
-                population.classes[c].parameters.base_coefficients[evt]
-        end
-    end
-end
+# function classWeightsReceive!(population::Population)
+#     for evt in CHOICE_MODIFIERS[begin:end-2]
+#         for c in 1:length(population.classes)
+#             population.class_weights_receive[evt-CHOICE_MODIFIERS[1]+1, c] =
+#                 sum(@views population.classes[c].host_weights_receive[evt, :]) *
+#                 population.classes[c].parameters.base_coefficients[evt]
+#         end
+#     end
+# end
 
 # Intra-Model (Population) level
 
-function populationWeights!(model::Model)
-    for evt in EVENTS
-        for p in 1:length(model.populations)
-            model.population_weights[evt, p] = sum(@views model.populations[p].class_weights[evt, :])
-        end
-    end
-end
+# function populationWeights!(model::Model)
+#     for evt in EVENTS
+#         for p in 1:length(model.populations)
+#             model.population_weights[evt, p] = sum(@views model.populations[p].class_weights[evt, :])
+#         end
+#     end
+# end
 
-function populationWeightsReceive!(model::Model)
-    for evt in CHOICE_MODIFIERS[begin:end-2]
-        for p in 1:length(model.populations)
-            model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, p] =
-                sum(@views model.populations[p].class_weights_receive[evt, :])
-        end
-    end
-end
+# function populationWeightsReceive!(model::Model)
+#     for evt in CHOICE_MODIFIERS[begin:end-2]
+#         for p in 1:length(model.populations)
+#             model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, p] =
+#                 sum(@views model.populations[p].class_weights_receive[evt, :])
+#         end
+#     end
+# end
 
 # Intra-Model (Event) level
 
-function rates!(model::Model)
-    for evt in EVENTS
-        model.event_rates[evt] = sum([
-            model.population_weights[evt, p]
-            #TODO: This loop has to be a switch with a case for every event type computing the rate the correct way
-            for p in 1:length(model.populations)
-        ])
-    end
-end
+# function rates!(model::Model)
+#     for evt in EVENTS
+#         model.event_rates[evt] = sum([
+#             model.population_weights[evt, p]
+#             #TODO: This loop has to be a switch with a case for every event type computing the rate the correct way
+#             for p in 1:length(model.populations)
+#         ])
+#     end
+# end
 
 # Rate calculation:
 
-function setRates!(host::Host, class::Class)
-    pathogenFractions!(host, class)
-    responseWeights!(host, class)
-    pathogenWeights!(host, class)
-end
+# function setRates!(host::Host, class::Class)
+#     pathogenFractions!(host, class)
+#     responseWeights!(host, class)
+#     pathogenWeights!(host, class)
+# end
 
-function setRates!(class::Class)
-    hostWeightsPathogen!(class)
-    hostWeightsResponse!(class)
-    hostWeightsHost!(class)
-    hostWeightsReceive!(class)
-end
+# function setRates!(class::Class)
+#     hostWeightsPathogen!(class)
+#     hostWeightsResponse!(class)
+#     hostWeightsHost!(class)
+#     hostWeightsReceive!(class)
+# end
 
-function setRates!(population::Population)
-    classWeights!(population)
-    classWeightsReceive!(population)
-end
+# function setRates!(population::Population)
+#     classWeights!(population)
+#     classWeightsReceive!(population)
+# end
 
-function setRates!(model::Model)
-    populationWeights!(model)
-    populationWeightsReceive!(model)
-    rates!(model)
-end
+# function setRates!(model::Model)
+#     populationWeights!(model)
+#     populationWeightsReceive!(model)
+#     rates!(model)
+# end
 
 # Weight change propagation:
 
@@ -403,6 +407,7 @@ function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, popu
     model.population_weights[:, model.population_dict[population.id]] .+= change[begin:NUM_EVENTS]
     model.population_weights_receive[:, model.population_dict[population.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-3]
 
+    model.population_weights_receive_sums .+= change[end-NUM_CHOICE_MODIFIERS+1:end-3]
     model.event_rates .+= change[begin:NUM_EVENTS]
 end
 
@@ -441,6 +446,8 @@ end
 
 function propagateWeightReceiveChanges!(change::Float64, population::Population, evt::Int64, model::Model)
     model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] += change
+
+    model.population_weights_receive_sums[evt-CHOICE_MODIFIERS[1]+1] += change
 end
 
 function propagateWeightReceiveChanges!(change::Float64, class::Class, population::Population, evt::Int64, model::Model)

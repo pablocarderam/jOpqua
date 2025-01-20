@@ -2,6 +2,7 @@ using Revise
 using jOpqua
 
 using StaticArrays
+using Random
 
 # Parameters
 pa_type = jOpqua.PathogenType(
@@ -58,8 +59,15 @@ host = jOpqua.newHost!(class, pop, model)
 pat = jOpqua.newPathogen!("ATCG", class, pa_type)
 res = jOpqua.newResponse!(pat, pat, (0,0), class, re_type)
 
-jOpqua.addPathogenToHost!(pat, host, class, pop, model)
-jOpqua.addResponseToHost!(res, host, class, pop, model)
+jOpqua.addPathogenToHost!(pat, 1, class, pop, model)
+jOpqua.addResponseToHost!(res, 1, class, pop, model)
 
-jOpqua.removePathogenFromHost!(1, host, class, pop, model)
-jOpqua.removeResponseFromHost!(1, host, class, pop, model)
+jOpqua.removePathogenFromHost!(1, 1, class, pop, model)
+jOpqua.removeResponseFromHost!(1, 1, class, pop, model)
+
+jOpqua.choosePathogen(1, 1, 1, 1, model, rand())
+jOpqua.chooseResponse(1, 1, 1, 7, model, rand())
+jOpqua.chooseHost(1, 1, 7, model, rand())
+jOpqua.chooseClass(1, 7, model, rand())
+jOpqua.choosePopulation(7, model, rand())
+jOpqua.chooseEvent(model, rand())

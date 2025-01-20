@@ -110,5 +110,9 @@ mutable struct Model
     population_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-3 x POPULATIONS; -3 excludes intrahost fitness, host receive contact rates, and class change
 
+    population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS-3,Float64}
+    # size NUM_CHOICE_MODIFIERS-3; -3 excludes intrahost fitness, host receive contact rates, and class change
+
     event_rates::MVector{NUM_EVENTS,Float64}
+    event_rates_sum::Float64
 end

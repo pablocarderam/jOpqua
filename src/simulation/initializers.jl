@@ -34,11 +34,10 @@ function newHost!(class::Class, population::Population, model::Model)
     class.host_weights_receive = catCol(class.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
     propagateWeightChanges!(
-        SVector{NUM_COEFFICIENTS,Float64}(
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        START_COEFFICIENTS
         # class change, inter-population contact and migration numbers per class or
         # population are fractions that sum to one, so no need to account for in here
-        ), length(class.hosts), class, population, model
+        , length(class.hosts), class, population, model
     )
 
     return class.hosts[end]
@@ -81,6 +80,8 @@ function newModel()
         Dict{String,Int64}(),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 3, 0),
-        zeros(SVector{jOpqua.NUM_EVENTS,Float64}),
+        zeros(SVector{NUM_CHOICE_MODIFIERS - 3,Float64}),
+        zeros(SVector{NUM_EVENTS,Float64}),
+        0.0
     )
 end

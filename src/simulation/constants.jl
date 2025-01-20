@@ -60,3 +60,10 @@ const NUM_CHOICE_MODIFIERS = length(CHOICE_MODIFIERS)
 
 const COEFFICIENTS = SA[EVENTS..., CHOICE_MODIFIERS...]
 const NUM_COEFFICIENTS = length(COEFFICIENTS)
+
+# Starter coefficients
+const START_COEFFICIENTS = SVector{NUM_COEFFICIENTS,Float64}(
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+# class change, inter-population contact and migration numbers per class or
+# population are fractions that sum to one, so no need to account for in here
+)
