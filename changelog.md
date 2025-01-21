@@ -1,5 +1,12 @@
 # jOpqua Changelog
 
+## 21 January 2025
+- Some simple syntax debugging in events functions
+- Important debugging in hostWeights computation, some weight matrix indexes were
+missing and weight changes for propagation were not computed correctly for pathogen
+and response events
+- Make populations retain `RECEIVE_CONTACT` weights in `class_weights`
+
 ## 20 January 2025
 - Rename `acquireResponse` to `developResponse` to avoid ambiguity about when a
 `Response` is actually added to a `Host`

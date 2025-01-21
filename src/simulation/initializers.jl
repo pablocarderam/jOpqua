@@ -51,7 +51,7 @@ function newClass!(id::String, parameters::ClassParameters, population::Populati
     ))
     population.class_dict[id] = length(population.classes)
     population.class_weights = catCol(population.class_weights, zeros(Float64, NUM_EVENTS))
-    population.class_weights_receive = catCol(population.class_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 2))
+    population.class_weights_receive = catCol(population.class_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
     return population.classes[end]
 end
@@ -62,7 +62,7 @@ function newPopulation!(id::String, model::Model)
         Vector{Class}(undef, 0),
         Dict{String,Int64}(),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
-        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 2, 0),
+        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))
