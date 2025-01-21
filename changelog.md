@@ -14,6 +14,9 @@ probability that a `Host` is immune to a specific infecting `Pathogen` thanks to
 a `Response` of this type
 - Changed `intraPopulationContact!` to check for immunity with `immunityProbability`
 before adding a `Pathogen`
+- Fix weight/rate computation to modify rate sum (wasn't happening)
+- Replaced `sample()` with `chooseRandom()` in `intraPopulationContact`, Connor
+benchmarked and said it was ~5X faster??
 
 ## 20 January 2025
 - Rename `acquireResponse` to `developResponse` to avoid ambiguity about when a

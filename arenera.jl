@@ -74,6 +74,10 @@ for h in 1:num_immune
     jOpqua.addResponseToHost!(pat, h, class, pop, model)
 end
 
+t_vec = collect(0.0:10.0)
+
+jOpqua.simulate!(model, t_vec)
+
 jOpqua.establishMutant!(model, rand())
 
 # jOpqua.removePathogenFromHost!(1, 1, class, pop, model)
