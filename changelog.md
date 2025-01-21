@@ -6,6 +6,14 @@
 missing and weight changes for propagation were not computed correctly for pathogen
 and response events
 - Make populations retain `RECEIVE_CONTACT` weights in `class_weights`
+- Added `immunity.jl` to contain functions to simulate immune responses using
+`Response` elements, added `immunityProbability` as a function that computes
+probability that a `Host` is immune to a specific infecting `Pathogen`
+- Added `immunityProbability` field to `ResponseType` that computes the
+probability that a `Host` is immune to a specific infecting `Pathogen` thanks to
+a `Response` of this type
+- Changed `intraPopulationContact!` to check for immunity with `immunityProbability`
+before adding a `Pathogen`
 
 ## 20 January 2025
 - Rename `acquireResponse` to `developResponse` to avoid ambiguity about when a

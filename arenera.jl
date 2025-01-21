@@ -33,6 +33,7 @@ re_type = jOpqua.ResponseType(
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
     ],
+    (imp_g, mat_g, pat_g)->1.0
 )
 
 class_parameters = jOpqua.ClassParameters(

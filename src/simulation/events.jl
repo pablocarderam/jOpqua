@@ -209,11 +209,16 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
                         model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx] in
                         model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens)
 
-                        addPathogenToHost!(
-                            model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                            host_idx_2, model.populations[pop_idx].classes[class_idx_2],
-                            model.populations[pop_idx], model
-                        )
+                        if rand() > immunityProbability( # we use > because < implies immunity
+                                model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                                model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2])
+
+                            addPathogenToHost!(
+                                model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                                host_idx_2, model.populations[pop_idx].classes[class_idx_2],
+                                model.populations[pop_idx], model
+                            )
+                        end
                     end
                 end
                 for _ in 1:num_mut
@@ -222,7 +227,12 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
                         model.populations[pop_idx].classes[class_idx_1]
                     )
 
-                    if !(mut in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens)
+                    if ( ! (
+                            mut in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
+                            ) ) && rand() > immunityProbability( # we use > because < implies immunity
+                                mut, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
+                            )
+
                         addPathogenToHost!(
                             mut, host_idx_2,
                             model.populations[pop_idx].classes[class_idx_2],
@@ -233,14 +243,21 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
                 for _ in 1:num_rec
                     p_idx_2 = choosePathogen(host_idx_1, class_idx_1, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
 
-                    if p_idx != p_idx_2 && model.populations[pop_idx].classes[class_idx_1].host[host_idx_1].pathogen[p_idx].type == model.populations[pop_idx].classes[class_idx_1].host[host_idx_1].pathogen[p_idx_2].type
+                    if p_idx != p_idx_2 && (
+                            model.populations[pop_idx].classes[class_idx_1].host[host_idx_1].pathogen[p_idx].type ==
+                            model.populations[pop_idx].classes[class_idx_1].host[host_idx_1].pathogen[p_idx_2].type )
+
                         recombinant = recombinantPathogens!(
                             model.populations[pop_idx].classes[class_idx_1].host[host_idx_1].pathogen[p_idx],
                             model.populations[pop_idx].classes[class_idx_1].host[host_idx_1].pathogen[p_idx_2],
                             model.populations[pop_idx].classes[class_idx_1]
                         )
 
-                        if !(recombinant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens)
+                        if ( ! (
+                            recombinant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
+                            ) ) && rand() > immunityProbability( # we use > because < implies immunity
+                                recombinant, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
+                            )
                             addPathogenToHost!(
                                 recombinant, host_idx_2,
                                 model.populations[pop_idx].classes[class_idx_2],
@@ -261,7 +278,11 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
 
                         recombinant_mutant = mutantPathogen!(recombinant, model.populations[pop_idx].classes[class_idx_1])
 
-                        if !(recombinant_mutant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens)
+                        if ( ! (
+                            recombinant_mutant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
+                            ) ) && rand() > immunityProbability( # we use > because < implies immunity
+                                recombinant_mutant, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
+                            )
                             addPathogenToHost!(
                                 recombinant_mutant, host_idx_2,
                                 model.populations[pop_idx].classes[class_idx_2],
