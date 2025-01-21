@@ -5,6 +5,8 @@ struct PathogenType
 
     num_loci::Int64
     possible_alleles::String
+    mean_recombination_crossovers::Int64
+    mean_effective_inoculum::Float64
 
     coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
 end
@@ -27,21 +29,20 @@ struct ClassParameters
 
     pathogen_types::Dict{String,PathogenType}
     response_types::Dict{String,ResponseType}
-    acquireResponses::Function # takes in Pathogen, Host, Class as arguments, returns Response objects to be added
+    developResponses::Function # takes in Pathogen, Host, Class as arguments, returns Response objects to be added
     # (this handles how many and which responses to choose when adding a response to a host)
-
+    #TODO: maybe doesn't need Class? Probably does to ensure responses don't already exist
 end
 
 struct Pathogen
-    id::Int64
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
     type::PathogenType
 end
 
 struct Response
-    id::Tuple{Int64,Int64} #TODO: this is redundant and unnecessary I think
-    parent::Tuple{Int64,Int64} # This is only useful for response lineage tracing, but not the simulation?
+    parent::Tuple{String,String,String} # imprinted genome, matured genome, type ID
+    # This is only useful for response lineage tracing, but not the simulation?
     imprinted_pathogen::Pathogen # This will track the Pathogen imprinted in the naive response
     matured_pathogen::Pathogen
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
@@ -70,11 +71,10 @@ mutable struct Class
     id::String
     parameters::ClassParameters
 
-    pathogens::Dict{Int64,Pathogen}
-    responses::Dict{Tuple{Int64,Int64},Response}
+    pathogens::Dict{String,Pathogen}
+    responses::Dict{Tuple{String,String,String},Response}
+    # keys are tuples of imprinted genome, matured genome, type ID
     hosts::Vector{Host} # size MAX_HOSTS
-
-    pathogens_idx::Int64
 
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
     host_weights_receive::Matrix{Float64}
@@ -92,14 +92,6 @@ mutable struct Population
     class_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-2 x CLASSES; -2 excludes intrahost fitness, host receive contact rates
 end
-
-# struct Model
-#     id::Int64
-#     populations::MVector{POPULATIONS,Population}
-#     pathogen_rates::MVector{POPULATIONS,Float64}
-#     response_rates::MVector{POPULATIONS,Float64}
-#     host_rates::MVector{POPULATIONS,Float64}
-# end
 
 mutable struct Model
     populations::Vector{Population} # size POPULATIONS

@@ -1,5 +1,30 @@
 # jOpqua Changelog
 
+## 20 January 2025
+- Rename `acquireResponse` to `developResponse` to avoid ambiguity about when a
+`Response` is actually added to a `Host`
+- Added a quasi zero-truncated Poisson distribution function as used in Python Opqua;
+worth looking into whether an actual zero-truncated Poisson is preferrable
+- Added `num_recombination_crossovers` and `mean_effective_inoculum` parameters to
+`PathogenType`
+(as an aside, I have decided to use Poisson distributions to model inoculum size
+rather than negative binomials for simplicity and due to the fact that the increased
+variability in mean inoculum size seen in Sobel Leonard _et al._ (2017) may have been
+inflated due to the technical contaminations in Poon _et al._ (2016),
+(https://doi.org/10.1128/jvi.00936-19)[https://doi.org/10.1128/jvi.00936-19])
+- Change `pathogens` dictionary in `Class` to use genomes as keys and
+correspondingly changed `responses` dictionary to use tuples of genomes as keys;
+removed `id` field from both `Pathogen` and `Response` and `pathogens_idx` from
+`Class`
+- Rename `RECOMBINATION` event as `RECOMBINANT_ESTABLISHMENT`, rename
+`MUTATION_AT_CONTACT` as `MUTATION_PER_REPLICATION`, add a new event choice
+coefficient `RECOMBINATION_PER_REPLICATION`
+- Added `binomial()` to generate binomial random numbers, faster than
+`Distributions.jl`
+- Added event functions for mutant establishment, pathogen clearance, response
+acquisition, recombinant establishment, and intra-population contact--debugging
+needed for these
+
 ## 19 January 2025
 - Changed `pathogens` and `responses` vectors in `Class` to be dictionaries instead,
 with keys corresponding to the assigned `Pathogen` integer code in the case of

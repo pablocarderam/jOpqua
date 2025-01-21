@@ -1,22 +1,26 @@
 function randChoose(rand_n::Float64, rates, rates_sum::Float64; regenerate_rand::Bool=false)
-        #TODO: rates is not type defined to accommodate @views, maybe this is bad
-    norm_rand_n = rand_n * rates_sum
-    cum_sum = 0.0
-    idx = 0
-    chosen_rate = 0
-    for r in rates
-        idx += 1
-        cum_sum += r
-        chosen_rate = r
-        if cum_sum > norm_rand_n
-            break
+        #TODO: rates is not type-defined to accommodate @views, maybe this is bad
+    if rates_sum > 0
+        norm_rand_n = rand_n * rates_sum
+        cum_sum = 0.0
+        idx = 0
+        chosen_rate = 0.0
+        for r in rates
+            idx += 1
+            cum_sum += r
+            chosen_rate = r
+            if cum_sum > norm_rand_n
+                break
+            end
         end
-    end
 
-    if regenerate_rand
-        return idx, (norm_rand_n - cum_sum + chosen_rate) / chosen_rate
+        if regenerate_rand
+            return idx, (norm_rand_n - cum_sum + chosen_rate) / chosen_rate
+        else
+            return idx, 0.0
+        end
     else
-        return idx, 0.0
+        return NaN, rand_n
     end
 end
 
@@ -42,7 +46,6 @@ end
 
 function chooseHost(class_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     if weight > NUM_EVENTS
-        println(weight)
         return randChoose(
             rand_n,
             @views(model.populations[population_idx].classes[class_idx].host_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]) .*
@@ -104,4 +107,37 @@ function chooseEvent(model::Model, rand_n::Float64)
         model.event_rates_sum,
         regenerate_rand=true
     )
+end
+
+function choosePathogen(weight::Int64, model::Model, rand_n::Float64)
+    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
+    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
+    host_idx,rand_n = chooseHost(class_idx, pop_idx, weight, model, rand_n)
+    pathogen_idx,rand_n = choosePathogen(host_idx, class_idx, pop_idx, weight, model, rand_n)
+
+    return pathogen_idx, host_idx, class_idx, pop_idx, rand_n
+end
+
+function chooseResponse(weight::Int64, model::Model, rand_n::Float64)
+    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
+    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
+    host_idx,rand_n = chooseHost(class_idx, pop_idx, weight, model, rand_n)
+    response_idx,rand_n = chooseResponse(host_idx, class_idx, pop_idx, weight, model, rand_n)
+
+    return response_idx, host_idx, class_idx, pop_idx, rand_n
+end
+
+function chooseHost(weight::Int64, model::Model, rand_n::Float64)
+    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
+    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
+    host_idx,rand_n = chooseHost(class_idx, pop_idx, weight, model, rand_n)
+
+    return host_idx, class_idx, pop_idx, rand_n
+end
+
+function chooseClass(weight::Int64, model::Model, rand_n::Float64)
+    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
+    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
+
+    return class_idx, pop_idx, rand_n
 end
