@@ -66,7 +66,6 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, class
 end
 
 function addPathogenToHost!(pathogen::Pathogen, host_idx::Int64, class::Class, population::Population, model::Model)
-    println(("Adding",pathogen.sequence,host_idx))
     push!(class.hosts[host_idx].pathogens, pathogen)
     push!(class.hosts[host_idx].pathogen_fractions, 0.0)
     class.hosts[host_idx].pathogen_weights = catCol(
@@ -172,8 +171,8 @@ end
 
 function intraPopulationContact!(model::Model, rand_n::Float64)
     host_idx_1, class_idx_1, pop_idx, rand_n = chooseHost(INTRA_POPULATION_CONTACT, model, rand_n)
-    class_idx_2, rand_n = chooseClass(pop_idx, INTRA_POPULATION_CONTACT, model, rand_n)
-    host_idx_2, rand_n = chooseHost(class_idx_2, pop_idx, INTRA_POPULATION_CONTACT, model, rand_n)
+    class_idx_2, rand_n = chooseClass(pop_idx, RECEIVE_CONTACT, model, rand_n)
+    host_idx_2, rand_n = chooseHost(class_idx_2, pop_idx, RECEIVE_CONTACT, model, rand_n)
 
     if host_idx_1 != host_idx_2 || class_idx_1 != class_idx_2
         inocula = MVector{length(model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens)}([

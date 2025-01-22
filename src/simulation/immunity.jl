@@ -1,25 +1,29 @@
 function infectionProbability(pathogen::Pathogen, host::Host)
     # reactivity-weighted arithmetic mean of infection coefficients
-    reac_sum = 0.0
-    numerator_sum = 0.0
-    for response in host.responses
-        reac_sum += response.type.reactivityCoefficient(
-            response.imprinted_pathogen.sequence,
-            response.matured_pathogen.sequence,
-            pathogen.sequence
-        )
-        numerator_sum += response.type.reactivityCoefficient(
-            response.imprinted_pathogen.sequence,
-            response.matured_pathogen.sequence,
-            pathogen.sequence
-        ) * response.type.infectionCoefficient(
-            response.imprinted_pathogen.sequence,
-            response.matured_pathogen.sequence,
-            pathogen.sequence
-        )
-    end
+    if length(host.responses) > 0
+        reac_sum = 0.0
+        numerator_sum = 0.0
+        for response in host.responses
+            reac_sum += response.type.reactivityCoefficient(
+                response.imprinted_pathogen.sequence,
+                response.matured_pathogen.sequence,
+                pathogen.sequence
+            )
+            numerator_sum += response.type.reactivityCoefficient(
+                response.imprinted_pathogen.sequence,
+                response.matured_pathogen.sequence,
+                pathogen.sequence
+            ) * response.type.infectionCoefficient(
+                response.imprinted_pathogen.sequence,
+                response.matured_pathogen.sequence,
+                pathogen.sequence
+            )
+        end
 
-    return numerator_sum / reac_sum
+        return numerator_sum / reac_sum
+    else
+        return 1.0
+    end
 
     # # different algorithm reactivity-weighted arithmetic mean of infection coefficients
     # return sum([

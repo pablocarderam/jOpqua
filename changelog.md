@@ -1,5 +1,12 @@
 # jOpqua Changelog
 
+## 22 January 2025
+- Make `Class`, `Population`, and `Model` receive weight matrices include weights
+for all coefficients except for fitness
+- Change `intraPopulationContact!` such that host 2 is sampled using receive
+contact coefficients (instead of intrapopulation contact coefficients)
+- Minor debug in `hostWeightsReceive!`, missing a couple lines
+
 ## 21 January 2025
 - Some simple syntax debugging in events functions
 - Important debugging in hostWeights computation, some weight matrix indexes were

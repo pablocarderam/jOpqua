@@ -17,7 +17,7 @@ function newResponse!(
         type
     )
 
-    return class.responses[(imprinted_pathogen.sequence,matured_pathogen.sequence,type.id)]
+    return class.responses[(imprinted_pathogen.sequence, matured_pathogen.sequence, type.id)]
 end
 
 function newHost!(class::Class, population::Population, model::Model)
@@ -66,7 +66,7 @@ function newPopulation!(id::String, model::Model)
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))
-    model.population_weights_receive = catCol(model.population_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 3))
+    model.population_weights_receive = catCol(model.population_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
     return model.populations[end]
 end
@@ -76,8 +76,8 @@ function newModel()
         Vector{Population}(undef, 0),
         Dict{String,Int64}(),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
-        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 3, 0),
-        zeros(SVector{NUM_CHOICE_MODIFIERS - 3,Float64}),
+        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
+        zeros(SVector{NUM_CHOICE_MODIFIERS - 1,Float64}),
         zeros(SVector{NUM_EVENTS,Float64}),
         0.0
     )

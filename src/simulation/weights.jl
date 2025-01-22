@@ -159,7 +159,7 @@ function pathogenWeights!(p::Int64, host::Host, evt::Int64)
         # instead, we assume the rate of loss compounds
         # (could be inversely proportional to fraction?)
         host.pathogen_weights[evt, p] = host.pathogen_weights[evt, p] #/
-            # length(host.pathogens)
+    # length(host.pathogens)
     elseif evt == RECOMBINANT_ESTABLISHMENT && length(host.pathogens) < 2
         # if nobody to recombine with, no recombinatioin happens
         host.pathogen_weights[evt, p] = 0.0
@@ -273,8 +273,9 @@ function hostWeightsReceive!(h::Int64, class::Class, evt::Int64)
                     # we weight by pathogen fraction as above
                     class.hosts[h].pathogen_fractions[p] *
                     weightedResponse(
-                        host.pathogens[p], class.hosts[h], evt
+                        class.hosts[h].pathogens[p], class.hosts[h], evt
                     )
+                    for p in 1:length(class.hosts[h].pathogens)
                 ])
         end
     end
@@ -347,9 +348,9 @@ end
 
 function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, population::Population, model::Model)
     model.population_weights[:, model.population_dict[population.id]] .+= change[begin:NUM_EVENTS]
-    model.population_weights_receive[:, model.population_dict[population.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-3]
+    model.population_weights_receive[:, model.population_dict[population.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
 
-    model.population_weights_receive_sums .+= change[end-NUM_CHOICE_MODIFIERS+1:end-3]
+    model.population_weights_receive_sums .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
     model.event_rates .+= change[begin:NUM_EVENTS]
     model.event_rates_sum += sum(change[begin:NUM_EVENTS])
 end
