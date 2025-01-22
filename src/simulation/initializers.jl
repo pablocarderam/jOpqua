@@ -2,7 +2,11 @@ using StaticArrays
 
 function newPathogen!(sequence::String, class::Class, type::PathogenType)
     class.pathogens[sequence] = Pathogen(
-        sequence, pathogenSequenceCoefficients(sequence, type), type
+        sequence, pathogenSequenceCoefficients(sequence, type),
+        type.mean_effective_inoculum * type.inoculumCoefficient(sequence),
+        type.mean_mutations_per_replication * type.mutationCoefficient(sequence),
+        type.mean_recombination_crossovers * type.recombinationCoefficient(sequence),
+        type
     )
 
     return class.pathogens[sequence]

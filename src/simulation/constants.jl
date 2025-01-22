@@ -25,17 +25,14 @@ const CLASS_CHANGE = 10
 const MIGRATION = 11
 
 # Choice modifiers, zooming in in scale (order matters)
-# Event choice
-const RECOMBINATION_PER_REPLICATION = 12
-const MUTATION_PER_REPLICATION = 13
 # Population choice
-const RECEIVE_MIGRATION = 14
+const RECEIVE_MIGRATION = 12
 # Class choice
-const RECEIVE_CLASS_CHANGE = 15
+const RECEIVE_CLASS_CHANGE = 13
 # Host choice
-const RECEIVE_CONTACT = 16
+const RECEIVE_CONTACT = 14
 # Pathogen choice
-const INTRAHOST_FITNESS = 17
+const INTRAHOST_FITNESS = 15
 
 # Global trackers
 const PATHOGEN_EVENTS = SA[
@@ -54,8 +51,7 @@ const EVENTS = SA[PATHOGEN_EVENTS..., RESPONSE_EVENTS..., HOST_EVENTS...]
 const NUM_EVENTS = length(EVENTS)
 
 const CHOICE_MODIFIERS = SA[
-    RECOMBINATION_PER_REPLICATION, MUTATION_PER_REPLICATION, RECEIVE_MIGRATION,
-    RECEIVE_CLASS_CHANGE, RECEIVE_CONTACT, INTRAHOST_FITNESS
+    RECEIVE_MIGRATION, RECEIVE_CLASS_CHANGE, RECEIVE_CONTACT, INTRAHOST_FITNESS
 ]
 const NUM_CHOICE_MODIFIERS = length(CHOICE_MODIFIERS)
 
@@ -64,7 +60,7 @@ const NUM_COEFFICIENTS = length(COEFFICIENTS)
 
 # Starter coefficients
 const START_COEFFICIENTS = SVector{NUM_COEFFICIENTS,Float64}(
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]
 # class change, inter-population contact and migration numbers per class or
 # population are fractions that sum to one, so no need to account for in here
 )

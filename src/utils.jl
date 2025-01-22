@@ -6,7 +6,7 @@ catCol(a, b) = reshape(append!(vec(a), vec(b)), size(a)[1:end-1]..., :)
 zeroTruncatedPoisson(rate) = 1.0 + pois_rand(rate - 1.0)
 # this is a hack of what possibly should be done
 # (but also maybe this is correct and I just shouldn't call it a
-# zero-truncated Poisson at all, I have to think)
+# zero-truncated Poisson at all, I have to think #TODO:)
 # https://en.wikipedia.org/wiki/Zero-truncated_Poisson_distribution
 
 function binomial(n::Integer, p::Real)

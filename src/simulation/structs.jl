@@ -5,10 +5,15 @@ struct PathogenType
 
     num_loci::Int64
     possible_alleles::String
-    mean_recombination_crossovers::Int64
+
     mean_effective_inoculum::Float64
+    mean_mutations_per_replication::Float64
+    mean_recombination_crossovers::Int64
 
     coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+    inoculumCoefficient::Function # takes seq argument, returns Float64
+    mutationCoefficient::Function # takes seq argument, returns Float64
+    recombinationCoefficient::Function # takes seq argument, returns Float64
 end
 
 struct ResponseType
@@ -39,6 +44,9 @@ end
 struct Pathogen
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
+    mean_effective_inoculum::Float64
+    mean_mutations_per_replication::Float64
+    mean_recombination_crossovers::Float64
     type::PathogenType
 end
 

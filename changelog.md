@@ -6,6 +6,23 @@ for all coefficients except for fitness
 - Change `intraPopulationContact!` such that host 2 is sampled using receive
 contact coefficients (instead of intrapopulation contact coefficients)
 - Minor debug in `hostWeightsReceive!`, missing a couple lines
+- Created `attemptInfection` function to handle checking for infection likelihod,
+etc. before successfully adding a `Pathogen` to a `Host` so that it can be
+called by `intraPopulationContact`, `interPopulationContact`, `establishMutant`,
+`establishRecombinant`, and `birth` (if there is vertical transmission)
+- Move `RECOMBINATION_PER_REPLICATION` and `MUTATION_PER_REPLICATION`
+to named fields of `PathogenType`, add corresponding coefficient functions (and a
+function for effective inoculum), make corresponding fields within `Pathogen`;
+don't bother with the specific or static coefficient functions  in `Response`,
+they don't matter; considered moving fitness to a separate field too but because
+fitness is actually used in sampling, this is incorrect (rationale is the other
+two coefficients are not used to sample entities)
+- Changed computation of mutation and recombination probability during
+transmission to be based on Poisson process means
+- Moved contact algorithm into its own function to be called by
+`intraPopulationContact` and `interPopulationContact` with a parameter specifying
+whether or not to resample populations (#TODO: sampling of population 2 needs to be
+done according to contact rates from population 1)
 
 ## 21 January 2025
 - Some simple syntax debugging in events functions

@@ -9,14 +9,15 @@ pa_type = jOpqua.PathogenType(
     "pa_type",
     10,
     "ARNDCEQGHILKMFPSTWYV*",
-    0,
     1.0,
+    0.0,
+    0.0,
     SA[ # pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
         g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
         g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
         g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0, g->1.0,
     ],
+    g->1.0, g->1.0, g->1.0,
 )
 
 re_type = jOpqua.ResponseType(
@@ -25,13 +26,11 @@ re_type = jOpqua.ResponseType(
         (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
         (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
         (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
-        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
     ],
     SA[ # specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
-        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
     ],
     (imp_g, mat_g, pat_g)->1.0,
     (imp_g, mat_g, pat_g)->1.0,
@@ -42,8 +41,7 @@ class_parameters = jOpqua.ClassParameters(
     SA[ # base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
         0.0, 1.0, 0.0, 0.0, 1.0,
         0.0, 0.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0, 0.0,
-        1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0, 0.0,
     ],
     Dict(), # class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
     Dict(), # inter_population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
@@ -55,8 +53,8 @@ class_parameters = jOpqua.ClassParameters(
 
 # Model setup
 num_populations = 1
-num_hosts = 10
-num_infected = 5
+num_hosts = 1000
+num_infected = Int(num_hosts * 0.5)
 num_immune = 0
 
 model = jOpqua.newModel()

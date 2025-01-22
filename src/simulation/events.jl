@@ -3,14 +3,11 @@ using StatsBase
 using PoissonRandom
 using Random
 
-# Basic actions
+# General actions
 
 function mutantPathogen!(pathogen::Pathogen, class::Class)
     loci = rand(
-        1:pathogen.type.num_loci, zeroTruncatedPoisson(
-            class.parameters.base_coefficients[MUTATION_PER_REPLICATION] *
-            pathogen.coefficients[MUTATION_PER_REPLICATION]
-        )
+        1:pathogen.type.num_loci, zeroTruncatedPoisson(pathogen.mean_mutations_per_replication)
     )
     seq = ""
     for locus in loci
@@ -28,10 +25,10 @@ end
 function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, class::Class)
     children = MVector(pathogen_1.sequence, pathogen_2.sequence)
 
-    if pathogen_1.type.mean_recombination_crossovers > 0 && pathogen_2.type.mean_recombination_crossovers > 0
+    if pathogen_1.mean_recombination_crossovers > 0 && pathogen_2.mean_recombination_crossovers > 0
         num_evts = zeroTruncatedPoisson(mean(
-            pathogen_1.type.mean_recombination_crossovers,
-            pathogen_2.type.mean_recombination_crossovers
+            pathogen_1.mean_recombination_crossovers,
+            pathogen_2.mean_recombination_crossovers
         ))
         loci = rand(1:pathogen_1.type.num_loci, num_evts)
         for l in loci
@@ -99,6 +96,132 @@ function removeResponseFromHost!(response_idx::Int64, host_idx::Int64, class::Cl
     hostWeights!(host_idx, class, population, model)
 end
 
+function attemptInfection!(pathogen::Pathogen,
+        host_idx::Int64, class_idx::Int64, pop_idx::Int64, model::Model)
+    if !(
+        pathogen in
+        model.populations[pop_idx].classes[class_idx].hosts[host_idx].pathogens
+        ) &&
+        rand() < infectionProbability(
+            pathogen,
+            model.populations[pop_idx].classes[class_idx].hosts[host_idx]
+        )
+
+        addPathogenToHost!(
+            pathogen,
+            host_idx, model.populations[pop_idx].classes[class_idx],
+            model.populations[pop_idx], model
+        )
+    end
+end
+
+
+function hostContact!(model::Model, rand_n::Float64, same_population::Bool)
+    host_idx_1, class_idx_1, pop_idx_1, rand_n = chooseHost(INTRA_POPULATION_CONTACT, model, rand_n)
+    pop_idx_2 = pop_idx_1
+    if !same_population
+        pop_idx_2, rand_n = choosePopulation(RECEIVE_CONTACT, model, rand_n)
+        #TODO: this sampling needs to be done according to contact rates from pop1
+    end
+    class_idx_2, rand_n = chooseClass(pop_idx_2, RECEIVE_CONTACT, model, rand_n)
+    host_idx_2, rand_n = chooseHost(class_idx_2, pop_idx_2, RECEIVE_CONTACT, model, rand_n)
+
+    if host_idx_1 != host_idx_2 || class_idx_1 != class_idx_2 || pop_idx_1 != pop_idx_2
+        inocula = MVector{length(model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens)}([
+            pois_rand(
+                model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_effective_inoculum *
+                model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogen_fractions[p_idx]
+            )
+            for p_idx in 1:length(model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens)
+        ])
+        if !any(inocula .!= 0)
+            idx, rand_n = randChoose(
+                rand_n,
+                model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogen_fractions,
+                1.0, regenerate_rand=true
+            )
+            inocula[idx] += 1
+        end
+
+        for p_idx in eachindex(inocula)
+            if inocula[p_idx] > 0
+                mut_prob = min(
+                    1.0, 1.0-exp(
+                        -model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_mutations_per_replication
+                    )
+                )
+                # probability from Poisson PMF with k=0
+                rec_prob = 0.0
+                if length(model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens) > 1
+                    rec_prob = min(
+                        1.0, 1.0-exp(
+                            -model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_recombination_crossovers
+                        )
+                    )
+                    # probability from Poisson PMF with k=0
+                end
+                num_mut = binomial(inocula[p_idx], mut_prob * (1.0 - rec_prob))
+                num_rec = binomial(inocula[p_idx], rec_prob * (1.0 - mut_prob))
+                num_mut_rec = binomial(inocula[p_idx], mut_prob * rec_prob)
+                if inocula[p_idx] - num_mut - num_rec - num_mut_rec > 0
+                    attemptInfection!(
+                        model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                        host_idx_2, class_idx_2, pop_idx_2, model
+                    )
+                end
+                for _ in 1:num_mut
+                    attemptInfection!(
+                        mutantPathogen!(
+                            model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                            model.populations[pop_idx_1].classes[class_idx_1]
+                        ), host_idx_2, class_idx_2, pop_idx_2, model
+                    )
+                end
+                for _ in 1:num_rec
+                    p_idx_2 = choosePathogen(host_idx_1, class_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand_n)
+
+                    if p_idx != p_idx_2 && (
+                        model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].type ==
+                        model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx_2].type)
+
+                        attemptInfection!(
+                            recombinantPathogens!(
+                                model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                                model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx_2],
+                                model.populations[pop_idx_1].classes[class_idx_1]
+                            ), host_idx_2, class_idx_2, pop_idx_2, model
+                        )
+                    end
+                end
+                for _ in 1:num_mut_rec
+                    p_idx_2 = choosePathogen(host_idx_1, class_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand_n)
+
+                    if p_idx != p_idx_2
+                        recombinant = recombinantPathogens!(
+                            model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                            model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx_2],
+                            model.populations[pop_idx_1].classes[class_idx_1]
+                        )
+
+                        attemptInfection!(
+                            mutantPathogen!(recombinant, model.populations[pop_idx_1].classes[class_idx_1]),
+                            host_idx_2, class_idx_2, pop_idx_2, model
+                        )
+                    else
+                        attemptInfection!(
+                            mutantPathogen!(
+                                model.populations[pop_idx_1].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                                model.populations[pop_idx_1].classes[class_idx_1]
+                            ),
+                            host_idx_2, class_idx_2, pop_idx_2, model
+                        )
+                    end
+                end
+            end
+        end
+    end
+end
+
 # Model events
 
 function establishMutant!(model::Model, rand_n::Float64)
@@ -109,13 +232,7 @@ function establishMutant!(model::Model, rand_n::Float64)
         model.populations[pop_idx].classes[class_idx]
     )
 
-    if !(mut in model.populations[pop_idx].classes[class_idx].hosts[host_idx].pathogens)
-        addPathogenToHost!(
-            mut, host_idx,
-            model.populations[pop_idx].classes[class_idx],
-            model.populations[pop_idx], model
-        )
-    end
+    attemptInfection!(mut, host_idx, class_idx, pop_idx, model)
 end
 
 function clearPathogen!(model::Model, rand_n::Float64)
@@ -159,162 +276,20 @@ function establishRecombinant!(model::Model, rand_n::Float64)
             model.populations[pop_idx].classes[class_idx]
         )
 
-        if !(recombinant in model.populations[pop_idx].classes[class_idx].hosts[host_idx].pathogens)
-            addPathogenToHost!(
-                recombinant, host_idx,
-                model.populations[pop_idx].classes[class_idx],
-                model.populations[pop_idx], model
-            )
-        end
+        attemptInfection!(recombinant, host_idx, class_idx, pop_idx, model)
     end
 end
 
 function intraPopulationContact!(model::Model, rand_n::Float64)
-    host_idx_1, class_idx_1, pop_idx, rand_n = chooseHost(INTRA_POPULATION_CONTACT, model, rand_n)
-    class_idx_2, rand_n = chooseClass(pop_idx, RECEIVE_CONTACT, model, rand_n)
-    host_idx_2, rand_n = chooseHost(class_idx_2, pop_idx, RECEIVE_CONTACT, model, rand_n)
+    hostContact!(model, rand_n, true)
+end
 
-    if host_idx_1 != host_idx_2 || class_idx_1 != class_idx_2
-        inocula = MVector{length(model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens)}([
-            pois_rand(
-                model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].type.mean_effective_inoculum *
-                model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogen_fractions[p_idx]
-            )
-            for p_idx in 1:length(model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens)
-        ])
-        if !any(inocula .!= 0)
-            idx, rand_n = randChoose(
-                rand_n,
-                model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogen_fractions,
-                1.0, regenerate_rand=true
-            )
-            inocula[idx] += 1
-        end
-
-        for p_idx in eachindex(inocula)
-            if inocula[p_idx] > 0
-                mut_prob = min(
-                    1.0,
-                    model.populations[pop_idx].classes[class_idx_1].parameters.base_coefficients[MUTATION_PER_REPLICATION] *
-                    model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].coefficients[MUTATION_PER_REPLICATION]
-                )
-                rec_prob = 0.0
-                if length(model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens) > 1
-                    rec_prob = min(
-                        1.0,
-                        model.populations[pop_idx].classes[class_idx_1].parameters.base_coefficients[RECOMBINATION_PER_REPLICATION] *
-                        model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].coefficients[RECOMBINATION_PER_REPLICATION]
-                    )
-                end
-                num_mut = binomial(inocula[p_idx], mut_prob * (1.0 - rec_prob))
-                num_rec = binomial(inocula[p_idx], rec_prob * (1.0 - mut_prob))
-                num_mut_rec = binomial(inocula[p_idx], mut_prob * rec_prob)
-                if inocula[p_idx] - num_mut - num_rec - num_mut_rec > 0
-                    if !(
-                        model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx] in
-                        model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens)
-
-                        if rand() < infectionProbability(
-                            model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                            model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2])
-
-                            addPathogenToHost!(
-                                model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                                host_idx_2, model.populations[pop_idx].classes[class_idx_2],
-                                model.populations[pop_idx], model
-                            )
-                        end
-                    end
-                end
-                for _ in 1:num_mut
-                    mut = mutantPathogen!(
-                        model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                        model.populations[pop_idx].classes[class_idx_1]
-                    )
-
-                    if (!(
-                        mut in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
-                    )) && rand() < infectionProbability(
-                        mut, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
-                    )
-
-                        addPathogenToHost!(
-                            mut, host_idx_2,
-                            model.populations[pop_idx].classes[class_idx_2],
-                            model.populations[pop_idx], model
-                        )
-                    end
-                end
-                for _ in 1:num_rec
-                    p_idx_2 = choosePathogen(host_idx_1, class_idx_1, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
-
-                    if p_idx != p_idx_2 && (
-                        model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].type ==
-                        model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx_2].type)
-
-                        recombinant = recombinantPathogens!(
-                            model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                            model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx_2],
-                            model.populations[pop_idx].classes[class_idx_1]
-                        )
-
-                        if (!(
-                            recombinant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
-                        )) && rand() < infectionProbability(
-                            recombinant, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
-                        )
-                            addPathogenToHost!(
-                                recombinant, host_idx_2,
-                                model.populations[pop_idx].classes[class_idx_2],
-                                model.populations[pop_idx], model
-                            )
-                        end
-                    end
-                end
-                for _ in 1:num_mut_rec
-                    p_idx_2 = choosePathogen(host_idx_1, class_idx_1, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
-
-                    if p_idx != p_idx_2
-                        recombinant = recombinantPathogens!(
-                            model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                            model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx_2],
-                            model.populations[pop_idx].classes[class_idx_1]
-                        )
-
-                        recombinant_mutant = mutantPathogen!(recombinant, model.populations[pop_idx].classes[class_idx_1])
-
-                        if (!(
-                            recombinant_mutant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
-                        )) && rand() < infectionProbability( # we use > because < implies immunity
-                            recombinant_mutant, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
-                        )
-                            addPathogenToHost!(
-                                recombinant_mutant, host_idx_2,
-                                model.populations[pop_idx].classes[class_idx_2],
-                                model.populations[pop_idx], model
-                            )
-                        end
-                    else
-                        mut = mutantPathogen!(
-                            model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                            model.populations[pop_idx].classes[class_idx_1]
-                        )
-
-                        if !(mut in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens)
-                            addPathogenToHost!(
-                                mut, host_idx_2,
-                                model.populations[pop_idx].classes[class_idx_2],
-                                model.populations[pop_idx], model
-                            )
-                        end
-                    end
-                end
-            end
-        end
-    end
+function interPopulationContact!(model::Model, rand_n::Float64)
+    hostContact!(model, rand_n, false)
 end
 
 event_functions = SA[
     establishMutant!, clearPathogen!, acquireResponse!,
-    establishRecombinant!, intraPopulationContact!
+    establishRecombinant!, intraPopulationContact!,
+    interPopulationContact!,
 ]
