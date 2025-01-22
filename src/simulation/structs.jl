@@ -101,6 +101,9 @@ mutable struct Population
     class_weights::Matrix{Float64} # size NUM_EVENTS x CLASSES
     class_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-1 x CLASSES; -1 excludes intrahost fitness
+
+    total_hosts::Int64
+    receive_contact_sum::Float64
 end
 
 mutable struct Model

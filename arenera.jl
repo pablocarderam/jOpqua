@@ -17,7 +17,7 @@ pa_type = jOpqua.PathogenType(
         g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
         g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
     ],
-    g->1.0, g->1.0, g->1.0,
+    g -> 1.0, g -> 1.0, g -> 1.0,
 )
 
 re_type = jOpqua.ResponseType(
@@ -32,8 +32,8 @@ re_type = jOpqua.ResponseType(
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
     ],
-    (imp_g, mat_g, pat_g)->1.0,
-    (imp_g, mat_g, pat_g)->1.0,
+    (imp_g, mat_g, pat_g) -> 1.0,
+    (imp_g, mat_g, pat_g) -> 1.0,
 )
 
 class_parameters = jOpqua.ClassParameters(
@@ -53,20 +53,22 @@ class_parameters = jOpqua.ClassParameters(
 
 # Model setup
 num_populations = 1
-num_hosts = 1000
+num_hosts = 10000
 num_infected = Int(num_hosts * 0.5)
 num_immune = 0
 
 model = jOpqua.newModel()
 pop = jOpqua.newPopulation!("pop", model)
 class = jOpqua.newClass!("class", class_parameters, pop)
-for _ in 1:num_hosts
+for i in 1:num_hosts
+    println(i)
     host = jOpqua.newHost!(class, pop, model)
 end
 pat = jOpqua.newPathogen!("AAAA", class, pa_type)
 res = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), class, re_type)
 
 for h in 1:num_infected
+    println(h)
     jOpqua.addPathogenToHost!(pat, h, class, pop, model)
 end
 for h in 1:num_immune

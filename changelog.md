@@ -23,6 +23,22 @@ transmission to be based on Poisson process means
 `intraPopulationContact` and `interPopulationContact` with a parameter specifying
 whether or not to resample populations (#TODO: sampling of population 2 needs to be
 done according to contact rates from population 1)
+- Added propagation functions that go from the population level to the event level
+
+KNOWN ISSUE: contact rate computation is incorrect; we have to multiply the sum of
+contact rates by the sum of receive weights inside the `Class` level and divide by
+the total number of hosts inside the `Population` level. This is a problem for the
+current propagation architecture because it can handle changes in a single
+variable at a time--to account for a change in contact weight and a change in
+receive weight stemming from a single event, it currently has to go through
+propagation cascades twice. To solve this, we will add a series of propagation
+functions specifically for contact rates that take not only the change in contact
+rate as a parameter, but also the simultaneous change in receive rate.
+
+- Relatedly, we added `total_hosts` and `receive_contact_sum` fields to
+`Population` to be used in the computation of contact rate and modified
+`newHost!` to change both `total_hosts` and contact weights at the `Population`
+level correspondingly
 
 ## 21 January 2025
 - Some simple syntax debugging in events functions

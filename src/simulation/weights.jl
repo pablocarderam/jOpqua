@@ -361,13 +361,17 @@ end
 
 # Weight change propagation:
 
+function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, model::Model)
+    model.event_rates .+= change[begin:NUM_EVENTS]
+    model.event_rates_sum += sum(change[begin:NUM_EVENTS])
+end
+
 function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, population::Population, model::Model)
     model.population_weights[:, model.population_dict[population.id]] .+= change[begin:NUM_EVENTS]
     model.population_weights_receive[:, model.population_dict[population.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
 
     model.population_weights_receive_sums .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
-    model.event_rates .+= change[begin:NUM_EVENTS]
-    model.event_rates_sum += sum(change[begin:NUM_EVENTS])
+    propagateWeightChanges!(change, model)
 end
 
 function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, class::Class, population::Population, model::Model)
@@ -385,11 +389,15 @@ function propagateWeightChanges!(
     propagateWeightChanges!(class.parameters.base_coefficients .* change, class, population, model)
 end
 
+function propagateWeightChanges!(change::Float64, evt::Int64, model::Model)
+    model.event_rates[evt] += change
+    model.event_rates_sum += change
+end
+
 function propagateWeightChanges!(change::Float64, population::Population, evt::Int64, model::Model)
     model.population_weights[evt, model.population_dict[population.id]] += change
 
-    model.event_rates[evt] += change
-    model.event_rates_sum += change
+    propagateWeightChanges!(change, evt, model)
 end
 
 function propagateWeightChanges!(change::Float64, class::Class, population::Population, evt::Int64, model::Model)
