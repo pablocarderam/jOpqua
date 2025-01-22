@@ -33,7 +33,8 @@ re_type = jOpqua.ResponseType(
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
     ],
-    (imp_g, mat_g, pat_g)->1.0
+    (imp_g, mat_g, pat_g)->1.0,
+    (imp_g, mat_g, pat_g)->1.0,
 )
 
 class_parameters = jOpqua.ClassParameters(
@@ -78,7 +79,7 @@ t_vec = collect(0.0:10.0)
 
 jOpqua.simulate!(model, t_vec)
 
-jOpqua.establishMutant!(model, rand())
+# jOpqua.establishMutant!(model, rand())
 
 # jOpqua.removePathogenFromHost!(1, 1, class, pop, model)
 # jOpqua.removeResponseFromHost!(1, 1, class, pop, model)

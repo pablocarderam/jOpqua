@@ -29,6 +29,94 @@ function pathogenSequenceCoefficients(sequence::String, type::PathogenType)
     ]
 end
 
+function weightedResponse(pathogen::Pathogen, host::Host, evt::Int64)
+    # reactivity-weighted arithmetic mean of specific coefficients
+    reac_sum = 0.0
+    numerator_sum = 0.0
+    for response in host.responses
+        reac_sum += response.type.reactivityCoefficient(
+            response.imprinted_pathogen.sequence,
+            response.matured_pathogen.sequence,
+            pathogen.sequence
+        )
+        numerator_sum += response.type.reactivityCoefficient(
+            response.imprinted_pathogen.sequence,
+            response.matured_pathogen.sequence,
+            pathogen.sequence
+        ) * response.type.specific_coefficient_functions[evt](
+            response.imprinted_pathogen.sequence,
+            response.matured_pathogen.sequence,
+            pathogen.sequence
+        )
+    end
+
+    return numerator_sum / reac_sum
+
+    # # different algorithm reactivity-weighted arithmetic mean of specific coefficients
+    # return sum([
+    #     response.type.reactivityCoefficient(
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     ) * response.type.specific_coefficient_functions[evt](
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     )
+    #     for response in host.responses
+    #     ]) / sum([
+    #         response.type.reactivityCoefficient(
+    #             response.imprinted_pathogen.sequence,
+    #             response.matured_pathogen.sequence,
+    #             pathogen.sequence
+    #         )
+    #         for response in host.responses
+    #     ])
+
+    # # reactivity-weighted harmonic mean of specific coefficients
+    # reac_sum = 0.0
+    # denom_sum = 0.0
+    # for response in host.responses
+    #     reac_sum += response.type.reactivityCoefficient(
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     )
+    #     denom_sum += response.type.reactivityCoefficient(
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     ) / response.type.specific_coefficient_functions[evt](
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     )
+    # end
+
+    # return reac_sum / denom_sum
+
+    # different algorithm reactivity-weighted harmonic mean of specific coefficients
+    # return sum([
+    #     response.type.reactivityCoefficient(
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     )
+    #     for response in host.responses
+    #     ]) / sum([
+    #     response.type.reactivityCoefficient(
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     ) / response.type.specific_coefficient_functions[evt](
+    #         response.imprinted_pathogen.sequence,
+    #         response.matured_pathogen.sequence,
+    #         pathogen.sequence
+    #     )
+    #     for response in host.responses
+    #     ])
+end
+
 # Intrahost-level representation
 
 function pathogenFractions!(host::Host)
@@ -43,14 +131,9 @@ function pathogenFractions!(host::Host)
         if length(host.responses) > 0
             for p in 1:length(host.pathogens)
                 fracs[p] =
-                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * sum([
-                        re.type.specific_coefficient_functions[INTRAHOST_FITNESS](
-                            re.imprinted_pathogen.sequence,
-                            re.matured_pathogen.sequence,
-                            host.pathogens[p].sequence
-                        )
-                        for re in host.responses
-                    ])
+                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedResponse(
+                        host.pathogens[p], host, INTRAHOST_FITNESS
+                    )
             end
         else
             for p in 1:length(host.pathogens)
@@ -73,10 +156,13 @@ function pathogenWeights!(p::Int64, host::Host, evt::Int64)
         )
     if evt == CLEARANCE
         # Clearance likelihoods are not proportional to intrahost fraction,
-        # instead, we assume they are uniform (could be inversely proportional?)
-        host.pathogen_weights[evt, p] =
-            host.pathogen_weights[evt, p] /
-            length(host.pathogens)
+        # instead, we assume the rate of loss compounds
+        # (could be inversely proportional to fraction?)
+        host.pathogen_weights[evt, p] = host.pathogen_weights[evt, p] #/
+            # length(host.pathogens)
+    elseif evt == RECOMBINANT_ESTABLISHMENT && length(host.pathogens) < 2
+        # if nobody to recombine with, no recombinatioin happens
+        host.pathogen_weights[evt, p] = 0.0
     else
         # All other pathogen event likelihoods are proportional to intrahost fraction
         host.pathogen_weights[evt, p] =
@@ -85,15 +171,9 @@ function pathogenWeights!(p::Int64, host::Host, evt::Int64)
     end
     if length(host.responses) > 0
         host.pathogen_weights[evt, p] =
-            host.pathogen_weights[evt, p] *
-            sum([
-                re.type.specific_coefficient_functions[evt](
-                    re.imprinted_pathogen.sequence,
-                    re.matured_pathogen.sequence,
-                    host.pathogens[p].sequence
-                )
-                for re in host.responses
-            ])
+            host.pathogen_weights[evt, p] * weightedResponse(
+                host.pathogens[p], host, evt
+            )
     end
 end
 
@@ -102,6 +182,8 @@ function hostWeightsPathogen!(host_idx::Int64, class::Class, evt::Int64)
     for p in 1:length(class.hosts[host_idx].pathogens)
         pathogenWeights!(p, class.hosts[host_idx], evt)
         class.host_weights[evt, host_idx] += class.hosts[host_idx].pathogen_weights[evt, p]
+        # we sum here because we have already weighted by fraction
+        # (for everything except clearance, see above)
     end
 end
 
@@ -113,7 +195,7 @@ end
 
 function responseWeights!(re::Int64, host::Host, evt::Int64)
     host.response_weights[evt-RESPONSE_EVENTS[1]+1, re] =
-    # No Response fraction here, just presence of Response is enough
+    # No Response fraction weighting here, just presence of Response is enough
         host.responses[re].type.static_coefficient_functions[evt](
             host.responses[re].imprinted_pathogen.sequence,
             host.responses[re].matured_pathogen.sequence
@@ -125,6 +207,7 @@ function hostWeightsResponse!(host_idx::Int64, class::Class, evt::Int64)
     for re in 1:length(class.hosts[host_idx].responses)
         responseWeights!(re, class.hosts[host_idx], evt)
         class.host_weights[evt, host_idx] += class.hosts[host_idx].response_weights[evt-RESPONSE_EVENTS[1]+1, re]
+        # We sum here because having more responses does imply more events, e.g. losses of response
     end
 end
 
@@ -150,22 +233,19 @@ function hostWeightsHost!(h::Int64, class::Class, evt::Int64)
             ])
         if length(class.hosts[h].responses) > 0
             class.host_weights[evt, h] =
-                class.host_weights[evt, h] *
-                sum([
-                    class.hosts[h].pathogen_fractions[p] *
-                    re.type.specific_coefficient_functions[evt](
-                        re.imprinted_pathogen.sequence,
-                        re.matured_pathogen.sequence,
-                        class.hosts[h].pathogens[p].sequence
+                class.host_weights[evt, h] * sum([
+                    # we weight by pathogen fraction as above
+                    class.hosts[h].pathogen_fractions[p] * weightedResponse(
+                        class.hosts[h].pathogens[p], class.hosts[h], evt
                     )
-                    for re in class.hosts[h].responses for p in 1:length(class.hosts[h].pathogens)
+                    for p in 1:length(class.hosts[h].pathogens)
                 ])
         end
     end
     if length(class.hosts[h].responses) > 0
         class.host_weights[evt, h] =
             class.host_weights[evt, h] *
-            sum([
+            sum([ # no response fraction weighting, see above
                 re.type.static_coefficient_functions[evt](
                     re.imprinted_pathogen.sequence,
                     re.matured_pathogen.sequence
@@ -189,22 +269,19 @@ function hostWeightsReceive!(h::Int64, class::Class, evt::Int64)
             ])
         if length(class.hosts[h].responses) > 0
             class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] =
-                class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
-                sum([
+                class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] * sum([
+                    # we weight by pathogen fraction as above
                     class.hosts[h].pathogen_fractions[p] *
-                    re.type.specific_coefficient_functions[evt](
-                        class.hosts[h].pathogens[p].sequence,
-                        re.imprinted_pathogen.sequence,
-                        re.matured_pathogen.sequence
+                    weightedResponse(
+                        host.pathogens[p], class.hosts[h], evt
                     )
-                    for re in class.hosts[h].responses for p in 1:length(class.hosts[h].pathogens)
                 ])
         end
     end
     if length(class.hosts[h].responses) > 0
         class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] =
             class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
-            sum([
+            sum([ # no response fraction weighting, see above
                 re.type.static_coefficient_functions[evt](
                     re.imprinted_pathogen.sequence,
                     re.matured_pathogen.sequence

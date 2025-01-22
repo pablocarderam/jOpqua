@@ -16,7 +16,29 @@ a `Response` of this type
 before adding a `Pathogen`
 - Fix weight/rate computation to modify rate sum (wasn't happening)
 - Replaced `sample()` with `chooseRandom()` in `intraPopulationContact`, Connor
-benchmarked and said it was ~5X faster??
+benchmarked and said it was ~5X faster, at least sometimes?
+- Renamed `immunityProbability` field within `ResponseType` as `infectionCoefficient`,
+changed mechanism such that a coefficient of `1.0` is complete susceptibility and
+`0.0` is complete immunity
+- Added `reactivityCoefficient` as a field of `ResponseType` to handle how much a
+`Response` contributes to a reaction against a specific pathogen
+- Change sums of `Response` specific coefficients to weighted arithmetic means,
+added `reactivityCoefficient` to calculation as weight, created a `weightedResponse`
+function to compute all specific weighted mean responses (`infectionCoefficient`
+weighted mean is computed separately); thought about whether these should be
+weighted arithmetic or harmonic means, I think arithmetic (the work is being done
+by the `reactivityCoefficient` function defining weights)
+- Added logic to make recombination weights/probability zero when less than two
+strains
+
+Considered renaming `pathogen_fractions` to `pathogen_populations` and
+`pathogenFractions` to `pathogenPopulations`, change the latter's behavior such
+that the top pathogen's population is reported as its coefficient product, not just
+`1.0`. Decided for sure against it; `pathogen_populations` captures competition,
+actual pathogen-specific strength/influence on events is captured by other functions.
+
+KNOWN ISSUES: infection events still don't seem to result in infection. This is a
+problem for tomorrow. First time simulation runs though!
 
 ## 20 January 2025
 - Rename `acquireResponse` to `developResponse` to avoid ambiguity about when a

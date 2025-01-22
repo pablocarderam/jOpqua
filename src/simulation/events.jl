@@ -66,6 +66,7 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, class
 end
 
 function addPathogenToHost!(pathogen::Pathogen, host_idx::Int64, class::Class, population::Population, model::Model)
+    println(("Adding",pathogen.sequence,host_idx))
     push!(class.hosts[host_idx].pathogens, pathogen)
     push!(class.hosts[host_idx].pathogen_fractions, 0.0)
     class.hosts[host_idx].pathogen_weights = catCol(
@@ -198,11 +199,14 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
                     model.populations[pop_idx].classes[class_idx_1].parameters.base_coefficients[MUTATION_PER_REPLICATION] *
                     model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].coefficients[MUTATION_PER_REPLICATION]
                 )
-                rec_prob = min(
-                    1.0,
-                    model.populations[pop_idx].classes[class_idx_1].parameters.base_coefficients[RECOMBINATION_PER_REPLICATION] *
-                    model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].coefficients[RECOMBINATION_PER_REPLICATION]
-                )
+                rec_prob = 0.0
+                if length(model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens) > 1
+                    rec_prob = min(
+                        1.0,
+                        model.populations[pop_idx].classes[class_idx_1].parameters.base_coefficients[RECOMBINATION_PER_REPLICATION] *
+                        model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx].coefficients[RECOMBINATION_PER_REPLICATION]
+                    )
+                end
                 num_mut = binomial(inocula[p_idx], mut_prob * (1.0 - rec_prob))
                 num_rec = binomial(inocula[p_idx], rec_prob * (1.0 - mut_prob))
                 num_mut_rec = binomial(inocula[p_idx], mut_prob * rec_prob)
@@ -211,7 +215,7 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
                         model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx] in
                         model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens)
 
-                        if rand() > immunityProbability( # we use > because < implies immunity
+                        if rand() < infectionProbability(
                             model.populations[pop_idx].classes[class_idx_1].hosts[host_idx_1].pathogens[p_idx],
                             model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2])
 
@@ -231,7 +235,7 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
 
                     if (!(
                         mut in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
-                    )) && rand() > immunityProbability( # we use > because < implies immunity
+                    )) && rand() < infectionProbability(
                         mut, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
                     )
 
@@ -257,7 +261,7 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
 
                         if (!(
                             recombinant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
-                        )) && rand() > immunityProbability( # we use > because < implies immunity
+                        )) && rand() < infectionProbability(
                             recombinant, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
                         )
                             addPathogenToHost!(
@@ -282,7 +286,7 @@ function intraPopulationContact!(model::Model, rand_n::Float64)
 
                         if (!(
                             recombinant_mutant in model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2].pathogens
-                        )) && rand() > immunityProbability( # we use > because < implies immunity
+                        )) && rand() < infectionProbability( # we use > because < implies immunity
                             recombinant_mutant, model.populations[pop_idx].classes[class_idx_2].hosts[host_idx_2]
                         )
                             addPathogenToHost!(
