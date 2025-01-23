@@ -103,6 +103,8 @@ mutable struct Population
     # size NUM_CHOICE_MODIFIERS-1 x CLASSES; -1 excludes intrahost fitness
 
     total_hosts::Int64
+    intra_population_contact_sum::Float64
+    # inter_population_contact_sum::Float64
     receive_contact_sum::Float64
 end
 

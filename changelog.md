@@ -2,6 +2,23 @@
 
 ## 23 January 2025
 - Small bug fix in `newHost!`
+- Track `intra_population_contact_sum` within `Population`
+- Made intra-population contact rate at the `Population` level account for
+receive contact and total host populations
+- Changes in event modifier weights are now computed before events so that
+receive weights are computed prior to contact rates
+- Make changes in receive weights propagate into contact rates at the
+`Population` level (different from what I described yesterday, but I like
+this better)
+
+#TODO: continue debugging contacts, not convinced simulation trajectories are
+reasonable
+If we can make inter-population contact rates depend on receive rates the way
+intra-population contact works, we should consider two major changes in
+architecture: (1) getting rid of `Classes` completely since `Populations` can
+model anything a `Class` does, and (2) getting rid of the distinction between
+intra- and inter-population contacts entirely, since an inter-population contact
+with the same population achieves the same objective.
 
 ## 22 January 2025
 - Make `Class`, `Population`, and `Model` receive weight matrices include weights

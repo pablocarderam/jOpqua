@@ -35,9 +35,10 @@ function newHost!(class::Class, population::Population, model::Model)
     class.host_weights = catCol(class.host_weights, zeros(Float64, NUM_EVENTS))
     class.host_weights_receive = catCol(class.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
-    model.population_weights[INTRA_POPULATION_CONTACT, model.populations_dict[population.id]] = (
-        model.population_weights[INTRA_POPULATION_CONTACT, model.populations_dict[population.id]] *
-        population.total_hosts / (population.total_hosts + 1)
+    propagateWeightChanges!(
+        - model.population_weights[INTRA_POPULATION_CONTACT, model.population_dict[population.id]] /
+        (population.total_hosts + 1),
+        population, INTRA_POPULATION_CONTACT, model
     )
     #TODO: update inter-pop contacts
     population.total_hosts += 1
@@ -74,7 +75,7 @@ function newPopulation!(id::String, model::Model)
         Dict{String,Int64}(),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
-        0, 0.0
+        0, 0.0, 0.0
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))
