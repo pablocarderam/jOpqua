@@ -1,5 +1,8 @@
 # jOpqua Changelog
 
+## 23 January 2025
+- Small bug fix in `newHost!`
+
 ## 22 January 2025
 - Make `Class`, `Population`, and `Model` receive weight matrices include weights
 for all coefficients except for fitness

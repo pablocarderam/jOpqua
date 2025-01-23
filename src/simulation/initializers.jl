@@ -35,10 +35,10 @@ function newHost!(class::Class, population::Population, model::Model)
     class.host_weights = catCol(class.host_weights, zeros(Float64, NUM_EVENTS))
     class.host_weights_receive = catCol(class.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
-    model.population_weights[INTRA_POPULATION_CONTACT, populations_dict[population.id]] = (
-        model.population_weights[INTRA_POPULATION_CONTACT, populations_dict[population.id]] *
+    model.population_weights[INTRA_POPULATION_CONTACT, model.populations_dict[population.id]] = (
+        model.population_weights[INTRA_POPULATION_CONTACT, model.populations_dict[population.id]] *
         population.total_hosts / (population.total_hosts + 1)
-        )
+    )
     #TODO: update inter-pop contacts
     population.total_hosts += 1
 
