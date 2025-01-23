@@ -305,23 +305,6 @@ end
 function hostWeights!(host_idx::Int64, class::Class, population::Population, model::Model)
     pathogenFractions!(class.hosts[host_idx])
     prev = 0.0
-    for weight in CHOICE_MODIFIERS[begin:end-1]
-            # receive weights should be computed prior to contact rates
-        prev = class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx]
-        hostWeightsReceive!(host_idx, class, weight)
-        if (
-                prev != class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] &&
-                class.parameters.base_coefficients[weight] != 0.0 &&
-                weight < NUM_COEFFICIENTS - 2
-                )
-
-            propagateWeightReceiveChanges!(
-                class.parameters.base_coefficients[weight] *
-                (class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] - prev),
-                class, population, weight, model
-            )
-        end
-    end
     for weight in PATHOGEN_EVENTS
         prev = class.host_weights[weight, host_idx]
         hostWeightsPathogen!(host_idx, class, weight)
@@ -352,6 +335,22 @@ function hostWeights!(host_idx::Int64, class::Class, population::Population, mod
             )
         end
     end
+    for weight in CHOICE_MODIFIERS[begin:end-1]
+        prev = class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx]
+        hostWeightsReceive!(host_idx, class, weight)
+        if (
+                prev != class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] &&
+                class.parameters.base_coefficients[weight] != 0.0 &&
+                weight < NUM_COEFFICIENTS
+                )
+
+            propagateWeightReceiveChanges!(
+                class.parameters.base_coefficients[weight] *
+                (class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] - prev),
+                class, population, weight, model
+            )
+        end
+    end
 end
 
 # Intra-Population level: None needed
@@ -361,34 +360,6 @@ end
 # Rate level: None needed
 
 # Weight change propagation:
-
-function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, model::Model)
-    model.event_rates .+= change[begin:NUM_EVENTS]
-    model.event_rates_sum += sum(change[begin:NUM_EVENTS])
-end
-
-function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, population::Population, model::Model)
-    model.population_weights[:, model.population_dict[population.id]] .+= change[begin:NUM_EVENTS]
-    model.population_weights_receive[:, model.population_dict[population.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
-
-    model.population_weights_receive_sums .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
-    propagateWeightChanges!(change, model)
-end
-
-function propagateWeightChanges!(change::SVector{NUM_COEFFICIENTS,Float64}, class::Class, population::Population, model::Model)
-    population.class_weights[:, population.class_dict[class.id]] .+= change[begin:NUM_EVENTS]
-    population.class_weights_receive[:, population.class_dict[class.id]] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
-
-    propagateWeightChanges!(change, population, model)
-end
-
-function propagateWeightChanges!(
-    change::SVector{NUM_COEFFICIENTS,Float64}, host_idx::Int64, class::Class, population::Population, model::Model)
-    class.host_weights[:, host_idx] .+= change[begin:NUM_EVENTS]
-    class.host_weights_receive[:, host_idx] .+= change[end-NUM_CHOICE_MODIFIERS+1:end-1]
-
-    propagateWeightChanges!(class.parameters.base_coefficients .* change, class, population, model)
-end
 
 function propagateWeightChanges!(change::Float64, evt::Int64, model::Model)
     model.event_rates[evt] += change
@@ -438,7 +409,7 @@ end
 function propagateWeightReceiveChanges!(change::Float64, class::Class, population::Population, evt::Int64, model::Model)
     population.class_weights_receive[evt-CHOICE_MODIFIERS[1]+1, population.class_dict[class.id]] += change
 
-    if evt < NUM_COEFFICIENTS - 3
+    if evt < NUM_COEFFICIENTS
         propagateWeightReceiveChanges!(change, population, evt, model)
     end
 end
@@ -446,7 +417,7 @@ end
 function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, class::Class, population::Population, evt::Int64, model::Model)
     class.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] += change
 
-    if evt < NUM_COEFFICIENTS - 1
+    if evt < NUM_COEFFICIENTS
         propagateWeightReceiveChanges!(class.parameters.base_coefficients[evt] * change, class, population, evt, model)
     end
 end

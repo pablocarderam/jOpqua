@@ -10,6 +10,7 @@ receive weights are computed prior to contact rates
 - Make changes in receive weights propagate into contact rates at the
 `Population` level (different from what I described yesterday, but I like
 this better)
+- Fix weight propagation
 
 #TODO: continue debugging contacts, not convinced simulation trajectories are
 reasonable

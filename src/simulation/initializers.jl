@@ -43,12 +43,27 @@ function newHost!(class::Class, population::Population, model::Model)
     #TODO: update inter-pop contacts
     population.total_hosts += 1
 
-    propagateWeightChanges!(
-        START_COEFFICIENTS
-        # class change, inter-population contact and migration numbers per class or
-        # population are fractions that sum to one, so no need to account for in here
-        , length(class.hosts), class, population, model
-    )
+    for coef in EVENTS
+        if START_COEFFICIENTS[coef] != 0
+            propagateWeightChanges!(
+                START_COEFFICIENTS[coef], length(class.hosts), class, population, coef, model
+            )
+        end
+    end
+    for coef in CHOICE_MODIFIERS[begin:end-1]
+        if START_COEFFICIENTS[coef] != 0
+            propagateWeightReceiveChanges!(
+                START_COEFFICIENTS[coef], length(class.hosts), class, population, coef, model
+            )
+        end
+    end
+
+    # propagateWeightChanges!(
+    #     START_COEFFICIENTS
+    #     # class change, inter-population contact and migration numbers per class or
+    #     # population are fractions that sum to one, so no need to account for in here
+    #     , length(class.hosts), class, population, model
+    # )
 
     return class.hosts[end]
 end
