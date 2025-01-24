@@ -21,7 +21,7 @@ function simulate!(model::Model, time_vector::Vector{Float64})
                 rand_n, model.event_rates,
                 model.event_rates_sum, regenerate_rand=true
             )
-            println((time, model.event_rates, evt_idx))
+            # println((time, model.event_rates, evt_idx))
             event_functions[evt_idx](model, rand_n)
 
             # evt_idx = sample(1:length(evt_funcs), Weights(model.event_rates))

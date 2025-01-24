@@ -339,10 +339,10 @@ function hostWeights!(host_idx::Int64, class::Class, population::Population, mod
         prev = class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx]
         hostWeightsReceive!(host_idx, class, weight)
         if (
-                prev != class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] &&
-                class.parameters.base_coefficients[weight] != 0.0 &&
-                weight < NUM_COEFFICIENTS
-                )
+            prev != class.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] &&
+            class.parameters.base_coefficients[weight] != 0.0 &&
+            weight < NUM_COEFFICIENTS
+        )
 
             propagateWeightReceiveChanges!(
                 class.parameters.base_coefficients[weight] *
@@ -378,8 +378,8 @@ function propagateWeightChanges!(change::Float64, class::Class, population::Popu
     if evt == INTRA_POPULATION_CONTACT
         population.intra_population_contact_sum += change
         change = change * population.receive_contact_sum / population.total_hosts
-    # elseif evt == INTER_POPULATION_CONTACT
-    #     population.inter_population_contact_sum += change
+        # elseif evt == INTER_POPULATION_CONTACT
+        #     population.inter_population_contact_sum += change
     end
 
     propagateWeightChanges!(change, population, evt, model)
