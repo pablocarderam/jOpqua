@@ -8,50 +8,45 @@ const RESPONSE_ACQUISITION = 3
 # Two pathogens, single host
 const RECOMBINANT_ESTABLISHMENT = 4
 # Single pathogen, two hosts
-const INTRA_POPULATION_CONTACT = 5
-const INTER_POPULATION_CONTACT = 6
+const CONTACT = 5
 
 # Response events
 # Single response, single host
-const RESPONSE_LOSS = 7
+const RESPONSE_LOSS = 6
 
 # Host events
-# Single host, single class
-const BIRTH = 8
-const DEATH = 9
-# Single host, two classes
-const CLASS_CHANGE = 10
+# Single host, single population
+const BIRTH = 7
+const DEATH = 8
 # Single host, two populations
-const MIGRATION = 11
+const MIGRATION = 9
 
 # Choice modifiers, zooming in in scale (order matters)
 # Population choice
-const RECEIVE_MIGRATION = 12
-# Class choice
-const RECEIVE_CLASS_CHANGE = 13
+const RECEIVE_MIGRATION = 10
 # Host choice
-const RECEIVE_CONTACT = 14
+const RECEIVE_CONTACT = 11
 # Pathogen choice
-const INTRAHOST_FITNESS = 15
+const INTRAHOST_FITNESS = 12
 
 # Global trackers
 const PATHOGEN_EVENTS = SA[
     MUTANT_ESTABLISHMENT, CLEARANCE, RESPONSE_ACQUISITION,
-    RECOMBINANT_ESTABLISHMENT, INTRA_POPULATION_CONTACT, INTER_POPULATION_CONTACT
+    RECOMBINANT_ESTABLISHMENT, CONTACT
 ]
 const NUM_PATHOGEN_EVENTS = length(PATHOGEN_EVENTS)
 
 const RESPONSE_EVENTS = SA[RESPONSE_LOSS]
 const NUM_RESPONSE_EVENTS = length(RESPONSE_EVENTS)
 
-const HOST_EVENTS = SA[BIRTH, DEATH, CLASS_CHANGE, MIGRATION]
+const HOST_EVENTS = SA[BIRTH, DEATH, MIGRATION]
 const NUM_HOST_EVENTS = length(HOST_EVENTS)
 
 const EVENTS = SA[PATHOGEN_EVENTS..., RESPONSE_EVENTS..., HOST_EVENTS...]
 const NUM_EVENTS = length(EVENTS)
 
 const CHOICE_MODIFIERS = SA[
-    RECEIVE_MIGRATION, RECEIVE_CLASS_CHANGE, RECEIVE_CONTACT, INTRAHOST_FITNESS
+    RECEIVE_MIGRATION, RECEIVE_CONTACT, INTRAHOST_FITNESS
 ]
 const NUM_CHOICE_MODIFIERS = length(CHOICE_MODIFIERS)
 
@@ -60,9 +55,7 @@ const NUM_COEFFICIENTS = length(COEFFICIENTS)
 
 # Starter coefficients
 const START_COEFFICIENTS = SVector{NUM_COEFFICIENTS,Float64}(
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]
-# class change, inter-population contact and migration numbers per class or
-# population are fractions that sum to one, so no need to account for in here
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0]
 )
 
 # Misc constants

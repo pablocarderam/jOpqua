@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 29 January 2025
+- Removed `Class` and everything associated to it
+- Made a single `CONTACT` event
+
 ## 23 January 2025
 - Small bug fix in `newHost!`
 - Track `intra_population_contact_sum` within `Population`
@@ -13,7 +17,7 @@ this better)
 - Fix weight propagation
 
 #TODO: continue debugging contacts, not convinced simulation trajectories are
-reasonable
+reasonable... actually, I think it works
 If we can make inter-population contact rates depend on receive rates the way
 intra-population contact works, we should consider two major changes in
 architecture: (1) getting rid of `Classes` completely since `Populations` can

@@ -24,63 +24,65 @@ function randChoose(rand_n::Float64, rates, rates_sum::Float64; regenerate_rand:
     end
 end
 
-function choosePathogen(host_idx::Int64, class_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
+function choosePathogen(host_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     return randChoose(
         rand_n,
-        @views(model.populations[population_idx].classes[class_idx].hosts[host_idx].pathogen_weights[weight,:]),
-        model.populations[population_idx].classes[class_idx].host_weights[weight, host_idx],
-            # assumes class's host weights are the sum of all pathogen weights, should be true
+        @views(model.populations[population_idx].hosts[host_idx].pathogen_weights[weight,:]),
+        model.populations[population_idx].host_weights[weight, host_idx],
+            # assumes population's host weights are the sum of all pathogen weights, should be true
         regenerate_rand=true
     )
 end
 
-function chooseResponse(host_idx::Int64, class_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
+function chooseResponse(host_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     return randChoose(
         rand_n,
-        @views(model.populations[population_idx].classes[class_idx].hosts[host_idx].response_weights[weight-RESPONSE_EVENTS[1]+1,:]),
-        model.populations[population_idx].classes[class_idx].host_weights[weight, host_idx],
-            # assumes class's host weights are the sum of all response weights, should be true
+        @views(model.populations[population_idx].hosts[host_idx].response_weights[weight-RESPONSE_EVENTS[1]+1,:]),
+        model.populations[population_idx].host_weights[weight, host_idx],
+            # assumes population's host weights are the sum of all response weights, should be true
         regenerate_rand=true
     )
 end
 
-function chooseHost(class_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
+function chooseHost(population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     if weight > NUM_EVENTS
         return randChoose(
             rand_n,
-            @views(model.populations[population_idx].classes[class_idx].host_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]) .*
-                model.populations[population_idx].classes[class_idx].parameters.base_coefficients[weight],
-            model.populations[population_idx].class_weights_receive[weight-CHOICE_MODIFIERS[1]+1, class_idx],
-            regenerate_rand=true
-        )
-    else
-        return randChoose(
-            rand_n,
-            @views(model.populations[population_idx].classes[class_idx].host_weights[weight,:]) .*
-                model.populations[population_idx].classes[class_idx].parameters.base_coefficients[weight],
-            model.populations[population_idx].class_weights[weight, class_idx],
-            regenerate_rand=true
-        )
-    end
-end
-
-function chooseClass(population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
-    if weight > NUM_EVENTS
-        return randChoose(
-            rand_n,
-            @views(model.populations[population_idx].class_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]),
+            @views(model.populations[population_idx].host_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]) .*
+                model.populations[population_idx].parameters.base_coefficients[weight],
             model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, population_idx],
+            #TODO: revise, maybe this is another field?
             regenerate_rand=true
         )
     else
         return randChoose(
             rand_n,
-            @views(model.populations[population_idx].class_weights[weight,:]),
+            @views(model.populations[population_idx].host_weights[weight,:]) .*
+                model.populations[population_idx].parameters.base_coefficients[weight],
             model.population_weights[weight, population_idx],
+            #TODO: revise, maybe this is another field?
             regenerate_rand=true
         )
     end
 end
+
+# function chooseClass(population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
+#     if weight > NUM_EVENTS
+#         return randChoose(
+#             rand_n,
+#             @views(model.populations[population_idx].class_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]),
+#             model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, population_idx],
+#             regenerate_rand=true
+#         )
+#     else
+#         return randChoose(
+#             rand_n,
+#             @views(model.populations[population_idx].class_weights[weight,:]),
+#             model.population_weights[weight, population_idx],
+#             regenerate_rand=true
+#         )
+#     end
+# end
 
 function choosePopulation(weight::Int64, model::Model, rand_n::Float64)
     if weight > NUM_EVENTS
@@ -110,34 +112,31 @@ function chooseEvent(model::Model, rand_n::Float64)
 end
 
 function choosePathogen(weight::Int64, model::Model, rand_n::Float64)
-    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
-    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
-    host_idx,rand_n = chooseHost(class_idx, pop_idx, weight, model, rand_n)
-    pathogen_idx,rand_n = choosePathogen(host_idx, class_idx, pop_idx, weight, model, rand_n)
+    pop_idx, rand_n = choosePopulation(weight, model, rand_n)
+    host_idx, rand_n = chooseHost(pop_idx, weight, model, rand_n)
+    pathogen_idx, rand_n = choosePathogen(host_idx, pop_idx, weight, model, rand_n)
 
-    return pathogen_idx, host_idx, class_idx, pop_idx, rand_n
+    return pathogen_idx, host_idx, pop_idx, rand_n
 end
 
 function chooseResponse(weight::Int64, model::Model, rand_n::Float64)
-    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
-    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
-    host_idx,rand_n = chooseHost(class_idx, pop_idx, weight, model, rand_n)
-    response_idx,rand_n = chooseResponse(host_idx, class_idx, pop_idx, weight, model, rand_n)
+    pop_idx, rand_n = choosePopulation(weight, model, rand_n)
+    host_idx, rand_n = chooseHost(pop_idx, weight, model, rand_n)
+    response_idx, rand_n = chooseResponse(host_idx, pop_idx, weight, model, rand_n)
 
-    return response_idx, host_idx, class_idx, pop_idx, rand_n
+    return response_idx, host_idx, pop_idx, rand_n
 end
 
 function chooseHost(weight::Int64, model::Model, rand_n::Float64)
-    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
-    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
-    host_idx,rand_n = chooseHost(class_idx, pop_idx, weight, model, rand_n)
+    pop_idx, rand_n = choosePopulation(weight, model, rand_n)
+    host_idx, rand_n = chooseHost(pop_idx, weight, model, rand_n)
 
-    return host_idx, class_idx, pop_idx, rand_n
+    return host_idx, pop_idx, rand_n
 end
 
-function chooseClass(weight::Int64, model::Model, rand_n::Float64)
-    pop_idx,rand_n = choosePopulation(weight, model, rand_n)
-    class_idx,rand_n = chooseClass(pop_idx, weight, model, rand_n)
+# function chooseClass(weight::Int64, model::Model, rand_n::Float64)
+#     pop_idx, rand_n = choosePopulation(weight, model, rand_n)
+#     class_idx, rand_n = chooseClass(pop_idx, weight, model, rand_n)
 
-    return class_idx, pop_idx, rand_n
-end
+#     return class_idx, pop_idx, rand_n
+# end

@@ -24,21 +24,21 @@ struct ResponseType
     reactivityCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
-struct ClassParameters
+struct PopulationParameters
     id::String
 
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
-    class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
+    # class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
 
-    inter_population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
+    population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
 
     pathogen_types::Dict{String,PathogenType}
     response_types::Dict{String,ResponseType}
-    developResponses::Function # takes in Pathogen, Host, Class as arguments, returns Response objects to be added
+    developResponses::Function # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
     # (this handles how many and which responses to choose when adding a response to a host)
-    #TODO: maybe doesn't need Class? Probably does to ensure responses don't already exist
+    #TODO: maybe doesn't need Population? Probably does to ensure responses don't already exist
 end
 
 struct Pathogen
@@ -74,12 +74,26 @@ mutable struct Host
     # to entities within hosts is recombination, and that uses the same rates
     # already calculated above since it's symmetrical. We therefore don't define
     # any additional matrices here and we handle all receiving rates for hosts
-    # and larger at the Class level.
+    # and larger at the Population level.
 end
 
-mutable struct Class
+# mutable struct Class
+#     id::String
+#     parameters::ClassParameters
+
+#     pathogens::Dict{String,Pathogen}
+#     responses::Dict{Tuple{String,String,String},Response}
+#     # keys are tuples of imprinted genome, matured genome, type ID
+#     hosts::Vector{Host} # size MAX_HOSTS
+
+#     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
+#     host_weights_receive::Matrix{Float64}
+#     # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
+# end
+
+mutable struct Population
     id::String
-    parameters::ClassParameters
+    parameters::PopulationParameters
 
     pathogens::Dict{String,Pathogen}
     responses::Dict{Tuple{String,String,String},Response}
@@ -89,22 +103,9 @@ mutable struct Class
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
     host_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
-end
-
-mutable struct Population
-    id::String
-
-    classes::Vector{Class} # size CLASSES
-    class_dict::Dict{String,Int64}
-    # Holds Class ids => Class indexes, used for migration to get matching class
-
-    class_weights::Matrix{Float64} # size NUM_EVENTS x CLASSES
-    class_weights_receive::Matrix{Float64}
-    # size NUM_CHOICE_MODIFIERS-1 x CLASSES; -1 excludes intrahost fitness
 
     total_hosts::Int64
-    intra_population_contact_sum::Float64
-    # inter_population_contact_sum::Float64
+    population_contact_sum::Float64
     receive_contact_sum::Float64
 end
 

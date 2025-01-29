@@ -13,9 +13,9 @@ pa_type = jOpqua.PathogenType(
     0.0,
     0.0,
     SA[ # pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
-        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0, g->1.0, g->1.0, g->1.0, g->1.0,
+        g->1.0, g->1.0, g->1.0, g->1.0,
+        g->1.0, g->1.0, g->1.0, g->1.0,
+        g->1.0, g->1.0, g->1.0, g->1.0,
     ],
     g -> 1.0, g -> 1.0, g -> 1.0,
 )
@@ -23,28 +23,28 @@ pa_type = jOpqua.PathogenType(
 re_type = jOpqua.ResponseType(
     "re_type", # id::String,
     SA[ # static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
-        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
-        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
-        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
+        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
+        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
+        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
     ],
     SA[ # specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
-        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
-        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
-        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
+        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
+        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
+        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
     ],
     (imp_g, mat_g, pat_g) -> 1.0,
     (imp_g, mat_g, pat_g) -> 1.0,
 )
 
-class_parameters = jOpqua.ClassParameters(
+pop_parameters = jOpqua.PopulationParameters(
     "TestParams", # id::String
     SA[ # base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
-        0.0, 1.0, 0.0, 0.0, 1.05,
-        0.0, 0.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 1.0, 0.0,
+        0.00, 1.0, 0.0, 0.0,
+        1.05, 0.0, 0.0, 0.0,
+        0.00, 0.0, 1.0, 0.0,
     ],
-    Dict(), # class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
-    Dict(), # inter_population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
+    # Dict(), # class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
+    Dict(), # population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(), # migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(pa_type.id => pa_type), # response_types::Dict{String,ResponseType}
     Dict(re_type.id => re_type), # response_types::Dict{String,ResponseType}
@@ -53,26 +53,26 @@ class_parameters = jOpqua.ClassParameters(
 
 # Model setup
 num_populations = 1
-num_hosts = 100000
+num_hosts = 10000
 num_infected = Int(num_hosts * 0.5)
 num_immune = 0
 
 model = jOpqua.newModel()
-pop = jOpqua.newPopulation!("pop", model)
-class = jOpqua.newClass!("class", class_parameters, pop)
+pop = jOpqua.newPopulation!("pop", pop_parameters, model)
+# class = jOpqua.newClass!("class", class_parameters, pop)
 for i in 1:num_hosts
     # println(i)
-    host = jOpqua.newHost!(class, pop, model)
+    host = jOpqua.newHost!(pop, model)
 end
-pat = jOpqua.newPathogen!("AAAA", class, pa_type)
-res = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), class, re_type)
+pat = jOpqua.newPathogen!("AAAA", pop, pa_type)
+res = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), pop, re_type)
 
 for h in 1:num_infected
     # println(h)
-    jOpqua.addPathogenToHost!(pat, h, class, pop, model)
+    jOpqua.addPathogenToHost!(pat, h, pop, model)
 end
 for h in 1:num_immune
-    jOpqua.addResponseToHost!(pat, h, class, pop, model)
+    jOpqua.addResponseToHost!(pat, h, pop, model)
 end
 
 t_vec = collect(0.0:10.0)

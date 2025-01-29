@@ -24,6 +24,7 @@ function simulate!(model::Model, time_vector::Vector{Float64})
             # println((time, model.event_rates, evt_idx))
             event_functions[evt_idx](model, rand_n)
 
+            # alternative sampling method:
             # evt_idx = sample(1:length(evt_funcs), Weights(model.event_rates))
             # event_functions[evt_idx](model, rand_n)
 
