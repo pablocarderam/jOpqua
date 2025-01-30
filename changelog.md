@@ -2,7 +2,10 @@
 
 ## 30 January 2025
 - Moved `hostContact!` down to section with events
--
+
+TODO: receive contact weights should be handled like contact weights, one
+per possible population contact relationship?
+Add inoculum, mutation, recombination population-level parameters
 
 ## 29 January 2025
 - Removed `Class` and everything associated to it
