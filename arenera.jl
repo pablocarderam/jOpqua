@@ -43,7 +43,6 @@ pop_parameters = jOpqua.PopulationParameters(
         1.05, 0.0, 0.0, 0.0,
         0.00, 0.0, 1.0, 0.0,
     ],
-    # Dict(), # class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
     Dict(), # population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(), # migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(pa_type.id => pa_type), # response_types::Dict{String,ResponseType}
@@ -59,7 +58,6 @@ num_immune = 0
 
 model = jOpqua.newModel()
 pop = jOpqua.newPopulation!("pop", pop_parameters, model)
-# class = jOpqua.newClass!("class", class_parameters, pop)
 for i in 1:num_hosts
     # println(i)
     host = jOpqua.newHost!(pop, model)
@@ -81,24 +79,22 @@ jOpqua.simulate!(model, t_vec)
 
 # jOpqua.establishMutant!(model, rand())
 
-# jOpqua.removePathogenFromHost!(1, 1, class, pop, model)
-# jOpqua.removeResponseFromHost!(1, 1, class, pop, model)
+# jOpqua.removePathogenFromHost!(1, 1, pop, model)
+# jOpqua.removeResponseFromHost!(1, 1, pop, model)
 
 # rand_n = rand()
 # x, rand_n = jOpqua.choosePathogen(1, 1, 1, 1, model, rand_n)
 # x, rand_n = jOpqua.chooseResponse(1, 1, 1, 7, model, rand_n)
 # x, rand_n = jOpqua.chooseHost(1, 1, 7, model, rand_n)
-# x, rand_n = jOpqua.chooseClass(1, 7, model, rand_n)
 # x, rand_n = jOpqua.choosePopulation(7, model, rand_n)
 # x, rand_n = jOpqua.chooseEvent(model, rand_n)
 
-# jOpqua.addPathogenToHost!(pat, 1, class, pop, model)
-# jOpqua.addResponseToHost!(res, 1, class, pop, model)
+# jOpqua.addPathogenToHost!(pat, 1, pop, model)
+# jOpqua.addResponseToHost!(res, 1, pop, model)
 
 # x, rand_n = jOpqua.choosePathogen(1, 1, 1, 1, model, rand_n)
 # x, rand_n = jOpqua.chooseResponse(1, 1, 1, 7, model, rand_n)
 # x, rand_n = jOpqua.chooseHost(1, 1, 7, model, rand_n)
-# x, rand_n = jOpqua.chooseClass(1, 7, model, rand_n)
 # x, rand_n = jOpqua.choosePopulation(7, model, rand_n)
 # x, rand_n = jOpqua.chooseEvent(model, rand_n)
 

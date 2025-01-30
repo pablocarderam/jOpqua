@@ -227,7 +227,7 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
     end
 end
 
-# Intra-Class level
+# Intra-Population level
 
 function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
     population.host_weights[evt, h] = 1.0
@@ -353,8 +353,6 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
     end
 end
 
-# Intra-Population level: None needed
-
 # Intra-Model (Event) level: None needed
 
 # Rate level: None needed
@@ -365,12 +363,6 @@ function propagateWeightChanges!(change::Float64, evt::Int64, model::Model)
     model.event_rates[evt] += change
     model.event_rates_sum += change
 end
-
-# function propagateWeightChanges!(change::Float64, population::Population, evt::Int64, model::Model)
-#     model.population_weights[evt, model.population_dict[population.id]] += change
-
-#     propagateWeightChanges!(change, evt, model)
-# end
 
 function propagateWeightChanges!(change::Float64, population::Population, evt::Int64, model::Model)
     model.population_weights[evt, model.population_dict[population.id]] += change
@@ -405,14 +397,6 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
         #TODO: update inter-pop contacts
     end
 end
-
-# function propagateWeightReceiveChanges!(change::Float64, class::Class, population::Population, evt::Int64, model::Model)
-#     population.class_weights_receive[evt-CHOICE_MODIFIERS[1]+1, population.class_dict[class.id]] += change
-
-#     if evt < NUM_COEFFICIENTS
-#         propagateWeightReceiveChanges!(change, population, evt, model)
-#     end
-# end
 
 function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, population::Population, evt::Int64, model::Model)
     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] += change

@@ -29,8 +29,6 @@ struct PopulationParameters
 
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
-    # class_change_fractions::Dict{String,Float64} # size CLASSES, must sum to 1
-
     population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
 
@@ -76,20 +74,6 @@ mutable struct Host
     # any additional matrices here and we handle all receiving rates for hosts
     # and larger at the Population level.
 end
-
-# mutable struct Class
-#     id::String
-#     parameters::ClassParameters
-
-#     pathogens::Dict{String,Pathogen}
-#     responses::Dict{Tuple{String,String,String},Response}
-#     # keys are tuples of imprinted genome, matured genome, type ID
-#     hosts::Vector{Host} # size MAX_HOSTS
-
-#     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
-#     host_weights_receive::Matrix{Float64}
-#     # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
-# end
 
 mutable struct Population
     id::String

@@ -49,12 +49,12 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
     ])
 
     # for seq in children
-    #     if !haskey(class.pathogens, seq)
-    #         newPathogen!(seq, class, pathogen_1.type)
+    #     if !haskey(population.pathogens, seq)
+    #         newPathogen!(seq, population, pathogen_1.type)
     #     end
     # end
 
-    # return SA[class.pathogens[children[1]], class.pathogens[children[2]]]
+    # return SA[population.pathogens[children[1]], population.pathogens[children[2]]]
 
     if !haskey(population.pathogens, children[1])
         newPathogen!(children[1], population, pathogen_1.type)
@@ -176,7 +176,6 @@ function hostContact!(model::Model, rand_n::Float64)
     #     pop_idx_2, rand_n = choosePopulation(RECEIVE_CONTACT, model, rand_n)
     #     #TODO: this sampling needs to be done according to contact rates from pop1
     # end
-    # class_idx_2, rand_n = chooseClass(pop_idx_2, RECEIVE_CONTACT, model, rand_n)
     host_idx_2, rand_n = chooseHost(pop_idx_2, RECEIVE_CONTACT, model, rand_n)
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2

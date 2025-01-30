@@ -60,28 +60,10 @@ function newHost!(population::Population, model::Model)
 
     # propagateWeightChanges!(
     #     START_COEFFICIENTS
-    #     # class change, inter-population contact and migration numbers per class or
-    #     # population are fractions that sum to one, so no need to account for in here
-    #     , length(class.hosts), class, population, model
     # )
 
     return population.hosts[end]
 end
-
-# function newClass!(id::String, parameters::ClassParameters, population::Population)
-#     push!(population.classes, Class(
-#         id, parameters,
-#         Dict{String,Pathogen}(), Dict{Tuple{String,String,String},Response}(),
-#         Vector{Host}(undef, 0),
-#         Matrix{Float64}(undef, NUM_EVENTS, 0),
-#         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
-#     ))
-#     population.class_dict[id] = length(population.classes)
-#     population.class_weights = catCol(population.class_weights, zeros(Float64, NUM_EVENTS))
-#     population.class_weights_receive = catCol(population.class_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
-
-#     return population.classes[end]
-# end
 
 function newPopulation!(id::String, parameters::PopulationParameters, model::Model)
     push!(model.populations, Population(

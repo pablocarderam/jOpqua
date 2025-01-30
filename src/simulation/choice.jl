@@ -66,24 +66,6 @@ function chooseHost(population_idx::Int64, weight::Int64, model::Model, rand_n::
     end
 end
 
-# function chooseClass(population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
-#     if weight > NUM_EVENTS
-#         return randChoose(
-#             rand_n,
-#             @views(model.populations[population_idx].class_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]),
-#             model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, population_idx],
-#             regenerate_rand=true
-#         )
-#     else
-#         return randChoose(
-#             rand_n,
-#             @views(model.populations[population_idx].class_weights[weight,:]),
-#             model.population_weights[weight, population_idx],
-#             regenerate_rand=true
-#         )
-#     end
-# end
-
 function choosePopulation(weight::Int64, model::Model, rand_n::Float64)
     if weight > NUM_EVENTS
         return randChoose(
@@ -133,10 +115,3 @@ function chooseHost(weight::Int64, model::Model, rand_n::Float64)
 
     return host_idx, pop_idx, rand_n
 end
-
-# function chooseClass(weight::Int64, model::Model, rand_n::Float64)
-#     pop_idx, rand_n = choosePopulation(weight, model, rand_n)
-#     class_idx, rand_n = chooseClass(pop_idx, weight, model, rand_n)
-
-#     return class_idx, pop_idx, rand_n
-# end
