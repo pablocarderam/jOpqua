@@ -113,6 +113,61 @@ function attemptInfection!(pathogen::Pathogen,
     end
 end
 
+# Model events
+
+function establishMutant!(model::Model, rand_n::Float64)
+    pathogen_idx, host_idx, pop_idx = choosePathogen(MUTANT_ESTABLISHMENT, model, rand_n)
+
+    mut = mutantPathogen!(
+        model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
+        model.populations[pop_idx]
+    )
+
+    attemptInfection!(mut, host_idx, pop_idx, model)
+end
+
+function clearPathogen!(model::Model, rand_n::Float64)
+    pathogen_idx, host_idx, pop_idx = choosePathogen(CLEARANCE, model, rand_n)
+
+    removePathogenFromHost!(
+        pathogen_idx, host_idx,
+        model.populations[pop_idx], model
+    )
+end
+
+function acquireResponse!(model::Model, rand_n::Float64)
+    pathogen_idx, host_idx, pop_idx = choosePathogen(CLEARANCE, model, rand_n)
+
+    responses = model.populations[pop_idx].parameters.developResponses(
+        model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
+        model.populations[pop_idx].hosts[host_idx],
+        model.populations[pop_idx],
+    )
+
+    for response in responses
+        if !(response in model.populations[pop_idx].hosts[host_idx].responses)
+            addResponseToHost!(
+                response, host_idx,
+                model.populations[pop_idx], model
+            )
+        end
+    end
+end
+
+function establishRecombinant!(model::Model, rand_n::Float64)
+    pathogen_idx_1, host_idx, pop_idx, rand_n = choosePathogen(RECOMBINANT_ESTABLISHMENT, model, rand_n)
+    pathogen_idx_2 = choosePathogen(host_idx, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
+
+    if pathogen_idx_1 != pathogen_idx_2 && pathogen_idx_1.type == pathogen_idx_2.type
+        recombinant = recombinantPathogens!(
+            model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1],
+            model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2],
+            model.populations[pop_idx]
+        )
+
+        attemptInfection!(recombinant, host_idx, pop_idx, model)
+    end
+end
 
 function hostContact!(model::Model, rand_n::Float64)
     host_idx_1, pop_idx_1, rand_n = chooseHost(CONTACT, model, rand_n)
@@ -217,62 +272,6 @@ function hostContact!(model::Model, rand_n::Float64)
                 end
             end
         end
-    end
-end
-
-# Model events
-
-function establishMutant!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx = choosePathogen(MUTANT_ESTABLISHMENT, model, rand_n)
-
-    mut = mutantPathogen!(
-        model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
-        model.populations[pop_idx]
-    )
-
-    attemptInfection!(mut, host_idx, pop_idx, model)
-end
-
-function clearPathogen!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx = choosePathogen(CLEARANCE, model, rand_n)
-
-    removePathogenFromHost!(
-        pathogen_idx, host_idx,
-        model.populations[pop_idx], model
-    )
-end
-
-function acquireResponse!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx = choosePathogen(CLEARANCE, model, rand_n)
-
-    responses = model.populations[pop_idx].parameters.developResponses(
-        model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
-        model.populations[pop_idx].hosts[host_idx],
-        model.populations[pop_idx],
-    )
-
-    for response in responses
-        if !(response in model.populations[pop_idx].hosts[host_idx].responses)
-            addResponseToHost!(
-                response, host_idx,
-                model.populations[pop_idx], model
-            )
-        end
-    end
-end
-
-function establishRecombinant!(model::Model, rand_n::Float64)
-    pathogen_idx_1, host_idx, pop_idx, rand_n = choosePathogen(RECOMBINANT_ESTABLISHMENT, model, rand_n)
-    pathogen_idx_2 = choosePathogen(host_idx, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
-
-    if pathogen_idx_1 != pathogen_idx_2 && pathogen_idx_1.type == pathogen_idx_2.type
-        recombinant = recombinantPathogens!(
-            model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1],
-            model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2],
-            model.populations[pop_idx]
-        )
-
-        attemptInfection!(recombinant, host_idx, pop_idx, model)
     end
 end
 

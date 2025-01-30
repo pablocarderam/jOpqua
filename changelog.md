@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 30 January 2025
+- Moved `hostContact!` down to section with events
+-
+
 ## 29 January 2025
 - Removed `Class` and everything associated to it
 - Made a single `CONTACT` event
