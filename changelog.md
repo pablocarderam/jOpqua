@@ -3,9 +3,13 @@
 ## 30 January 2025
 - Moved `hostContact!` down to section with events
 
-TODO: receive contact weights should be handled like contact weights, one
+TODO:
+- receive contact weights should be handled like contact weights, one
 per possible population contact relationship?
-Add inoculum, mutation, recombination population-level parameters
+- Add inoculum, mutation, recombination population-level parameters
+- Rename `MIGRATION` to `POPULATION_CHANGE`
+- `pathogenFractions!` should be a parameter of `Population`; current
+function should be the default
 
 ## 29 January 2025
 - Removed `Class` and everything associated to it
