@@ -30,7 +30,7 @@ struct PopulationParameters
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
     population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
-    migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
+    transition_rates::Dict{String,Float64} # size POPULATIONS, must sum to 1
 
     pathogen_types::Dict{String,PathogenType}
     response_types::Dict{String,ResponseType}
@@ -96,7 +96,7 @@ end
 mutable struct Model
     populations::Vector{Population} # size POPULATIONS
     population_dict::Dict{String,Int64}
-    # Holds Population ids => Population indexes, used for migration to get matching Population
+    # Holds Population ids => Population indexes, used for transition to get matching Population
 
     population_weights::Matrix{Float64} # size NUM_EVENTS x POPULATIONS
     population_weights_receive::Matrix{Float64}

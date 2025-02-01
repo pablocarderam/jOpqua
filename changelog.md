@@ -2,12 +2,14 @@
 
 ## 30 January 2025
 - Moved `hostContact!` down to section with events
+- Renamed `MIGRATION` to `TRANSITION` and `migration_fractions` to
+`transition_rates`
+-
 
 TODO:
 - receive contact weights should be handled like contact weights, one
 per possible population contact relationship?
 - Add inoculum, mutation, recombination population-level parameters
-- Rename `MIGRATION` to `POPULATION_CHANGE`
 - `pathogenFractions!` should be a parameter of `Population`; current
 function should be the default
 
