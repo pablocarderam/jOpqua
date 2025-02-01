@@ -1,15 +1,19 @@
 # jOpqua
+This is work in progress.
+
 Julia implementation of [Opqua](https://github.com/pablocarderam/opqua), with
 two particular improvements:
-- groups of hosts with different parameters but within the same population
-(`Class`, equivalent to compartments in epidemiological models)
+- streamlined system for groups of hosts with different parameters
+(`Population`), can be used for compartments in traditional epidemiological
+models, hosts types in multi-host/vector systems, geographically separate
+groups of hosts, sympatric groups of hosts with different epidemiological
+characteristics, etc., and all combinations of the above
 - an overhauled, flexible, and nuanced handling of host acquired immunity
-This is work in progress.
 
 ## Here's a rundown of the model.
 The model is built on the following hierarchy of entities,
 which are represented as structs:
-`Pathogen` and `Immunity` << `Host` << `Class` << `Population` << `Model`
+`Pathogen` and `Immunity` << `Host` << `Population` << `Model`
 
 Each one has its own file. Besides the entities of the model, there's a list of
 key processes that the simulation runs on. The likelihood of each process can
@@ -38,25 +42,23 @@ instance, the `Model` entity has a matrix with 10 rows (one for each event) and
 _p_ columns, where _p_ is the number of populations in the simulation. These are
 used to randomly sample a population whenever a given event occurs using the
 weights across the corresponding row. Similarly, `Population` entities have
-equivalent matrices with _c_ columns, one per `Class`, and each `Class` has a
-matrix with _h_ columns, one per `Host`. At the `Host` level, we have two
-different matrices with different dimensions: one corresponding to events
-involving `Pathogen` entities, and one corresponding to `Immunity` entities.
-Some events involve `Host` entities but not specific `Pathogen` or `Immunity`
-entities, those events are handled at the level of `Class` and are not
-represented within `Host` entities.
+equivalent matrices with _h_ columns, one per `Host`. At the `Host` level, we
+have two different matrices with different dimensions: one corresponding to
+events involving `Pathogen` entities, and one corresponding to `Immunity`
+entities. Some events involve `Host` entities but not specific `Pathogen` or
+`Immunity` entities, those events are handled at the level of `Population` and
+are not represented within `Host` entities.
 
 Now, in addition to these weight matrices that allow us to sample entities from
 their parents, we also have similar weight matrices that we use to sample
 entities when they are "receiving" an event. Examples of this are contact
 (formerly transmission, I think contact is more accurate depending on how
-immunity is handled but I might revisit this nomenclature) events within a
-`Population`, in which a `Pathogen` within a `Host` within a `Class` within a
-`Population` (all sampled using their respective weight matrices along the
-`INTRA_POPULATION_CONTACT` row) attempts to infect a different `Host` within
-some `Class` within the same `Population` (the `Class` and `Host` sampled using
-their respective `weight_receive` matrices along the `INTRA_POPULATION_CONTACT`
-row).
+immunity is handled but I might revisit this nomenclature) events, in which a
+`Pathogen` within a `Host` within a `Population` (all sampled using their
+respective weight matrices along the `CONTACT` row) attempts to infect a
+different `Host` within the same `Population` or a different one
+(the `Population` and `Host` sampled using their respective `weight_receive`
+matrices along the `CONTACT` row).
 
 At the bottom-most level, sampling of `Pathogen` entities within a `Host` is
 computed based on the coefficients of that `Pathogen` genome, which are
@@ -97,18 +99,20 @@ immunities, as done with pathogen clearance).
 
 The coefficient modifier functions that operate on `Pathogen` and `Immunity`
 sequences along with all other static base parameters describing event rates and
-likelihoods are defined at the level of the `Class`. This means that `Class`
-weights within a `Population` not only are weighted according to the sum of `Host`
-weights, but are also multiplied by `Class`-specific rates.
+likelihoods are defined at the level of the `Population`. This means that `Population`
+weights within a `Model` not only are weighted according to the sum of `Host`
+weights, but are also multiplied by `Population`-specific rates.
 
-The structs corresponding to `Pathogen`, `Immunity`, `Host`, `Class`, `Population`,
+The structs corresponding to `Pathogen`, `Immunity`, `Host`, `Population`,
 and `Model` represent the fundamental entities that are simulated in jOpqua. It
 is worth pointing out that each `Immunity` is associated to a specific
 `ImmunityType` defining the functions by which immunity affects functions in the
-model. Similarly, each `Class` is associated to a `ClassParameters` entity,
-which defines all parameters corresponding to entities within the `Class`
-(including `ImmunityTypes` available within the `Class`) as well as parameters
-of the `Class` itself.
+model. Similarly, each `Pathogen` is associated to a specific
+`PathogenType` with functions evaluating the effect of pathogen sequence on
+events, and each `Population` is associated to a `PopulationType` entity,
+which defines all parameters corresponding to entities within the `Population`
+(including `ImmunityTypes` available within the `Population`) as well as parameters
+of the `Population` itself.
 
 This model structure is pretty flexible: we can accommodate metapopulation
 structures, host compartments with different epidemiological parameters (not
