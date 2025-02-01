@@ -36,13 +36,16 @@ re_type = jOpqua.ResponseType(
     (imp_g, mat_g, pat_g) -> 1.0,
 )
 
-pop_parameters = jOpqua.PopulationParameters(
+pop_parameters = jOpqua.PopulationType(
     "TestParams", # id::String
     SA[ # base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
         0.00, 1.0, 0.0, 0.0,
         1.05, 0.0, 0.0, 0.0,
         0.00, 0.0, 1.0, 0.0,
     ],
+    jOpqua.pathogenFractionsWinnerTakesAll,
+    jOpqua.weightedResponseArithmeticMean,
+    jOpqua.infectionProbabilityArithmeticMean,
     Dict(), # population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(), # migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(pa_type.id => pa_type), # response_types::Dict{String,ResponseType}

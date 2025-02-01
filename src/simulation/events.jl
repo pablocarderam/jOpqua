@@ -102,7 +102,7 @@ function attemptInfection!(pathogen::Pathogen,
         pathogen in
         model.populations[pop_idx].hosts[host_idx].pathogens
         ) &&
-        rand() < infectionProbability(
+        rand() < model.populations[pop_idx].parameters.infectionProbability(
             pathogen,
             model.populations[pop_idx].hosts[host_idx]
         )

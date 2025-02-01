@@ -4,14 +4,22 @@
 - Moved `hostContact!` down to section with events
 - Renamed `MIGRATION` to `TRANSITION` and `migration_fractions` to
 `transition_rates`
--
+- Changed name of `PopulationParameters` to `PopulationType`
+- `pathogenFractions!` is now `pathogenFractionsWinnerTakesAll`,
+a parameter of `PopulationType`; default function is stored in
+new file, `intrahost.jl`
+- Made `weightedResponse` and `infectionProbability` into
+`weightedResponseArithmeticMean` and `infectionProbabilityArithmeticMean`,
+parameters of `PopulationType`; default functions are stored in
+`immunity.jl`
+- Moved `immunity.jl` and `intrahost.jl` into their corresponding
+directories within the new `extensions` directory
 
 TODO:
 - receive contact weights should be handled like contact weights, one
 per possible population contact relationship?
 - Add inoculum, mutation, recombination population-level parameters
-- `pathogenFractions!` should be a parameter of `Population`; current
-function should be the default
+
 
 ## 29 January 2025
 - Removed `Class` and everything associated to it

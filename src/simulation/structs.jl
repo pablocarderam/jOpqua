@@ -1,5 +1,6 @@
 using StaticArrays
 
+# Parameters structs (entity types):
 struct PathogenType
     id::String
 
@@ -24,21 +25,32 @@ struct ResponseType
     reactivityCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
-struct PopulationParameters
+struct PopulationType
     id::String
 
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
+
+    pathogenFractions::Function
+    # Takes Host and Population entities, returns vector with fractional representation of each pathogen present
+    weightedResponse::Function
+    # Takes Pathogen entity, Host entity, and event number;
+    # returns aggregated response coefficient against that Pathogen for that event
+    infectionProbability::Function
+    # Takes Pathogen and Host entities,
+    # returns probability that a contact results in successful infection given the Responses in Host
 
     population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     transition_rates::Dict{String,Float64} # size POPULATIONS, must sum to 1
 
     pathogen_types::Dict{String,PathogenType}
     response_types::Dict{String,ResponseType}
-    developResponses::Function # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
+    developResponses::Function
+    # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
     # (this handles how many and which responses to choose when adding a response to a host)
     #TODO: maybe doesn't need Population? Probably does to ensure responses don't already exist
 end
 
+# Model entities:
 struct Pathogen
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
@@ -77,7 +89,7 @@ end
 
 mutable struct Population
     id::String
-    parameters::PopulationParameters
+    parameters::PopulationType
 
     pathogens::Dict{String,Pathogen}
     responses::Dict{Tuple{String,String,String},Response}

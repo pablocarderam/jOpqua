@@ -29,143 +29,9 @@ function pathogenSequenceCoefficients(sequence::String, type::PathogenType)
     ]
 end
 
-function weightedResponse(pathogen::Pathogen, host::Host, evt::Int64)
-    # reactivity-weighted arithmetic mean of specific coefficients
-    if length(host.responses) > 0
-        reac_sum = 0.0
-        numerator_sum = 0.0
-        for response in host.responses
-            reac_sum += response.type.reactivityCoefficient(
-                response.imprinted_pathogen.sequence,
-                response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
-            numerator_sum += response.type.reactivityCoefficient(
-                response.imprinted_pathogen.sequence,
-                response.matured_pathogen.sequence,
-                pathogen.sequence
-            ) * response.type.specific_coefficient_functions[evt](
-                response.imprinted_pathogen.sequence,
-                response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
-        end
-
-        return numerator_sum / reac_sum
-    else
-        return 1.0
-    end
-
-    # # different algorithm reactivity-weighted arithmetic mean of specific coefficients
-    # if length(host.responses) > 0
-    #     return sum([
-    #         response.type.reactivityCoefficient(
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         ) * response.type.specific_coefficient_functions[evt](
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         )
-    #         for response in host.responses
-    #         ]) / sum([
-    #             response.type.reactivityCoefficient(
-    #                 response.imprinted_pathogen.sequence,
-    #                 response.matured_pathogen.sequence,
-    #                 pathogen.sequence
-    #             )
-    #             for response in host.responses
-    #         ])
-    # else
-    #     return 1.0
-    # end
-
-    # # reactivity-weighted harmonic mean of specific coefficients
-    # if length(host.responses) > 0
-    #     reac_sum = 0.0
-    #     denom_sum = 0.0
-    #     for response in host.responses
-    #         reac_sum += response.type.reactivityCoefficient(
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         )
-    #         denom_sum += response.type.reactivityCoefficient(
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         ) / response.type.specific_coefficient_functions[evt](
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         )
-    #     end
-
-    #     return reac_sum / denom_sum
-    # else
-    #     return 1.0
-    # end
-
-    # # different algorithm reactivity-weighted harmonic mean of specific coefficients
-    # if length(host.responses) > 0
-    #     return sum([
-    #         response.type.reactivityCoefficient(
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         )
-    #         for response in host.responses
-    #         ]) / sum([
-    #         response.type.reactivityCoefficient(
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         ) / response.type.specific_coefficient_functions[evt](
-    #             response.imprinted_pathogen.sequence,
-    #             response.matured_pathogen.sequence,
-    #             pathogen.sequence
-    #         )
-    #         for response in host.responses
-    #         ])
-    # else
-    #     return 1.0
-    # end
-end
-
-# Intrahost-level representation
-
-function pathogenFractions!(host::Host)
-    # Currently, we assume pathogen population fraction (share in total fitness)
-    # impacts all events equally regardless of event; this is not necessarilly the case, however.
-    # We also assume only the most fit pathogen affects events.
-    # If multiple pathogens are tied in fitness, the first one to have infected dominates.
-    # This all changes in popgen Opqua.
-    # # The values in the returned vector must sum to 1.0.
-    fracs = Vector{Float64}(undef, length(host.pathogens))
-    if length(host.pathogens) > 0
-        if length(host.responses) > 0
-            for p in 1:length(host.pathogens)
-                fracs[p] =
-                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedResponse(
-                        host.pathogens[p], host, INTRAHOST_FITNESS
-                    )
-            end
-        else
-            for p in 1:length(host.pathogens)
-                fracs[p] = host.pathogens[p].coefficients[INTRAHOST_FITNESS]
-            end
-        end
-        max_coef = argmax(fracs)
-        fracs = zeros(Float64, length(host.pathogens))
-        fracs[max_coef] = 1.0
-    end
-    host.pathogen_fractions = fracs
-end
-
 # Intrahost-level weights
 
-function pathogenWeights!(p::Int64, host::Host, evt::Int64)
+function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int64)
     host.pathogen_weights[evt, p] =
         host.pathogens[p].type.coefficient_functions[evt](
             host.pathogens[p].sequence
@@ -193,7 +59,7 @@ function pathogenWeights!(p::Int64, host::Host, evt::Int64)
     end
     if length(host.responses) > 0
         host.pathogen_weights[evt, p] =
-            host.pathogen_weights[evt, p] * weightedResponse(
+            host.pathogen_weights[evt, p] * population.parameters.weightedResponse(
                 host.pathogens[p], host, evt
             )
     end
@@ -202,7 +68,7 @@ end
 function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int64)
     population.host_weights[evt, host_idx] = 0.0
     for p in 1:length(population.hosts[host_idx].pathogens)
-        pathogenWeights!(p, population.hosts[host_idx], evt)
+        pathogenWeights!(p, population.hosts[host_idx], population, evt)
         population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
         # we sum here because we have already weighted by fraction
         # (for everything except clearance, see above)
@@ -245,7 +111,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
             population.host_weights[evt, h] =
                 population.host_weights[evt, h] * sum([
                     # we weight by pathogen fraction as above
-                    population.hosts[h].pathogen_fractions[p] * weightedResponse(
+                    population.hosts[h].pathogen_fractions[p] * population.parameters.weightedResponse(
                         population.hosts[h].pathogens[p], population.hosts[h], evt
                     )
                     for p in 1:length(population.hosts[h].pathogens)
@@ -282,7 +148,7 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
                 population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] * sum([
                     # we weight by pathogen fraction as above
                     population.hosts[h].pathogen_fractions[p] *
-                    weightedResponse(
+                    population.parameters.weightedResponse(
                         population.hosts[h].pathogens[p], population.hosts[h], evt
                     )
                     for p in 1:length(population.hosts[h].pathogens)
@@ -303,7 +169,9 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
 end
 
 function hostWeights!(host_idx::Int64, population::Population, model::Model)
-    pathogenFractions!(population.hosts[host_idx])
+    population.hosts[host_idx].pathogen_fractions = population.parameters.pathogenFractions(
+        population.hosts[host_idx], population
+    )
     prev = 0.0
     for weight in PATHOGEN_EVENTS
         prev = population.host_weights[weight, host_idx]

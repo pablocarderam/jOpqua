@@ -65,7 +65,7 @@ function newHost!(population::Population, model::Model)
     return population.hosts[end]
 end
 
-function newPopulation!(id::String, parameters::PopulationParameters, model::Model)
+function newPopulation!(id::String, parameters::PopulationType, model::Model)
     push!(model.populations, Population(
         id, parameters,
         Dict{String,Pathogen}(), Dict{Tuple{String,String,String},Response}(),
