@@ -3,9 +3,9 @@ using StaticArrays
 function newPathogen!(sequence::String, population::Population, type::PathogenType)
     population.pathogens[sequence] = Pathogen(
         sequence, pathogenSequenceCoefficients(sequence, type),
-        type.mean_effective_inoculum * type.inoculumCoefficient(sequence),
-        type.mean_mutations_per_replication * type.mutationCoefficient(sequence),
-        type.mean_recombination_crossovers * type.recombinationCoefficient(sequence),
+        type.mean_effective_inoculum * type.inoculumCoefficient(sequence) * population.parameters.inoculum_coefficient,
+        type.mean_mutations_per_replication * type.mutationCoefficient(sequence) * population.parameters.mutation_coefficient,
+        type.mean_recombination_crossovers * type.recombinationCoefficient(sequence) * population.parameters.recombination_coefficient,
         type
     )
 

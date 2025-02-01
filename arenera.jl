@@ -50,7 +50,10 @@ pop_parameters = jOpqua.PopulationType(
     Dict(), # migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
     Dict(pa_type.id => pa_type), # response_types::Dict{String,ResponseType}
     Dict(re_type.id => re_type), # response_types::Dict{String,ResponseType}
-    (p, h, c) -> Nothing # developResponses::Function
+    (p, h, c) -> Nothing, # developResponses::Function,
+    1.0, # inoculum_coefficient
+    1.0, # mutation_coefficient
+    1.0, # recombination_coefficient
 )
 
 # Model setup

@@ -48,6 +48,10 @@ struct PopulationType
     # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
     # (this handles how many and which responses to choose when adding a response to a host)
     #TODO: maybe doesn't need Population? Probably does to ensure responses don't already exist
+
+    inoculum_coefficient::Float64
+    mutation_coefficient::Float64
+    recombination_coefficient::Float64
 end
 
 # Model entities:
@@ -101,7 +105,7 @@ mutable struct Population
     # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
 
     total_hosts::Int64
-    population_contact_sum::Float64
+    contact_sum::Float64
     receive_contact_sum::Float64
 end
 

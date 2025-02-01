@@ -236,7 +236,7 @@ function propagateWeightChanges!(change::Float64, population::Population, evt::I
     model.population_weights[evt, model.population_dict[population.id]] += change
 
     if evt == CONTACT && population.total_hosts > 0
-        population.population_contact_sum += change
+        population.contact_sum += change
         change = change * population.receive_contact_sum / population.total_hosts
         # elseif evt == INTER_POPULATION_CONTACT
         #     population.inter_population_contact_sum += change
@@ -259,7 +259,7 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
     if evt == RECEIVE_CONTACT && evt < NUM_COEFFICIENTS
         population.receive_contact_sum += change
         propagateWeightChanges!(
-            change * population.population_contact_sum / population.total_hosts,
+            change * population.contact_sum / population.total_hosts,
             population, CONTACT, model
         )
         #TODO: update inter-pop contacts

@@ -14,11 +14,14 @@ parameters of `PopulationType`; default functions are stored in
 `immunity.jl`
 - Moved `immunity.jl` and `intrahost.jl` into their corresponding
 directories within the new `extensions` directory
+- Add inoculum, mutation, recombination population-level coefficient
+parameters
+- Rename `population_contact_sum` to `contact_sum`
 
-TODO:
-- receive contact weights should be handled like contact weights, one
-per possible population contact relationship?
-- Add inoculum, mutation, recombination population-level parameters
+TODO: Implement inter-population contacts such that self-contact is an option
+and we just have a single contacts function for all cases; receive contact
+weights should be handled like contact weights, one per possible population
+contact relationship
 
 
 ## 29 January 2025
