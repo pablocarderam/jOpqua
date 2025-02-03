@@ -303,8 +303,8 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
     elseif evt == RECEIVE_TRANSITION
         for p in 1:length(model.populations)
             change_p = (
-                change * model.populations[p].population_transition_coefficients[model.population_dict[population.id]] *
-                population.population_transition_coefficients_receive[p] / max(population.total_hosts, 1)
+                change * model.populations[p].population_transition_coefficients[model.population_dict[population.id]] /
+                max(population.total_hosts, 1)
                 )
                 # Transition receive weights are assumed to be independent of population.
             model.population_transition_weights_receive[model.population_dict[population.id], p] += change_p

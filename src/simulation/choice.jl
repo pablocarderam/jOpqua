@@ -1,5 +1,5 @@
 function randChoose(rand_n::Float64, rates, rates_sum::Float64; regenerate_rand::Bool=false)
-        #TODO: rates is not type-defined to accommodate @views, maybe this is bad
+    #TODO: rates is not type-defined to accommodate @views, maybe this is bad
     if rates_sum > 0
         norm_rand_n = rand_n * rates_sum
         cum_sum = 0.0
@@ -27,9 +27,9 @@ end
 function choosePathogen(host_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     return randChoose(
         rand_n,
-        @views(model.populations[population_idx].hosts[host_idx].pathogen_weights[weight,:]),
+        @views(model.populations[population_idx].hosts[host_idx].pathogen_weights[weight, :]),
         model.populations[population_idx].host_weights[weight, host_idx],
-            # assumes population's host weights are the sum of all pathogen weights, should be true
+        # assumes population's host weights are the sum of all pathogen weights, should be true
         regenerate_rand=true
     )
 end
@@ -37,9 +37,9 @@ end
 function chooseResponse(host_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     return randChoose(
         rand_n,
-        @views(model.populations[population_idx].hosts[host_idx].response_weights[weight-RESPONSE_EVENTS[1]+1,:]),
+        @views(model.populations[population_idx].hosts[host_idx].response_weights[weight-RESPONSE_EVENTS[1]+1, :]),
         model.populations[population_idx].host_weights[weight, host_idx],
-            # assumes population's host weights are the sum of all response weights, should be true
+        # assumes population's host weights are the sum of all response weights, should be true
         regenerate_rand=true
     )
 end
@@ -48,8 +48,8 @@ function chooseHost(population_idx::Int64, weight::Int64, model::Model, rand_n::
     if weight > NUM_EVENTS
         return randChoose(
             rand_n,
-            @views(model.populations[population_idx].host_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]) .*
-                model.populations[population_idx].parameters.base_coefficients[weight],
+            @views(model.populations[population_idx].host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :]) .*
+            model.populations[population_idx].parameters.base_coefficients[weight],
             model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, population_idx],
             #TODO: revise, maybe this is another field?
             regenerate_rand=true
@@ -57,8 +57,8 @@ function chooseHost(population_idx::Int64, weight::Int64, model::Model, rand_n::
     else
         return randChoose(
             rand_n,
-            @views(model.populations[population_idx].host_weights[weight,:]) .*
-                model.populations[population_idx].parameters.base_coefficients[weight],
+            @views(model.populations[population_idx].host_weights[weight, :]) .*
+            model.populations[population_idx].parameters.base_coefficients[weight],
             model.population_weights[weight, population_idx],
             #TODO: revise, maybe this is another field?
             regenerate_rand=true
@@ -69,15 +69,15 @@ end
 function choosePopulation(weight::Int64, model::Model, rand_n::Float64)
     if weight > NUM_EVENTS
         return randChoose(
-                rand_n,
-                @views(model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1,:]),
-                model.population_weights_receive_sums[weight-CHOICE_MODIFIERS[1]+1],
-                regenerate_rand=true
-            )
+            rand_n,
+            @views(model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :]),
+            model.population_weights_receive_sums[weight-CHOICE_MODIFIERS[1]+1],
+            regenerate_rand=true
+        )
     else
         return randChoose(
             rand_n,
-            @views(model.population_weights[weight,:]),
+            @views(model.population_weights[weight, :]),
             model.event_rates[weight],
             regenerate_rand=true
         )
@@ -97,7 +97,7 @@ function choosePopulationReceiveTransition(emitter_idx::Int64, model::Model, ran
     return randChoose(
         rand_n,
         @views(model.population_transition_weights_receive[:, emitter_idx]),
-        model.population_contact_transition_receive_sums[emitter_idx],
+        model.population_transition_weights_receive_sums[emitter_idx],
         regenerate_rand=true
     )
 end
