@@ -46,10 +46,6 @@ pop_parameters = jOpqua.PopulationType(
     jOpqua.pathogenFractionsWinnerTakesAll,
     jOpqua.weightedResponseArithmeticMean,
     jOpqua.infectionProbabilityArithmeticMean,
-    Dict(), # population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
-    Dict(), # migration_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
-    Dict(pa_type.id => pa_type), # response_types::Dict{String,ResponseType}
-    Dict(re_type.id => re_type), # response_types::Dict{String,ResponseType}
     (p, h, c) -> Nothing, # developResponses::Function,
     1.0, # inoculum_coefficient
     1.0, # mutation_coefficient
@@ -79,9 +75,10 @@ for h in 1:num_immune
     jOpqua.addResponseToHost!(pat, h, pop, model)
 end
 
-t_vec = collect(0.0:10.0)
+t_vec = collect(0.0:50.0)
 
-jOpqua.simulate!(model, t_vec)
+@time jOpqua.simulate!(model, t_vec)
+model.event_rates
 
 # jOpqua.establishMutant!(model, rand())
 

@@ -5,9 +5,9 @@ using StaticArrays
 const MUTANT_ESTABLISHMENT = 1
 const CLEARANCE = 2
 const RESPONSE_ACQUISITION = 3
-# Two pathogens, single host
+# Two pathogens (symmetrical), single host
 const RECOMBINANT_ESTABLISHMENT = 4
-# Single pathogen, two hosts
+# Single pathogen, two hosts (asymmetrical)
 const CONTACT = 5
 
 # Response events
@@ -18,7 +18,7 @@ const RESPONSE_LOSS = 6
 # Single host, single population
 const BIRTH = 7
 const DEATH = 8
-# Single host, two populations
+# Single host, two populations (asymmetrical)
 const TRANSITION = 9
 
 # Choice modifiers, zooming in in scale (order matters)

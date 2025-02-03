@@ -32,16 +32,36 @@ function newHost!(population::Population, model::Model)
         Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
         Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
     ))
+    population.total_hosts += 1
     population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
     population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
-    propagateWeightChanges!(
-        - model.population_weights[CONTACT, model.population_dict[population.id]] /
-        (population.total_hosts + 1),
-        population, CONTACT, model
-    )
-    #TODO: update inter-pop contacts
-    population.total_hosts += 1
+    for p in 1:length(model.populations)
+        model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
+            model.population_contact_weights_receive[model.population_dict[population.id], p] /
+            population.total_hosts
+        )
+        model.population_contact_weights_receive_sums[p] -= (
+            model.population_contact_weights_receive_sums[p] /
+            population.total_hosts
+        )
+        propagateWeightChanges!(
+            - model.population_weights[CONTACT, p] / population.total_hosts,
+            model.populations[p], CONTACT, model
+        )
+        model.population_transition_weights_receive[model.population_dict[population.id], p] -= (
+            model.population_transition_weights_receive[model.population_dict[population.id], p] /
+            population.total_hosts
+        )
+        model.population_transition_weights_receive_sums[p] -= (
+            model.population_transition_weights_receive_sums[p] /
+            population.total_hosts
+        )
+        propagateWeightChanges!(
+            - model.population_weights[TRANSITION, p] / population.total_hosts,
+            model.populations[p], TRANSITION, model
+        )
+    end
 
     for coef in EVENTS
         if START_COEFFICIENTS[coef] != 0
@@ -58,10 +78,6 @@ function newHost!(population::Population, model::Model)
         end
     end
 
-    # propagateWeightChanges!(
-    #     START_COEFFICIENTS
-    # )
-
     return population.hosts[end]
 end
 
@@ -72,11 +88,36 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         Vector{Host}(undef, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
-        0, 0.0, 0.0
+        0, 0.0, 0.0,
+        zeros(Float64, length(model.populations)),
+        zeros(Float64, length(model.populations)),
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))
     model.population_weights_receive = catCol(model.population_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
+
+    for pop in model.populations
+        push!(pop.population_contact_coefficients, 0.0)
+        push!(pop.population_transition_coefficients, 0.0)
+    end
+
+    if length(model.populations) > 1 # if more than just this population we just added
+        model.population_contact_weights_receive = catCol(
+            model.population_contact_weights_receive, zeros(Float64, length(model.populations))
+        )
+        model.population_transition_weights_receive = catCol(
+            model.population_transition_weights_receive, zeros(Float64, length(model.populations))
+        )
+    else
+        model.population_contact_weights_receive = Matrix{Float64}(undef, 1, 1)
+        model.population_transition_weights_receive = Matrix{Float64}(undef, 1, 1)
+    end
+
+    push!(model.population_contact_weights_receive_sums, 0.0)
+    push!(model.population_transition_weights_receive_sums, 0.0)
+
+    # By default, self contact is set to 1.0
+    setPopulationContactCoefficient!(length(model.populations), length(model.populations), 1.0, model)
 
     return model.populations[end]
 end
@@ -87,8 +128,12 @@ function newModel()
         Dict{String,Int64}(),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
-        zeros(SVector{NUM_CHOICE_MODIFIERS - 1,Float64}),
-        zeros(SVector{NUM_EVENTS,Float64}),
+        zeros(SVector{NUM_CHOICE_MODIFIERS - 1, Float64}),
+        Matrix{Float64}(undef, 0, 0),
+        Matrix{Float64}(undef, 0, 0),
+        Vector{Float64}(undef, 0),
+        Vector{Float64}(undef, 0),
+        zeros(SVector{NUM_EVENTS, Float64}),
         0.0
     )
 end

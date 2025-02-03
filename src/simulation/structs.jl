@@ -39,11 +39,6 @@ struct PopulationType
     # Takes Pathogen and Host entities,
     # returns probability that a contact results in successful infection given the Responses in Host
 
-    population_contact_fractions::Dict{String,Float64} # size POPULATIONS, must sum to 1
-    transition_rates::Dict{String,Float64} # size POPULATIONS, must sum to 1
-
-    pathogen_types::Dict{String,PathogenType}
-    response_types::Dict{String,ResponseType}
     developResponses::Function
     # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
     # (this handles how many and which responses to choose when adding a response to a host)
@@ -106,7 +101,10 @@ mutable struct Population
 
     total_hosts::Int64
     contact_sum::Float64
-    receive_contact_sum::Float64
+    transition_sum::Float64
+
+    population_contact_coefficients::Vector{Float64} # size POPULATIONS
+    population_transition_coefficients::Vector{Float64} # size POPULATIONS
 end
 
 mutable struct Model
@@ -118,8 +116,18 @@ mutable struct Model
     population_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-1 x POPULATIONS; -1 excludes intrahost fitness
 
-    population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS - 1,Float64}
+    population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS - 1, Float64}
     # size NUM_CHOICE_MODIFIERS-1; -1 excludes intrahost fitness
+
+    population_contact_weights_receive::Matrix{Float64}
+    # size POPULATIONS x POPULATIONS; receiver is on row, emitter is on column
+    population_transition_weights_receive::Matrix{Float64}
+    # size POPULATIONS x POPULATIONS; receiver is on row, emitter is on column
+
+    population_contact_weights_receive_sums::Vector{Float64}
+    # size POPULATIONS
+    population_transition_weights_receive_sums::Vector{Float64}
+    # size POPULATIONS
 
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64

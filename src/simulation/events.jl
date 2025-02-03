@@ -113,6 +113,26 @@ function attemptInfection!(pathogen::Pathogen,
     end
 end
 
+function setPopulationContactCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64, coefficient::Float64, model::Model)
+    model.populations[pop_idx_1].population_contact_coefficients[pop_idx_2] = coefficient
+    change = (
+        model.populations[pop_idx_1].population_contact_coefficients[pop_idx_2] *
+        model.population_weights_receive[RECEIVE_CONTACT-CHOICE_MODIFIERS[1]+1, pop_idx_2] /
+        max(model.populations[pop_idx_2].total_hosts, 1)
+        ) - model.population_contact_weights_receive[pop_idx_2, pop_idx_1]
+    updatePopulationContactWeightReceiveMatrix!(pop_idx_1, pop_idx_2, change, model)
+end
+
+function setPopulationTransitionCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64, coefficient::Float64, model::Model)
+    model.populations[pop_idx_1].population_transition_coefficients[pop_idx_2] = coefficient
+    change = (
+        model.populations[pop_idx_1].population_transition_coefficients[pop_idx_2] *
+        model.population_weights_receive[RECEIVE_TRANSITION-CHOICE_MODIFIERS[1]+1, pop_idx_2] /
+        max(model.populations[pop_idx_2].total_hosts, 1)
+        ) - model.population_transition_weights_receive[pop_idx_2, pop_idx_1]
+    updatePopulationTransitionWeightReceiveMatrix!(pop_idx_1, pop_idx_2, change, model)
+end
+
 # Model events
 
 function establishMutant!(model::Model, rand_n::Float64)
@@ -171,11 +191,7 @@ end
 
 function hostContact!(model::Model, rand_n::Float64)
     host_idx_1, pop_idx_1, rand_n = chooseHost(CONTACT, model, rand_n)
-    pop_idx_2 = pop_idx_1
-    # if !same_population
-    #     pop_idx_2, rand_n = choosePopulation(RECEIVE_CONTACT, model, rand_n)
-    #     #TODO: this sampling needs to be done according to contact rates from pop1
-    # end
+    pop_idx_2, rand_n = choosePopulationReceiveContact(pop_idx_1, model, rand_n)
     host_idx_2, rand_n = chooseHost(pop_idx_2, RECEIVE_CONTACT, model, rand_n)
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2

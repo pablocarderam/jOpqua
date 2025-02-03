@@ -84,6 +84,24 @@ function choosePopulation(weight::Int64, model::Model, rand_n::Float64)
     end
 end
 
+function choosePopulationReceiveContact(emitter_idx::Int64, model::Model, rand_n::Float64)
+    return randChoose(
+        rand_n,
+        @views(model.population_contact_weights_receive[:, emitter_idx]),
+        model.population_contact_weights_receive_sums[emitter_idx],
+        regenerate_rand=true
+    )
+end
+
+function choosePopulationReceiveTransition(emitter_idx::Int64, model::Model, rand_n::Float64)
+    return randChoose(
+        rand_n,
+        @views(model.population_transition_weights_receive[:, emitter_idx]),
+        model.population_contact_transition_receive_sums[emitter_idx],
+        regenerate_rand=true
+    )
+end
+
 function chooseEvent(model::Model, rand_n::Float64)
     return randChoose(
         rand_n,

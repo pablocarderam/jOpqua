@@ -1,6 +1,19 @@
 # jOpqua Changelog
 
-## 30 January 2025
+## 3 February 2025
+Significant overhaul of weights calculations in order to accommodate correct
+inter- and self-population contact
+
+More than just this, but some notes I took:
+- Change weights calculation for contacts at population level so that it
+incorporates infected and total host numbers as well as inter-population
+contacts
+- Change weight propagation so that event weights are not propagated above
+population level if the number of hosts is zero, and if they are zero, the
+corresponding population weight is set to zero and propagated
+- Implement contacts as inter- or intra-population contacts
+
+## 31 January 2025
 - Moved `hostContact!` down to section with events
 - Renamed `MIGRATION` to `TRANSITION` and `migration_fractions` to
 `transition_rates`
