@@ -11,18 +11,24 @@ struct PathogenType
     mean_mutations_per_replication::Float64
     mean_recombination_crossovers::Int64
 
+    vertical_transmission::Float64
+
     coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
     inoculumCoefficient::Function # takes seq argument, returns Float64
     mutationCoefficient::Function # takes seq argument, returns Float64
     recombinationCoefficient::Function # takes seq argument, returns Float64
+
+    verticalTransmission::Function # takes seq argument, returns Float64
 end
 
 struct ResponseType
     id::String
     static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured sequences and returns Float64 coefficient
     specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
+    inherit_response::Float64
     infectionCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
     reactivityCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
+
 end
 
 struct PopulationType
@@ -119,7 +125,7 @@ mutable struct Model
     population_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-1 x POPULATIONS; -1 excludes intrahost fitness
 
-    population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS - 1, Float64}
+    population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS - 1,Float64}
     # size NUM_CHOICE_MODIFIERS-1; -1 excludes intrahost fitness
 
     population_contact_weights_receive::Matrix{Float64}

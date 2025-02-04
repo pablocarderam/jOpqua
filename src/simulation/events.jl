@@ -96,16 +96,15 @@ function removeResponseFromHost!(response_idx::Int64, host_idx::Int64, populatio
     hostWeights!(host_idx, population, model)
 end
 
-function attemptInfection!(pathogen::Pathogen,
-        host_idx::Int64, pop_idx::Int64, model::Model)
+function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, model::Model)
     if !(
         pathogen in
         model.populations[pop_idx].hosts[host_idx].pathogens
-        ) &&
-        rand() < model.populations[pop_idx].parameters.infectionProbability(
-            pathogen,
-            model.populations[pop_idx].hosts[host_idx]
-        )
+    ) &&
+       rand() < model.populations[pop_idx].parameters.infectionProbability(
+        pathogen,
+        model.populations[pop_idx].hosts[host_idx]
+    )
 
         addPathogenToHost!(
             pathogen, host_idx, model.populations[pop_idx], model
@@ -220,7 +219,7 @@ function hostContact!(model::Model, rand_n::Float64)
         for p_idx in eachindex(inocula)
             if inocula[p_idx] > 0
                 mut_prob = min(
-                    1.0, 1.0-exp(
+                    1.0, 1.0 - exp(
                         -model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_mutations_per_replication
                     )
                 )
@@ -228,7 +227,7 @@ function hostContact!(model::Model, rand_n::Float64)
                 rec_prob = 0.0
                 if length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens) > 1
                     rec_prob = min(
-                        1.0, 1.0-exp(
+                        1.0, 1.0 - exp(
                             -model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_recombination_crossovers
                         )
                     )
@@ -300,11 +299,36 @@ function loseResponse!(model::Model, rand_n::Float64)
     response_idx, host_idx, pop_idx = chooseResponse(CLEARANCE, model, rand_n)
 
     removeResponseFromHost!(
-        response, host_idx, model.populations[pop_idx], model
+        response_idx, host_idx, model.populations[pop_idx], model
     )
+end
+
+function birth!(model::Model, rand_n::Float64)
+    host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
+
+    jOpqua.newHost!(model.populations[pop_idx], model)
+
+    for response in model.populations[pop_idx].hosts[host_idx].responses
+        if rand() < response.type.inherit_response
+            addResponseToHost!(
+                response, length(model.populations[pop_idx].hosts),
+                model.populations[pop_idx], model
+            )
+        end
+    end
+
+    for pathogen in model.populations[pop_idx].hosts[host_idx].pathogens
+        if rand() < (pathogen.type.vertical_transmission *
+                     pathogen.type.verticalTransmission(pathogen.sequence))
+            attemptInfection!(
+                pathogen, length(model.populations[pop_idx].hosts), pop_idx, model
+            )
+        end
+    end
 end
 
 event_functions = SA[
     establishMutant!, clearPathogen!, acquireResponse!,
     establishRecombinant!, hostContact!, loseResponse!,
+    birth!,
 ]

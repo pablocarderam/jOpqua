@@ -12,12 +12,13 @@ pa_type = jOpqua.PathogenType(
     1.0,
     0.0,
     0.0,
+    0.0,
     SA[ # pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
         g->1.0, g->1.0, g->1.0, g->1.0,
         g->1.0, g->1.0, g->1.0, g->1.0,
         g->1.0, g->1.0, g->1.0, g->1.0,
     ],
-    g -> 1.0, g -> 1.0, g -> 1.0,
+    g -> 1.0, g -> 1.0, g -> 1.0, g -> 1.0,
 )
 
 re_type = jOpqua.ResponseType(
@@ -32,6 +33,7 @@ re_type = jOpqua.ResponseType(
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
         (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
     ],
+    0.0,
     (imp_g, mat_g, pat_g) -> 1.0,
     (imp_g, mat_g, pat_g) -> 1.0,
 )
