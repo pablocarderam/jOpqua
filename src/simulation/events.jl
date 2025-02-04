@@ -296,7 +296,15 @@ function hostContact!(model::Model, rand_n::Float64)
     end
 end
 
+function loseResponse!(model::Model, rand_n::Float64)
+    response_idx, host_idx, pop_idx = chooseResponse(CLEARANCE, model, rand_n)
+
+    removeResponseFromHost!(
+        response, host_idx, model.populations[pop_idx], model
+    )
+end
+
 event_functions = SA[
     establishMutant!, clearPathogen!, acquireResponse!,
-    establishRecombinant!, hostContact!,
+    establishRecombinant!, hostContact!, loseResponse!,
 ]
