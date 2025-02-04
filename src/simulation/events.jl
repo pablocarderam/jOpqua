@@ -118,8 +118,11 @@ function setPopulationContactCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64, co
     change = (
         model.populations[pop_idx_1].population_contact_coefficients[pop_idx_2] *
         model.population_weights_receive[RECEIVE_CONTACT-CHOICE_MODIFIERS[1]+1, pop_idx_2] /
-        max(model.populations[pop_idx_2].total_hosts, 1)
-        ) - model.population_contact_weights_receive[pop_idx_2, pop_idx_1]
+        max(
+            model.populations[pop_idx_2].total_hosts *
+            model.populations[pop_idx_2].parameters.constant_contact_density,
+            1
+        )) - model.population_contact_weights_receive[pop_idx_2, pop_idx_1]
     updatePopulationContactWeightReceiveMatrix!(pop_idx_1, pop_idx_2, change, model)
 end
 
@@ -128,8 +131,11 @@ function setPopulationTransitionCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64,
     change = (
         model.populations[pop_idx_1].population_transition_coefficients[pop_idx_2] *
         model.population_weights_receive[RECEIVE_TRANSITION-CHOICE_MODIFIERS[1]+1, pop_idx_2] /
-        max(model.populations[pop_idx_2].total_hosts, 1)
-        ) - model.population_transition_weights_receive[pop_idx_2, pop_idx_1]
+        max(
+            model.populations[pop_idx_2].total_hosts *
+            model.populations[pop_idx_2].parameters.constant_transition_density,
+            1
+        )) - model.population_transition_weights_receive[pop_idx_2, pop_idx_1]
     updatePopulationTransitionWeightReceiveMatrix!(pop_idx_1, pop_idx_2, change, model)
 end
 

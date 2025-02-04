@@ -30,6 +30,9 @@ struct PopulationType
 
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
+    constant_contact_density::Bool
+    constant_transition_density::Bool
+
     pathogenFractions::Function
     # Takes Host and Population entities, returns vector with fractional representation of each pathogen present
     weightedResponse::Function

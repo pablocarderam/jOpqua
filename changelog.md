@@ -1,5 +1,12 @@
 # jOpqua Changelog
 
+## 4 February 2025
+- Added `constant_contact_density` as a parameter of `PopulationType` to specify
+whether or not to normalize by host population size in calculation of
+receive contact weights, equivalently, added `constant_transition_density`
+for receive transition weights (`constant_transition_density` should by
+default be `true`; can't imagine otherwise)
+
 ## 3 February 2025
 Significant overhaul of weights calculations in order to accommodate correct
 inter- and self-population contact

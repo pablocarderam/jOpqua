@@ -39,26 +39,28 @@ function newHost!(population::Population, model::Model)
     for p in 1:length(model.populations)
         model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
             model.population_contact_weights_receive[model.population_dict[population.id], p] /
-            population.total_hosts
+            max(population.total_hosts * population.parameters.constant_contact_density, 1)
         )
         model.population_contact_weights_receive_sums[p] -= (
             model.population_contact_weights_receive_sums[p] /
-            population.total_hosts
+            max(population.total_hosts * population.parameters.constant_contact_density, 1)
         )
         propagateWeightChanges!(
-            - model.population_weights[CONTACT, p] / population.total_hosts,
+            - model.population_weights[CONTACT, p] /
+            max(population.total_hosts * population.parameters.constant_contact_density, 1),
             model.populations[p], CONTACT, model
         )
         model.population_transition_weights_receive[model.population_dict[population.id], p] -= (
             model.population_transition_weights_receive[model.population_dict[population.id], p] /
-            population.total_hosts
+            max(population.total_hosts * population.parameters.constant_transition_density, 1)
         )
         model.population_transition_weights_receive_sums[p] -= (
             model.population_transition_weights_receive_sums[p] /
-            population.total_hosts
+            max(population.total_hosts * population.parameters.constant_transition_density, 1)
         )
         propagateWeightChanges!(
-            - model.population_weights[TRANSITION, p] / population.total_hosts,
+            - model.population_weights[TRANSITION, p] /
+            max(population.total_hosts * population.parameters.constant_transition_density, 1),
             model.populations[p], TRANSITION, model
         )
     end

@@ -43,6 +43,7 @@ pop_parameters = jOpqua.PopulationType(
         1.05, 0.0, 0.0, 0.0,
         0.00, 0.0, 1.0, 0.0,
     ],
+    true, false,
     jOpqua.pathogenFractionsWinnerTakesAll,
     jOpqua.weightedResponseArithmeticMean,
     jOpqua.infectionProbabilityArithmeticMean,
