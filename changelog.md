@@ -1,5 +1,8 @@
 # jOpqua Changelog
 
+## 5 February 2025
+- Added pathogen fraction to calculation of vertical transmission probability
+
 ## 4 February 2025
 - Added `constant_contact_density` as a parameter of `PopulationType` to specify
 whether or not to normalize by host population size in calculation of

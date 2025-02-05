@@ -309,7 +309,7 @@ function birth!(model::Model, rand_n::Float64)
     jOpqua.newHost!(model.populations[pop_idx], model)
 
     for response in model.populations[pop_idx].hosts[host_idx].responses
-        if rand() < response.type.inherit_response
+        if response.type.inherit_response > 0 && rand() < response.type.inherit_response
             addResponseToHost!(
                 response, length(model.populations[pop_idx].hosts),
                 model.populations[pop_idx], model
@@ -317,11 +317,16 @@ function birth!(model::Model, rand_n::Float64)
         end
     end
 
-    for pathogen in model.populations[pop_idx].hosts[host_idx].pathogens
-        if rand() < (pathogen.type.vertical_transmission *
-                     pathogen.type.verticalTransmission(pathogen.sequence))
+    for pathogen_idx in 1:length(model.populations[pop_idx].hosts[host_idx].pathogens)
+        if (model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission > 0 &&
+            rand() < model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission *
+                     model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.verticalTransmission(
+                         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].sequence
+                     ) *
+                     model.populations[pop_idx].hosts[host_idx].pathogen_fractions[pathogen_idx])
             attemptInfection!(
-                pathogen, length(model.populations[pop_idx].hosts), pop_idx, model
+                model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
+                length(model.populations[pop_idx].hosts), pop_idx, model
             )
         end
     end
