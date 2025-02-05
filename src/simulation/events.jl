@@ -112,6 +112,57 @@ function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, 
     end
 end
 
+function addHostToPopulation!(new_host::Host, population::Population, model::Model)
+    push!(population.hosts, new_host)
+    population.total_hosts += 1
+    population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
+    population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
+
+    for p in 1:length(model.populations)
+        model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
+            model.population_contact_weights_receive[model.population_dict[population.id], p] /
+            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+        )
+        model.population_contact_weights_receive_sums[p] -= (
+            model.population_contact_weights_receive_sums[p] /
+            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+        )
+        propagateWeightChanges!(
+            - model.population_weights[CONTACT, p] /
+            max(population.total_hosts * population.parameters.constant_contact_density, 1),
+            model.populations[p], CONTACT, model
+        )
+        model.population_transition_weights_receive[model.population_dict[population.id], p] -= (
+            model.population_transition_weights_receive[model.population_dict[population.id], p] /
+            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+        )
+        model.population_transition_weights_receive_sums[p] -= (
+            model.population_transition_weights_receive_sums[p] /
+            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+        )
+        propagateWeightChanges!(
+            - model.population_weights[TRANSITION, p] /
+            max(population.total_hosts * population.parameters.constant_transition_density, 1),
+            model.populations[p], TRANSITION, model
+        )
+    end
+
+    for coef in EVENTS
+        if START_COEFFICIENTS[coef] != 0
+            propagateWeightChanges!(
+                START_COEFFICIENTS[coef], length(population.hosts), population, coef, model
+            )
+        end
+    end
+    for coef in CHOICE_MODIFIERS[begin:end-1]
+        if START_COEFFICIENTS[coef] != 0
+            propagateWeightReceiveChanges!(
+                START_COEFFICIENTS[coef], length(population.hosts), population, coef, model
+            )
+        end
+    end
+end
+
 function setPopulationContactCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64, coefficient::Float64, model::Model)
     model.populations[pop_idx_1].population_contact_coefficients[pop_idx_2] = coefficient
     change = (

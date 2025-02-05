@@ -2,6 +2,7 @@
 
 ## 5 February 2025
 - Added pathogen fraction to calculation of vertical transmission probability
+- Moved code to add a `Host` to a `Population` into a separate function
 
 ## 4 February 2025
 - Added `constant_contact_density` as a parameter of `PopulationType` to specify
