@@ -81,6 +81,8 @@ end
 
 t_vec = collect(0.0:50.0)
 
+Random.seed!(0000)
+
 @time jOpqua.simulate!(model, t_vec)
 model.event_rates
 
