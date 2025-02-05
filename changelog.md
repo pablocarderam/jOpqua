@@ -3,6 +3,13 @@
 ## 5 February 2025
 - Added pathogen fraction to calculation of vertical transmission probability
 - Moved code to add a `Host` to a `Population` into a separate function
+- Optimizations including: add types to global variables; match literal types to
+their context; extend use of `@views`; cache emitting `Host` in `hostContact!`
+
+TODO: function for running and benchmarking repeated simulations; current setup
+has a global `model` variable which I (CLM) believe retains its state after
+simulation _n_ at the beginning of simulation _n+1_, affecting both simulation
+trajectory and runtime
 
 ## 4 February 2025
 - Added `constant_contact_density` as a parameter of `PopulationType` to specify

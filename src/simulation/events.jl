@@ -25,7 +25,7 @@ end
 function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population)
     children = MVector(pathogen_1.sequence, pathogen_2.sequence)
 
-    if pathogen_1.mean_recombination_crossovers > 0 && pathogen_2.mean_recombination_crossovers > 0
+    if pathogen_1.mean_recombination_crossovers > 0.0 && pathogen_2.mean_recombination_crossovers > 0.0
         num_evts = zeroTruncatedPoisson(mean(
             pathogen_1.mean_recombination_crossovers,
             pathogen_2.mean_recombination_crossovers
@@ -148,14 +148,14 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     end
 
     for coef in EVENTS
-        if START_COEFFICIENTS[coef] != 0
+        if START_COEFFICIENTS[coef] != 0.0
             propagateWeightChanges!(
                 START_COEFFICIENTS[coef], length(population.hosts), population, coef, model
             )
         end
     end
     for coef in CHOICE_MODIFIERS[begin:end-1]
-        if START_COEFFICIENTS[coef] != 0
+        if START_COEFFICIENTS[coef] != 0.0
             propagateWeightReceiveChanges!(
                 START_COEFFICIENTS[coef], length(population.hosts), population, coef, model
             )
@@ -171,7 +171,7 @@ function setPopulationContactCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64, co
         max(
             model.populations[pop_idx_2].total_hosts *
             model.populations[pop_idx_2].parameters.constant_contact_density,
-            1
+            1.0
         )) - model.population_contact_weights_receive[pop_idx_2, pop_idx_1]
     updatePopulationContactWeightReceiveMatrix!(pop_idx_1, pop_idx_2, change, model)
 end
@@ -184,7 +184,7 @@ function setPopulationTransitionCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64,
         max(
             model.populations[pop_idx_2].total_hosts *
             model.populations[pop_idx_2].parameters.constant_transition_density,
-            1
+            1.0
         )) - model.population_transition_weights_receive[pop_idx_2, pop_idx_1]
     updatePopulationTransitionWeightReceiveMatrix!(pop_idx_1, pop_idx_2, change, model)
 end
@@ -251,17 +251,18 @@ function hostContact!(model::Model, rand_n::Float64)
     host_idx_2, rand_n = chooseHost(pop_idx_2, RECEIVE_CONTACT, model, rand_n)
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
+        host1 = model.populations[pop_idx_1].hosts[host_idx_1]
         inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens)}([
             pois_rand(
-                model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_effective_inoculum *
-                model.populations[pop_idx_1].hosts[host_idx_1].pathogen_fractions[p_idx]
+                host1.pathogens[p_idx].mean_effective_inoculum *
+                host1.pathogen_fractions[p_idx]
             )
-            for p_idx in 1:length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens)
+            for p_idx in 1:length(host1.pathogens)
         ])
-        if !any(inocula .!= 0)
+        if !any(inocula .!= 0.0)
             idx, rand_n = randChoose(
                 rand_n,
-                model.populations[pop_idx_1].hosts[host_idx_1].pathogen_fractions,
+                @views(host1.pathogen_fractions),
                 1.0, regenerate_rand=true
             )
             inocula[idx] += 1
@@ -271,15 +272,15 @@ function hostContact!(model::Model, rand_n::Float64)
             if inocula[p_idx] > 0
                 mut_prob = min(
                     1.0, 1.0 - exp(
-                        -model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_mutations_per_replication
+                        -host1.pathogens[p_idx].mean_mutations_per_replication
                     )
                 )
                 # probability from Poisson PMF with k=0
                 rec_prob = 0.0
-                if length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens) > 1
+                if length(host1.pathogens) > 1
                     rec_prob = min(
                         1.0, 1.0 - exp(
-                            -model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx].mean_recombination_crossovers
+                            -host1.pathogens[p_idx].mean_recombination_crossovers
                         )
                     )
                     # probability from Poisson PMF with k=0
@@ -287,16 +288,16 @@ function hostContact!(model::Model, rand_n::Float64)
                 num_mut = binomial(inocula[p_idx], mut_prob * (1.0 - rec_prob))
                 num_rec = binomial(inocula[p_idx], rec_prob * (1.0 - mut_prob))
                 num_mut_rec = binomial(inocula[p_idx], mut_prob * rec_prob)
-                if inocula[p_idx] - num_mut - num_rec - num_mut_rec > 0
+                if inocula[p_idx] - num_mut - num_rec - num_mut_rec > 0.0
                     attemptInfection!(
-                        model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                        host1.pathogens[p_idx],
                         host_idx_2, pop_idx_2, model
                     )
                 end
                 for _ in 1:num_mut
                     attemptInfection!(
                         mutantPathogen!(
-                            model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                            host1.pathogens[p_idx],
                             model.populations[pop_idx_1]
                         ), host_idx_2, pop_idx_2, model
                     )
@@ -305,13 +306,13 @@ function hostContact!(model::Model, rand_n::Float64)
                     p_idx_2 = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand_n)
 
                     if p_idx != p_idx_2 && (
-                        model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx].type ==
-                        model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx_2].type)
+                        host1.pathogens[p_idx].type ==
+                        host1.pathogens[p_idx_2].type)
 
                         attemptInfection!(
                             recombinantPathogens!(
-                                model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                                model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx_2],
+                                host1.pathogens[p_idx],
+                                host1.pathogens[p_idx_2],
                                 model.populations[pop_idx_1]
                             ), host_idx_2, pop_idx_2, model
                         )
@@ -322,8 +323,8 @@ function hostContact!(model::Model, rand_n::Float64)
 
                     if p_idx != p_idx_2
                         recombinant = recombinantPathogens!(
-                            model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx],
-                            model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx_2],
+                            host1.pathogens[p_idx],
+                            host1.pathogens[p_idx_2],
                             model.populations[pop_idx_1]
                         )
 
@@ -334,7 +335,7 @@ function hostContact!(model::Model, rand_n::Float64)
                     else
                         attemptInfection!(
                             mutantPathogen!(
-                                model.populations[pop_idx_1].hosts[host_idx_1].pathogens[p_idx],
+                                host1.pathogens[p_idx],
                                 model.populations[pop_idx_1]
                             ),
                             host_idx_2, pop_idx_2, model
@@ -360,7 +361,7 @@ function birth!(model::Model, rand_n::Float64)
     jOpqua.newHost!(model.populations[pop_idx], model)
 
     for response in model.populations[pop_idx].hosts[host_idx].responses
-        if response.type.inherit_response > 0 && rand() < response.type.inherit_response
+        if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
             addResponseToHost!(
                 response, length(model.populations[pop_idx].hosts),
                 model.populations[pop_idx], model
@@ -369,7 +370,7 @@ function birth!(model::Model, rand_n::Float64)
     end
 
     for pathogen_idx in 1:length(model.populations[pop_idx].hosts[host_idx].pathogens)
-        if (model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission > 0 &&
+        if (model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
             rand() < model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission *
                      model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.verticalTransmission(
                          model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].sequence

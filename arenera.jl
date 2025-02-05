@@ -3,9 +3,10 @@ using jOpqua
 
 using StaticArrays
 using Random
+using BenchmarkTools
 
 # Parameters
-pa_type = jOpqua.PathogenType(
+pa_type::jOpqua.PathogenType = jOpqua.PathogenType(
     "pa_type",
     10,
     "ARNDCEQGHILKMFPSTWYV*",
@@ -21,7 +22,7 @@ pa_type = jOpqua.PathogenType(
     g -> 1.0, g -> 1.0, g -> 1.0, g -> 1.0,
 )
 
-re_type = jOpqua.ResponseType(
+re_type::jOpqua.ResponseType = jOpqua.ResponseType(
     "re_type", # id::String,
     SA[ # static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
         (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
@@ -38,7 +39,7 @@ re_type = jOpqua.ResponseType(
     (imp_g, mat_g, pat_g) -> 1.0,
 )
 
-pop_parameters = jOpqua.PopulationType(
+pop_parameters::jOpqua.PopulationType = jOpqua.PopulationType(
     "TestParams", # id::String
     SA[ # base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
         0.00, 1.0, 0.0, 0.0,
@@ -56,19 +57,19 @@ pop_parameters = jOpqua.PopulationType(
 )
 
 # Model setup
-num_populations = 1
-num_hosts = 10000
-num_infected = Int(num_hosts * 0.5)
-num_immune = 0
+num_populations::Int64 = 1
+num_hosts::Int64 = 10000
+num_infected::Int64 = Int(num_hosts * 0.5)
+num_immune::Int64 = 0
 
-model = jOpqua.newModel()
-pop = jOpqua.newPopulation!("pop", pop_parameters, model)
+model::jOpqua.Model = jOpqua.newModel()
+pop::jOpqua.Population = jOpqua.newPopulation!("pop", pop_parameters, model)
 for i in 1:num_hosts
     # println(i)
     host = jOpqua.newHost!(pop, model)
 end
-pat = jOpqua.newPathogen!("AAAA", pop, pa_type)
-res = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), pop, re_type)
+pat::jOpqua.Pathogen = jOpqua.newPathogen!("AAAA", pop, pa_type)
+res::jOpqua.Response = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), pop, re_type)
 
 for h in 1:num_infected
     # println(h)

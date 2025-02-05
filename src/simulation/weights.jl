@@ -287,7 +287,7 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
         for p in 1:length(model.populations)
             change_p = (
                 change * model.populations[p].population_contact_coefficients[model.population_dict[population.id]] /
-                max(population.total_hosts * population.parameters.constant_contact_density, 1)
+                max(population.total_hosts * population.parameters.constant_contact_density, 1.0)
                 )
                 # Contact rates assume scaling area if constant_contact_density is true:
                 # large populations are equally
@@ -305,7 +305,7 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
         for p in 1:length(model.populations)
             change_p = (
                 change * model.populations[p].population_transition_coefficients[model.population_dict[population.id]] /
-                max(population.total_hosts * population.parameters.constant_transition_density, 1)
+                max(population.total_hosts * population.parameters.constant_transition_density, 1.0)
                 )
                 # Transition receive weights are assumed to be independent of population
                 # (constant_transition_density=false), but can be modified if desired.

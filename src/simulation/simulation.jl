@@ -34,7 +34,7 @@ function simulate!(model::Model, time_vector::Vector{Float64})
         end
     end
 
-    println(evt_count)
+    # println(evt_count)
 
     # return model
 end
