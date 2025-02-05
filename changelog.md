@@ -1,10 +1,12 @@
 # jOpqua Changelog
 
 ## 5 February 2025
-- Added pathogen fraction to calculation of vertical transmission probability
-- Moved code to add a `Host` to a `Population` into a separate function
+- Added pathogen fraction to calculation of vertical transmission probability (PCR)
+- Moved code to add a `Host` to a `Population` into a separate function (PCR)
 - Optimizations including: add types to global variables; match literal types to
-their context; extend use of `@views`; cache emitting `Host` in `hostContact!`
+their context; extend use of `@views`; cache emitting `Host` in `hostContact!` (CLM)
+- Backtrack 2 optimizations (one @views use with no slicing, one comparison between
+ints that did not require using a float zero) (PCR)
 
 TODO: function for running and benchmarking repeated simulations; current setup
 has a global `model` variable which I (CLM) believe retains its state after

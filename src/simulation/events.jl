@@ -261,9 +261,7 @@ function hostContact!(model::Model, rand_n::Float64)
         ])
         if !any(inocula .!= 0.0)
             idx, rand_n = randChoose(
-                rand_n,
-                @views(host1.pathogen_fractions),
-                1.0, regenerate_rand=true
+                rand_n, host1.pathogen_fractions, 1.0, regenerate_rand=true
             )
             inocula[idx] += 1
         end
@@ -288,7 +286,7 @@ function hostContact!(model::Model, rand_n::Float64)
                 num_mut = binomial(inocula[p_idx], mut_prob * (1.0 - rec_prob))
                 num_rec = binomial(inocula[p_idx], rec_prob * (1.0 - mut_prob))
                 num_mut_rec = binomial(inocula[p_idx], mut_prob * rec_prob)
-                if inocula[p_idx] - num_mut - num_rec - num_mut_rec > 0.0
+                if inocula[p_idx] - num_mut - num_rec - num_mut_rec > 0
                     attemptInfection!(
                         host1.pathogens[p_idx],
                         host_idx_2, pop_idx_2, model
