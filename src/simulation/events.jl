@@ -163,6 +163,58 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     end
 end
 
+function removeHostFromPopulation!(host_idx::Int64, population::Population, model::Model)
+    for coef in EVENTS
+        if population.host_weights[host_idx, coef] != 0.0
+            propagateWeightChanges!(
+                - population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
+            )
+        end
+    end
+    for coef in CHOICE_MODIFIERS[begin:end-1]
+        if population.host_weights[host_idx, coef] != 0.0
+            propagateWeightReceiveChanges!(
+                - population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
+            )
+        end
+    end
+
+    for p in 1:length(model.populations)
+        model.population_contact_weights_receive[model.population_dict[population.id], p] += (
+            model.population_contact_weights_receive[model.population_dict[population.id], p] /
+            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+        )
+        model.population_contact_weights_receive_sums[p] += (
+            model.population_contact_weights_receive_sums[p] /
+            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+        )
+        propagateWeightChanges!(
+            model.population_weights[CONTACT, p] /
+            max(population.total_hosts * population.parameters.constant_contact_density, 1),
+            model.populations[p], CONTACT, model
+        )
+        model.population_transition_weights_receive[model.population_dict[population.id], p] += (
+            model.population_transition_weights_receive[model.population_dict[population.id], p] /
+            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+        )
+        model.population_transition_weights_receive_sums[p] += (
+            model.population_transition_weights_receive_sums[p] /
+            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+        )
+        propagateWeightChanges!(
+            model.population_weights[TRANSITION, p] /
+            max(population.total_hosts * population.parameters.constant_transition_density, 1),
+            model.populations[p], TRANSITION, model
+        )
+    end
+
+    population.host_weights = population.host_weights[1:end .!= host_idx, 1:end .!= host_idx]
+    population.host_weights_receive = population.host_weights_receive[1:end .!= host_idx, 1:end .!= host_idx]
+
+    population.total_hosts -= 1
+    deleteat!(population.hosts, host_idx)
+end
+
 function setPopulationContactCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64, coefficient::Float64, model::Model)
     model.populations[pop_idx_1].population_contact_coefficients[pop_idx_2] = coefficient
     change = (
@@ -382,8 +434,22 @@ function birth!(model::Model, rand_n::Float64)
     end
 end
 
+function death!(model::Model, rand_n::Float64)
+    host_idx, pop_idx, rand_n = chooseHost(DEATH, model, rand_n)
+
+    removeHostFromPopulation!(host_idx, model.populations[pop_idx], model)
+end
+
+function transition!(model::Model, rand_n::Float64)
+    host_idx, pop_idx_1, rand_n = chooseHost(TRANSITION, model, rand_n)
+    pop_idx_2, rand_n = choosePopulationReceiveTransition(pop_idx_1, model, rand_n)
+
+    addHostToPopulation!(model.populations[pop_idx_1].hosts[host_idx], population, model)
+    removeHostFromPopulation!(host_idx, model.populations[pop_idx_1], model)
+end
+
 event_functions = SA[
     establishMutant!, clearPathogen!, acquireResponse!,
     establishRecombinant!, hostContact!, loseResponse!,
-    birth!,
+    birth!, death!
 ]

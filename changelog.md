@@ -7,11 +7,23 @@
 their context; extend use of `@views`; cache emitting `Host` in `hostContact!` (CLM)
 - Backtrack 2 optimizations (one @views use with no slicing, one comparison between
 ints that did not require using a float zero) (PCR)
+- Added `removeHostFromPopulation` and death event (PCR)
+- Added transition event (PCR)
+All events implemented!!! but not tested lol
 
-TODO: function for running and benchmarking repeated simulations; current setup
+TODO:
+- function for running and benchmarking repeated simulations; current setup
 has a global `model` variable which I (CLM) believe retains its state after
 simulation _n_ at the beginning of simulation _n+1_, affecting both simulation
 trajectory and runtime
+- Test and debug the **** out of everything (all parameters and events,
+particularly events other than clearance and contact)
+
+Dev roadmap:
+- implement interventions
+- input parameters
+- output data + plotting
+- immunity DLC
 
 ## 4 February 2025
 - Added `constant_contact_density` as a parameter of `PopulationType` to specify
