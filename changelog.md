@@ -9,6 +9,7 @@ their context; extend use of `@views`; cache emitting `Host` in `hostContact!` (
 ints that did not require using a float zero) (PCR)
 - Added `removeHostFromPopulation` and death event (PCR)
 - Added transition event (PCR)
+
 All events implemented!!! but not tested lol
 
 TODO:
