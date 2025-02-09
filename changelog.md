@@ -1,5 +1,8 @@
 # jOpqua Changelog
 
+## 9 February 2025
+- Small bug fix in `transition!`
+
 ## 5 February 2025
 - Added pathogen fraction to calculation of vertical transmission probability (PCR)
 - Moved code to add a `Host` to a `Population` into a separate function (PCR)

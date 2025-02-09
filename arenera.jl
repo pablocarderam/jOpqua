@@ -57,34 +57,43 @@ pop_parameters::jOpqua.PopulationType = jOpqua.PopulationType(
 )
 
 # Model setup
-num_populations::Int64 = 1
-num_hosts::Int64 = 10000
-num_infected::Int64 = Int(num_hosts * 0.5)
-num_immune::Int64 = 0
+function testRun()
+    num_populations::Int64 = 1
+    num_hosts::Int64 = 10000
+    num_infected::Int64 = Int(num_hosts * 0.5)
+    num_immune::Int64 = 0
 
-model::jOpqua.Model = jOpqua.newModel()
-pop::jOpqua.Population = jOpqua.newPopulation!("pop", pop_parameters, model)
-for i in 1:num_hosts
-    # println(i)
-    host = jOpqua.newHost!(pop, model)
+    model::jOpqua.Model = jOpqua.newModel()
+    pop::jOpqua.Population = jOpqua.newPopulation!("pop", pop_parameters, model)
+    for i in 1:num_hosts
+        # println(i)
+        host = jOpqua.newHost!(pop, model)
+    end
+    pat::jOpqua.Pathogen = jOpqua.newPathogen!("AAAA", pop, pa_type)
+    res::jOpqua.Response = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), pop, re_type)
+
+    for h in 1:num_infected
+        # println(h)
+        jOpqua.addPathogenToHost!(pat, h, pop, model)
+    end
+    for h in 1:num_immune
+        jOpqua.addResponseToHost!(pat, h, pop, model)
+    end
+
+    t_vec = collect(0.0:50.0)
+
+    Random.seed!(0000)
+
+    @time jOpqua.simulate!(model, t_vec)
+    println(model.event_rates)
 end
-pat::jOpqua.Pathogen = jOpqua.newPathogen!("AAAA", pop, pa_type)
-res::jOpqua.Response = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), pop, re_type)
 
-for h in 1:num_infected
-    # println(h)
-    jOpqua.addPathogenToHost!(pat, h, pop, model)
-end
-for h in 1:num_immune
-    jOpqua.addResponseToHost!(pat, h, pop, model)
-end
+testRun()
 
-t_vec = collect(0.0:50.0)
-
-Random.seed!(0000)
-
-@time jOpqua.simulate!(model, t_vec)
-model.event_rates
+# Result M3 Max 64 GB 9 Feb (second run):
+# 94438
+#   2.023602 seconds (4.98 M allocations: 10.808 GiB, 18.23% gc time)
+# [0.0, 465.0, 0.0, 0.0, 488.2500000000037, 0.0, 0.0, 0.0, 0.0]
 
 # jOpqua.establishMutant!(model, rand())
 

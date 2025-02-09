@@ -128,7 +128,7 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
             max(population.total_hosts * population.parameters.constant_contact_density, 1)
         )
         propagateWeightChanges!(
-            - model.population_weights[CONTACT, p] /
+            -model.population_weights[CONTACT, p] /
             max(population.total_hosts * population.parameters.constant_contact_density, 1),
             model.populations[p], CONTACT, model
         )
@@ -141,7 +141,7 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
             max(population.total_hosts * population.parameters.constant_transition_density, 1)
         )
         propagateWeightChanges!(
-            - model.population_weights[TRANSITION, p] /
+            -model.population_weights[TRANSITION, p] /
             max(population.total_hosts * population.parameters.constant_transition_density, 1),
             model.populations[p], TRANSITION, model
         )
@@ -167,14 +167,14 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
     for coef in EVENTS
         if population.host_weights[host_idx, coef] != 0.0
             propagateWeightChanges!(
-                - population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
+                -population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
             )
         end
     end
     for coef in CHOICE_MODIFIERS[begin:end-1]
         if population.host_weights[host_idx, coef] != 0.0
             propagateWeightReceiveChanges!(
-                - population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
+                -population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
             )
         end
     end
@@ -208,8 +208,8 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
         )
     end
 
-    population.host_weights = population.host_weights[1:end .!= host_idx, 1:end .!= host_idx]
-    population.host_weights_receive = population.host_weights_receive[1:end .!= host_idx, 1:end .!= host_idx]
+    population.host_weights = population.host_weights[1:end.!=host_idx, 1:end.!=host_idx]
+    population.host_weights_receive = population.host_weights_receive[1:end.!=host_idx, 1:end.!=host_idx]
 
     population.total_hosts -= 1
     deleteat!(population.hosts, host_idx)
@@ -444,7 +444,7 @@ function transition!(model::Model, rand_n::Float64)
     host_idx, pop_idx_1, rand_n = chooseHost(TRANSITION, model, rand_n)
     pop_idx_2, rand_n = choosePopulationReceiveTransition(pop_idx_1, model, rand_n)
 
-    addHostToPopulation!(model.populations[pop_idx_1].hosts[host_idx], population, model)
+    addHostToPopulation!(model.populations[pop_idx_1].hosts[host_idx], model.populations[pop_idx_2], model)
     removeHostFromPopulation!(host_idx, model.populations[pop_idx_1], model)
 end
 
