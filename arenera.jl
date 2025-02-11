@@ -94,6 +94,11 @@ testRun()
 # 94438
 #   2.023602 seconds (4.98 M allocations: 10.808 GiB, 18.23% gc time)
 # [0.0, 465.0, 0.0, 0.0, 488.2500000000037, 0.0, 0.0, 0.0, 0.0]
+#
+# Same machine, same code, different day—what changed???:
+# 94438
+#   1.926932 seconds (4.98 M allocations: 10.808 GiB, 17.70% gc time)
+# [0.0, 465.0, 0.0, 0.0, 488.2500000000037, 0.0, 0.0, 0.0, 0.0]
 
 # jOpqua.establishMutant!(model, rand())
 

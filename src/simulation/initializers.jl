@@ -91,6 +91,7 @@ function newModel()
         Matrix{Float64}(undef, 0, 0),
         Vector{Float64}(undef, 0),
         Vector{Float64}(undef, 0),
+        Vector{Intervention}(undef, 0),
         zeros(SVector{NUM_EVENTS, Float64}),
         0.0
     )

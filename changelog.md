@@ -1,7 +1,10 @@
 # jOpqua Changelog
 
+## 11 February 2025
+- Added interventions (PCR)
+
 ## 9 February 2025
-- Small bug fix in `transition!`
+- Small bug fix in `transition!` (PCR)
 
 ## 5 February 2025
 - Added pathogen fraction to calculation of vertical transmission probability (PCR)
@@ -25,6 +28,7 @@ particularly events other than clearance and contact)
 
 Dev roadmap:
 - implement interventions
+- simulation history saving
 - input parameters
 - output data + plotting
 - immunity DLC

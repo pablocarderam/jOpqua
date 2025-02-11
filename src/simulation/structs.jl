@@ -116,6 +116,12 @@ mutable struct Population
     population_transition_coefficients::Vector{Float64} # size POPULATIONS
 end
 
+struct Intervention
+    time::Float64
+    intervention::Function
+    arguments::Vector
+end
+
 mutable struct Model
     populations::Vector{Population} # size POPULATIONS
     population_dict::Dict{String,Int64}
@@ -137,6 +143,8 @@ mutable struct Model
     # size POPULATIONS
     population_transition_weights_receive_sums::Vector{Float64}
     # size POPULATIONS
+
+    interventions::Vector{Intervention}
 
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64
