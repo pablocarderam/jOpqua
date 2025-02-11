@@ -3,7 +3,9 @@ using jOpqua
 
 using StaticArrays
 using Random
+
 using BenchmarkTools
+using ProfileView
 
 # Parameters
 pa_type::jOpqua.PathogenType = jOpqua.PathogenType(
@@ -57,7 +59,7 @@ pop_parameters::jOpqua.PopulationType = jOpqua.PopulationType(
 )
 
 # Model setup
-function testRun()
+function testRun(seed)
     num_populations::Int64 = 1
     num_hosts::Int64 = 10000
     num_infected::Int64 = Int(num_hosts * 0.5)
@@ -82,13 +84,15 @@ function testRun()
 
     t_vec = collect(0.0:50.0)
 
-    Random.seed!(0000)
+    Random.seed!(seed)
 
-    @time jOpqua.simulate!(model, t_vec)
+    @profview jOpqua.simulate!(model, t_vec)
     println(model.event_rates)
 end
 
-testRun()
+# @profview testRun()
+testRun(1)
+testRun(0)
 
 # Result M3 Max 64 GB 9 Feb (second run):
 # 94438

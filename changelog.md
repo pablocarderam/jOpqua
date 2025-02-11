@@ -2,6 +2,13 @@
 
 ## 11 February 2025
 - Added interventions (PCR)
+- Added flamegraphs to sandbox file (PCR)
+- Defined a couple of static array types within `events.jl`
+
+Next is saving history--a clean implementation of this would take advantage of
+the intervention framework to save whatever is needed whenever needed, but might
+result in performance issues given the type instability of interventions, so maybe
+a standalone implementation of sampling and saving might be best?
 
 ## 9 February 2025
 - Small bug fix in `transition!` (PCR)

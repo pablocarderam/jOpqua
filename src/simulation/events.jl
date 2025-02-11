@@ -23,7 +23,7 @@ function mutantPathogen!(pathogen::Pathogen, population::Population)
 end
 
 function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population)
-    children = MVector(pathogen_1.sequence, pathogen_2.sequence)
+    children = MVector{2, String}(pathogen_1.sequence, pathogen_2.sequence)
 
     if pathogen_1.mean_recombination_crossovers > 0.0 && pathogen_2.mean_recombination_crossovers > 0.0
         num_evts = zeroTruncatedPoisson(mean(
@@ -40,10 +40,10 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
         num_evts = 0
     end
 
-    children = MVector{2}([split(seq, CHROMOSOME_SEPARATOR) for seq in children])
+    children = MVector{2, String}([split(seq, CHROMOSOME_SEPARATOR) for seq in children])
     parent = rand(0:1, length(children[1]))
 
-    children = SVector([
+    children = SVector{2, String}([
         join([children[parent[i]+1][i] for i in 1:length(children[1])], CHROMOSOME_SEPARATOR),
         join([children[(parent[i]!=true)+1][i] for i in 1:length(children[2])], CHROMOSOME_SEPARATOR)
     ])
@@ -304,7 +304,7 @@ function hostContact!(model::Model, rand_n::Float64)
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]
-        inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens)}([
+        inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens), Int64}([
             pois_rand(
                 host1.pathogens[p_idx].mean_effective_inoculum *
                 host1.pathogen_fractions[p_idx]
