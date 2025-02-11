@@ -119,7 +119,6 @@ end
 struct Intervention
     time::Float64
     intervention::Function
-    arguments::Vector
 end
 
 mutable struct Model

@@ -17,9 +17,7 @@ function simulate!(model::Model, time_vector::Vector{Float64})
                 time + dt >= interventions[intervention_tracker].time)
                     # if there are any interventions left and if it is time to make one,
                 time = interventions[intervention_tracker].time
-                interventions[intervention_tracker].intervention(
-                    interventions[intervention_tracker].arguments...
-                )
+                interventions[intervention_tracker].intervention(model)
                 intervention_tracker += 1
             else
                 time += dt
@@ -47,9 +45,7 @@ function simulate!(model::Model, time_vector::Vector{Float64})
                 time >= interventions[intervention_tracker].time)
                     # if there are any interventions left
                 time = interventions[intervention_tracker].time
-                interventions[intervention_tracker].intervention(
-                    interventions[intervention_tracker].arguments...
-                )
+                interventions[intervention_tracker].intervention(model)
                 intervention_tracker += 1
             else
                 time = time_vector[end]
