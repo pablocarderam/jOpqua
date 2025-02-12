@@ -2,6 +2,7 @@
 
 ## 12 February 2025
 - Removed `total_hosts`, replaced with instances of `length(population.hosts)` (PCR)
+- Optimized `Host` initialization at startup (CLM)
 
 ## 11 February 2025
 - Added interventions (PCR)

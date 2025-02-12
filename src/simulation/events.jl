@@ -119,6 +119,7 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     population.host_weights_with_coefficient = catCol(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS))
     population.host_weights_receive_with_coefficient = catCol(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
+    # TODO: make compatible with `propagateWeightsOnAddHost!`
     for p in 1:length(model.populations)
         model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
             model.population_contact_weights_receive[model.population_dict[population.id], p] /
@@ -163,6 +164,29 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
         end
     end
 end
+
+function addHostsToPopulation!(num_hosts::Int64, population::Population, model::Model)
+    num_starting_hosts = length(population.hosts)
+    for i in 1:num_hosts
+        push!(population.hosts, Host(
+            length(population.hosts) + 1,
+            Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
+            Vector{Float64}(undef, 0),
+            Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
+            Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
+        ))
+    end
+
+    # update matrices
+    population.host_weights = hcat(population.host_weights, zeros(Float64, NUM_EVENTS, num_hosts))
+    population.host_weights_receive = hcat(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
+    population.host_weights_with_coefficient = hcat(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS, num_hosts))
+    population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
+
+    for i in 1:num_hosts
+        propagateWeightsOnAddHost!(num_starting_hosts+i, population, model)
+    end
+end 
 
 function removeHostFromPopulation!(host_idx::Int64, population::Population, model::Model)
     for coef in EVENTS

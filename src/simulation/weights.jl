@@ -350,3 +350,49 @@ function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, popula
         propagateWeightReceiveChanges!(population.parameters.base_coefficients[evt] * change, population, evt, model)
     end
 end
+
+function propagateWeightsOnAddHost!(host_num::Int64, population::Population, model::Model)
+    for p in 1:length(model.populations)
+        model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
+            model.population_contact_weights_receive[model.population_dict[population.id], p] /
+            max(host_num * population.parameters.constant_contact_density, 1)
+        )
+        model.population_contact_weights_receive_sums[p] -= (
+            model.population_contact_weights_receive_sums[p] /
+            max(host_num * population.parameters.constant_contact_density, 1)
+        )
+        propagateWeightChanges!(
+            -model.population_weights[CONTACT, p] /
+            max(host_num * population.parameters.constant_contact_density, 1),
+            model.populations[p], CONTACT, model
+        )
+        model.population_transition_weights_receive[model.population_dict[population.id], p] -= (
+            model.population_transition_weights_receive[model.population_dict[population.id], p] /
+            max(host_num * population.parameters.constant_transition_density, 1)
+        )
+        model.population_transition_weights_receive_sums[p] -= (
+            model.population_transition_weights_receive_sums[p] /
+            max(host_num * population.parameters.constant_transition_density, 1)
+        )
+        propagateWeightChanges!(
+            -model.population_weights[TRANSITION, p] /
+            max(host_num * population.parameters.constant_transition_density, 1),
+            model.populations[p], TRANSITION, model
+        )
+    end
+
+    for coef in EVENTS
+        if START_COEFFICIENTS[coef] != 0.0
+            propagateWeightChanges!(
+                START_COEFFICIENTS[coef], host_num, population, coef, model
+            )
+        end
+    end
+    for coef in CHOICE_MODIFIERS[begin:end-1]
+        if START_COEFFICIENTS[coef] != 0.0
+            propagateWeightReceiveChanges!(
+                START_COEFFICIENTS[coef], host_num, population, coef, model
+            )
+        end
+    end
+end

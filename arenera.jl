@@ -67,10 +67,7 @@ function testRun(seed)
 
     model::jOpqua.Model = jOpqua.newModel()
     pop::jOpqua.Population = jOpqua.newPopulation!("pop", pop_parameters, model)
-    for i in 1:num_hosts
-        # println(i)
-        host = jOpqua.newHost!(pop, model)
-    end
+    jOpqua.addHostsToPopulation!(num_hosts, pop, model)
     pat::jOpqua.Pathogen = jOpqua.newPathogen!("AAAA", pop, pa_type)
     res::jOpqua.Response = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), pop, re_type)
 
