@@ -117,6 +117,8 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     population.total_hosts += 1
     population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
     population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
+    population.host_weights_with_coefficient = catCol(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS))
+    population.host_weights_receive_with_coefficient = catCol(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
 
     for p in 1:length(model.populations)
         model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
@@ -210,6 +212,8 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
 
     population.host_weights = population.host_weights[1:end.!=host_idx, 1:end.!=host_idx]
     population.host_weights_receive = population.host_weights_receive[1:end.!=host_idx, 1:end.!=host_idx]
+    population.host_weights_with_coefficient = population.host_weights_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
+    population.host_weights_receive_with_coefficient = population.host_weights_receive_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
 
     population.total_hosts -= 1
     deleteat!(population.hosts, host_idx)

@@ -3,7 +3,17 @@
 ## 11 February 2025
 - Added interventions (PCR)
 - Added flamegraphs to sandbox file (PCR)
-- Defined a couple of static array types within `events.jl`
+- Defined a couple of static array types within `events.jl` (PCR)
+- Made new matrices in `Population` with sums of host weights pre-multiplied by
+coefficients, to be used in `chooseHost` replacing the inline, broadcasted,
+element-wise multiplication by the base coefficient; resulted in a ~4X speedup and
+garbage collection time going from ~18% to ~1.5%, even with the speedup--the problem
+was found with the dual wonders of flame graphs and CLM (PCR)
+- Defined type of `AbstractArray` in `randChoose` (PCR)
+
+There was a bug in the use of parenthesis for `@views` in `choice.jl`, very
+minor effect on performance. The fix was made obsolete by removing the broadcasted
+multiplication anyway.
 
 Next is saving history--a clean implementation of this would take advantage of
 the intervention framework to save whatever is needed whenever needed, but might
@@ -18,7 +28,7 @@ a standalone implementation of sampling and saving might be best?
 - Moved code to add a `Host` to a `Population` into a separate function (PCR)
 - Optimizations including: add types to global variables; match literal types to
 their context; extend use of `@views`; cache emitting `Host` in `hostContact!` (CLM)
-- Backtrack 2 optimizations (one @views use with no slicing, one comparison between
+- Backtrack 2 optimizations (one `@views` use with no slicing, one comparison between
 ints that did not require using a float zero) (PCR)
 - Added `removeHostFromPopulation` and death event (PCR)
 - Added transition event (PCR)

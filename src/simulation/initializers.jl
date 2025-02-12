@@ -46,6 +46,8 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         Vector{Host}(undef, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
+        Matrix{Float64}(undef, NUM_EVENTS, 0),
+        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
         0, 0.0, 0.0,
         zeros(Float64, length(model.populations)),
         zeros(Float64, length(model.populations)),

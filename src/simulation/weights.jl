@@ -73,6 +73,10 @@ function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int6
         # we sum here because we have already weighted by fraction
         # (for everything except clearance, see above)
     end
+    population.host_weights_with_coefficient[evt, host_idx] = (
+        population.host_weights[evt, host_idx] *
+        population.parameters.base_coefficients[evt]
+    )
 end
 
 function responseWeights!(re::Int64, host::Host, evt::Int64)
@@ -91,6 +95,10 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
         population.host_weights[evt, host_idx] += population.hosts[host_idx].response_weights[evt-RESPONSE_EVENTS[1]+1, re]
         # We sum here because having more responses does imply more events, e.g. losses of response
     end
+    population.host_weights_with_coefficient[evt, host_idx] = (
+        population.host_weights[evt, host_idx] *
+        population.parameters.base_coefficients[evt]
+    )
 end
 
 # Intra-Population level
@@ -129,6 +137,10 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
                 for re in population.hosts[h].responses
             ])
     end
+    population.host_weights_with_coefficient[evt, h] = (
+        population.host_weights[evt, h] *
+        population.parameters.base_coefficients[evt]
+    )
 end
 
 function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
@@ -166,6 +178,10 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
                 for re in population.hosts[h].responses
             ])
     end
+    population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, h] = (
+        population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
+        population.parameters.base_coefficients[evt]
+    )
 end
 
 function hostWeights!(host_idx::Int64, population::Population, model::Model)
@@ -258,6 +274,10 @@ end
 
 function propagateWeightChanges!(change::Float64, host_idx::Int64, population::Population, evt::Int64, model::Model)
     population.host_weights[evt, host_idx] += change
+    population.host_weights_with_coefficient[evt, host_idx] += (
+        change *
+        population.parameters.base_coefficients[evt]
+    )
 
     if population.total_hosts > 0
         if evt == CONTACT
@@ -321,6 +341,10 @@ end
 
 function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, population::Population, evt::Int64, model::Model)
     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] += change
+    population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, host_idx] += (
+        change *
+        population.parameters.base_coefficients[evt]
+    )
 
     if evt < NUM_COEFFICIENTS
         propagateWeightReceiveChanges!(population.parameters.base_coefficients[evt] * change, population, evt, model)

@@ -60,7 +60,7 @@ pop_parameters::jOpqua.PopulationType = jOpqua.PopulationType(
 
 # Model setup
 function testRun(seed)
-    num_populations::Int64 = 1
+    # num_populations::Int64 = 1
     num_hosts::Int64 = 10000
     num_infected::Int64 = Int(num_hosts * 0.5)
     num_immune::Int64 = 0
@@ -86,7 +86,8 @@ function testRun(seed)
 
     Random.seed!(seed)
 
-    @profview jOpqua.simulate!(model, t_vec)
+    # @profview jOpqua.simulate!(model, t_vec)
+    @time jOpqua.simulate!(model, t_vec)
     println(model.event_rates)
 end
 
@@ -94,7 +95,7 @@ end
 testRun(1)
 testRun(0)
 
-# Result M3 Max 64 GB 9 Feb (second run):
+# Result M3 Max 64 GB 9 Feb (second run) seed 0:
 # 94438
 #   2.023602 seconds (4.98 M allocations: 10.808 GiB, 18.23% gc time)
 # [0.0, 465.0, 0.0, 0.0, 488.2500000000037, 0.0, 0.0, 0.0, 0.0]
@@ -102,6 +103,11 @@ testRun(0)
 # Same machine, same code, different day—what changed???:
 # 94438
 #   1.926932 seconds (4.98 M allocations: 10.808 GiB, 17.70% gc time)
+# [0.0, 465.0, 0.0, 0.0, 488.2500000000037, 0.0, 0.0, 0.0, 0.0]
+
+# Result M3 Max 64 GB 11 Feb (second run) seed 0:
+# 94438
+#   0.550135 seconds (4.55 M allocations: 170.740 MiB, 1.45% gc time)
 # [0.0, 465.0, 0.0, 0.0, 488.2500000000037, 0.0, 0.0, 0.0, 0.0]
 
 # jOpqua.establishMutant!(model, rand())
