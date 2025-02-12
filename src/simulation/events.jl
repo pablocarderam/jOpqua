@@ -184,9 +184,9 @@ function addHostsToPopulation!(num_hosts::Int64, population::Population, model::
     population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
 
     for i in 1:num_hosts
-        propagateWeightsOnAddHost!(num_starting_hosts+i, population, model)
+        propagateWeightsOnAddHost!(num_starting_hosts + i, population, model)
     end
-end 
+end
 
 function removeHostFromPopulation!(host_idx::Int64, population::Population, model::Model)
     for coef in EVENTS
@@ -474,7 +474,7 @@ function transition!(model::Model, rand_n::Float64)
     removeHostFromPopulation!(host_idx, model.populations[pop_idx_1], model)
 end
 
-event_functions = SA[
+const EVENT_FUNCTIONS = SA[
     establishMutant!, clearPathogen!, acquireResponse!,
     establishRecombinant!, hostContact!, loseResponse!,
     birth!, death!

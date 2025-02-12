@@ -3,6 +3,7 @@
 ## 12 February 2025
 - Removed `total_hosts`, replaced with instances of `length(population.hosts)` (PCR)
 - Optimized `Host` initialization at startup (CLM)
+- Made `event_functions` into constant `EVENT_FUNCTIONS` (PCR)
 
 ## 11 February 2025
 - Added interventions (PCR)

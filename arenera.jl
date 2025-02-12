@@ -7,59 +7,59 @@ using Random
 using BenchmarkTools
 using ProfileView
 
-# Parameters
-pa_type::jOpqua.PathogenType = jOpqua.PathogenType(
-    "pa_type",
-    10,
-    "ARNDCEQGHILKMFPSTWYV*",
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    SA[ # pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
-        g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0, g->1.0, g->1.0, g->1.0,
-        g->1.0, g->1.0, g->1.0, g->1.0,
-    ],
-    g -> 1.0, g -> 1.0, g -> 1.0, g -> 1.0,
-)
-
-re_type::jOpqua.ResponseType = jOpqua.ResponseType(
-    "re_type", # id::String,
-    SA[ # static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
-        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
-        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
-        (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
-    ],
-    SA[ # specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
-        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
-        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
-        (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
-    ],
-    0.0,
-    (imp_g, mat_g, pat_g) -> 1.0,
-    (imp_g, mat_g, pat_g) -> 1.0,
-)
-
-pop_parameters::jOpqua.PopulationType = jOpqua.PopulationType(
-    "TestParams", # id::String
-    SA[ # base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
-        0.00, 1.0, 0.0, 0.0,
-        1.05, 0.0, 0.0, 0.0,
-        0.00, 0.0, 1.0, 0.0,
-    ],
-    true, false,
-    jOpqua.pathogenFractionsWinnerTakesAll,
-    jOpqua.weightedResponseArithmeticMean,
-    jOpqua.infectionProbabilityArithmeticMean,
-    (p, h, c) -> Nothing, # developResponses::Function,
-    1.0, # inoculum_coefficient
-    1.0, # mutation_coefficient
-    1.0, # recombination_coefficient
-)
-
 # Model setup
-function testRun(seed)
+function testRun(seed::Int64)
+    # Parameters
+    pa_type::jOpqua.PathogenType = jOpqua.PathogenType(
+        "pa_type",
+        10,
+        "ARNDCEQGHILKMFPSTWYV*",
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        SA[ # pathogen_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+            g->1.0, g->1.0, g->1.0, g->1.0,
+            g->1.0, g->1.0, g->1.0, g->1.0,
+            g->1.0, g->1.0, g->1.0, g->1.0,
+        ],
+        g -> 1.0, g -> 1.0, g -> 1.0, g -> 1.0,
+    )
+
+    re_type::jOpqua.ResponseType = jOpqua.ResponseType(
+        "re_type", # id::String,
+        SA[ # static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
+            (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
+            (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
+            (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0, (imp_g, mat_g)->1.0,
+        ],
+        SA[ # specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function},
+            (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
+            (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
+            (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0, (imp_g, mat_g, pat_g)->1.0,
+        ],
+        0.0,
+        (imp_g, mat_g, pat_g) -> 1.0,
+        (imp_g, mat_g, pat_g) -> 1.0,
+    )
+
+    pop_parameters::jOpqua.PopulationType = jOpqua.PopulationType(
+        "TestParams", # id::String
+        SA[ # base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
+            0.00, 1.0, 0.0, 0.0,
+            1.05, 0.0, 0.0, 0.0,
+            0.00, 0.0, 1.0, 0.0,
+        ],
+        true, false,
+        jOpqua.pathogenFractionsWinnerTakesAll,
+        jOpqua.weightedResponseArithmeticMean,
+        jOpqua.infectionProbabilityArithmeticMean,
+        (p, h, c) -> Nothing, # developResponses::Function,
+        1.0, # inoculum_coefficient
+        1.0, # mutation_coefficient
+        1.0, # recombination_coefficient
+    )
+
     # num_populations::Int64 = 1
     num_hosts::Int64 = 10000
     num_infected::Int64 = Int(num_hosts * 0.5)
@@ -76,7 +76,7 @@ function testRun(seed)
         jOpqua.addPathogenToHost!(pat, h, pop, model)
     end
     for h in 1:num_immune
-        jOpqua.addResponseToHost!(pat, h, pop, model)
+        jOpqua.addResponseToHost!(res, h, pop, model)
     end
 
     t_vec = collect(0.0:50.0)
@@ -84,13 +84,18 @@ function testRun(seed)
     Random.seed!(seed)
 
     # @profview jOpqua.simulate!(model, t_vec)
-    @time jOpqua.simulate!(model, t_vec)
+    # @time jOpqua.simulate!(model, t_vec)
+    jOpqua.simulate!(model, t_vec)
     println(model.event_rates)
 end
 
 # @profview testRun()
-testRun(1)
-testRun(0)
+@time testRun(0)
+@time testRun(1)
+# for i in 1:200
+#     println(i)
+#     @time testRun(i)
+# end
 
 # Result M3 Max 64 GB 9 Feb (second run) seed 0:
 # 94438
