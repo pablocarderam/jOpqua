@@ -48,7 +48,7 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
-        0, 0.0, 0.0,
+        0.0, 0.0,
         zeros(Float64, length(model.populations)),
         zeros(Float64, length(model.populations)),
     ))
@@ -88,13 +88,13 @@ function newModel()
         Dict{String,Int64}(),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
-        zeros(SVector{NUM_CHOICE_MODIFIERS - 1, Float64}),
+        zeros(SVector{NUM_CHOICE_MODIFIERS - 1,Float64}),
         Matrix{Float64}(undef, 0, 0),
         Matrix{Float64}(undef, 0, 0),
         Vector{Float64}(undef, 0),
         Vector{Float64}(undef, 0),
         Vector{Intervention}(undef, 0),
-        zeros(SVector{NUM_EVENTS, Float64}),
+        zeros(SVector{NUM_EVENTS,Float64}),
         0.0
     )
 end

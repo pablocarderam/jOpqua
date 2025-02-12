@@ -279,7 +279,7 @@ function propagateWeightChanges!(change::Float64, host_idx::Int64, population::P
         population.parameters.base_coefficients[evt]
     )
 
-    if population.total_hosts > 0
+    if length(population.hosts) > 0
         if evt == CONTACT
             population.contact_sum += change
             change = change * model.population_contact_weights_receive_sums[model.population_dict[population.id]]
@@ -307,13 +307,13 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
         for p in 1:length(model.populations)
             change_p = (
                 change * model.populations[p].population_contact_coefficients[model.population_dict[population.id]] /
-                max(population.total_hosts * population.parameters.constant_contact_density, 1.0)
-                )
-                # Contact rates assume scaling area if constant_contact_density is true:
-                # large populations are equally
-                # dense as small ones, so contact is constant (divide by total hosts).
-                # If you don't want this to happen, modify each population's
-                # receive contact coefficient accordingly.
+                max(length(population.hosts) * population.parameters.constant_contact_density, 1.0)
+            )
+            # Contact rates assume scaling area if constant_contact_density is true:
+            # large populations are equally
+            # dense as small ones, so contact is constant (divide by total hosts).
+            # If you don't want this to happen, modify each population's
+            # receive contact coefficient accordingly.
             model.population_contact_weights_receive[model.population_dict[population.id], p] += change_p
             model.population_contact_weights_receive_sums[p] += change_p
             propagateWeightChanges!(
@@ -325,10 +325,10 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
         for p in 1:length(model.populations)
             change_p = (
                 change * model.populations[p].population_transition_coefficients[model.population_dict[population.id]] /
-                max(population.total_hosts * population.parameters.constant_transition_density, 1.0)
-                )
-                # Transition receive weights are assumed to be independent of population
-                # (constant_transition_density=false), but can be modified if desired.
+                max(length(population.hosts) * population.parameters.constant_transition_density, 1.0)
+            )
+            # Transition receive weights are assumed to be independent of population
+            # (constant_transition_density=false), but can be modified if desired.
             model.population_transition_weights_receive[model.population_dict[population.id], p] += change_p
             model.population_transition_weights_receive_sums[p] += change_p
             propagateWeightChanges!(

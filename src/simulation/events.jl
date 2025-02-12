@@ -23,7 +23,7 @@ function mutantPathogen!(pathogen::Pathogen, population::Population)
 end
 
 function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population)
-    children = MVector{2, String}(pathogen_1.sequence, pathogen_2.sequence)
+    children = MVector{2,String}(pathogen_1.sequence, pathogen_2.sequence)
 
     if pathogen_1.mean_recombination_crossovers > 0.0 && pathogen_2.mean_recombination_crossovers > 0.0
         num_evts = zeroTruncatedPoisson(mean(
@@ -40,10 +40,10 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
         num_evts = 0
     end
 
-    children = MVector{2, String}([split(seq, CHROMOSOME_SEPARATOR) for seq in children])
+    children = MVector{2,String}([split(seq, CHROMOSOME_SEPARATOR) for seq in children])
     parent = rand(0:1, length(children[1]))
 
-    children = SVector{2, String}([
+    children = SVector{2,String}([
         join([children[parent[i]+1][i] for i in 1:length(children[1])], CHROMOSOME_SEPARATOR),
         join([children[(parent[i]!=true)+1][i] for i in 1:length(children[2])], CHROMOSOME_SEPARATOR)
     ])
@@ -114,7 +114,6 @@ end
 
 function addHostToPopulation!(new_host::Host, population::Population, model::Model)
     push!(population.hosts, new_host)
-    population.total_hosts += 1
     population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
     population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
     population.host_weights_with_coefficient = catCol(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS))
@@ -123,28 +122,28 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     for p in 1:length(model.populations)
         model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
             model.population_contact_weights_receive[model.population_dict[population.id], p] /
-            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
         )
         model.population_contact_weights_receive_sums[p] -= (
             model.population_contact_weights_receive_sums[p] /
-            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
         )
         propagateWeightChanges!(
             -model.population_weights[CONTACT, p] /
-            max(population.total_hosts * population.parameters.constant_contact_density, 1),
+            max(length(population.hosts) * population.parameters.constant_contact_density, 1),
             model.populations[p], CONTACT, model
         )
         model.population_transition_weights_receive[model.population_dict[population.id], p] -= (
             model.population_transition_weights_receive[model.population_dict[population.id], p] /
-            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
         )
         model.population_transition_weights_receive_sums[p] -= (
             model.population_transition_weights_receive_sums[p] /
-            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
         )
         propagateWeightChanges!(
             -model.population_weights[TRANSITION, p] /
-            max(population.total_hosts * population.parameters.constant_transition_density, 1),
+            max(length(population.hosts) * population.parameters.constant_transition_density, 1),
             model.populations[p], TRANSITION, model
         )
     end
@@ -184,28 +183,28 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
     for p in 1:length(model.populations)
         model.population_contact_weights_receive[model.population_dict[population.id], p] += (
             model.population_contact_weights_receive[model.population_dict[population.id], p] /
-            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
         )
         model.population_contact_weights_receive_sums[p] += (
             model.population_contact_weights_receive_sums[p] /
-            max(population.total_hosts * population.parameters.constant_contact_density, 1)
+            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
         )
         propagateWeightChanges!(
             model.population_weights[CONTACT, p] /
-            max(population.total_hosts * population.parameters.constant_contact_density, 1),
+            max(length(population.hosts) * population.parameters.constant_contact_density, 1),
             model.populations[p], CONTACT, model
         )
         model.population_transition_weights_receive[model.population_dict[population.id], p] += (
             model.population_transition_weights_receive[model.population_dict[population.id], p] /
-            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
         )
         model.population_transition_weights_receive_sums[p] += (
             model.population_transition_weights_receive_sums[p] /
-            max(population.total_hosts * population.parameters.constant_transition_density, 1)
+            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
         )
         propagateWeightChanges!(
             model.population_weights[TRANSITION, p] /
-            max(population.total_hosts * population.parameters.constant_transition_density, 1),
+            max(length(population.hosts) * population.parameters.constant_transition_density, 1),
             model.populations[p], TRANSITION, model
         )
     end
@@ -215,7 +214,6 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
     population.host_weights_with_coefficient = population.host_weights_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
     population.host_weights_receive_with_coefficient = population.host_weights_receive_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
 
-    population.total_hosts -= 1
     deleteat!(population.hosts, host_idx)
 end
 
@@ -225,7 +223,7 @@ function setPopulationContactCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64, co
         model.populations[pop_idx_1].population_contact_coefficients[pop_idx_2] *
         model.population_weights_receive[RECEIVE_CONTACT-CHOICE_MODIFIERS[1]+1, pop_idx_2] /
         max(
-            model.populations[pop_idx_2].total_hosts *
+            length(model.populations[pop_idx_2].hosts) *
             model.populations[pop_idx_2].parameters.constant_contact_density,
             1.0
         )) - model.population_contact_weights_receive[pop_idx_2, pop_idx_1]
@@ -238,7 +236,7 @@ function setPopulationTransitionCoefficient!(pop_idx_1::Int64, pop_idx_2::Int64,
         model.populations[pop_idx_1].population_transition_coefficients[pop_idx_2] *
         model.population_weights_receive[RECEIVE_TRANSITION-CHOICE_MODIFIERS[1]+1, pop_idx_2] /
         max(
-            model.populations[pop_idx_2].total_hosts *
+            length(model.populations[pop_idx_2].hosts) *
             model.populations[pop_idx_2].parameters.constant_transition_density,
             1.0
         )) - model.population_transition_weights_receive[pop_idx_2, pop_idx_1]
@@ -308,7 +306,7 @@ function hostContact!(model::Model, rand_n::Float64)
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]
-        inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens), Int64}([
+        inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
             pois_rand(
                 host1.pathogens[p_idx].mean_effective_inoculum *
                 host1.pathogen_fractions[p_idx]

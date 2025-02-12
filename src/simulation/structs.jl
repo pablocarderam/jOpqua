@@ -112,7 +112,6 @@ mutable struct Population
     host_weights_receive_with_coefficient::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
 
-    total_hosts::Int64
     contact_sum::Float64
     transition_sum::Float64
 
