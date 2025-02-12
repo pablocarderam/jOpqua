@@ -1,7 +1,7 @@
 # jOpqua Changelog
 
 ## 12 February 2025
-- Removed `total_host`, replaced with instances of `length(population.hosts)` (PCR)
+- Removed `total_hosts`, replaced with instances of `length(population.hosts)` (PCR)
 
 ## 11 February 2025
 - Added interventions (PCR)
