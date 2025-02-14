@@ -1,8 +1,10 @@
 using StaticArrays
 
-function newPathogen!(sequence::String, population::Population, type::PathogenType)
+function newPathogen!(
+        sequence::String, population::Population, type::PathogenType;
+        parents::MVector{2, Union{Pathogen, Nothing}}=MVector{2, Union{Pathogen, Nothing}}([nothing, nothing]))
     population.pathogens[sequence] = Pathogen(
-        sequence, pathogenSequenceCoefficients(sequence, type),
+        parents, sequence, pathogenSequenceCoefficients(sequence, type),
         type.mean_effective_inoculum * type.inoculumCoefficient(sequence) * population.parameters.inoculum_coefficient,
         type.mean_mutations_per_replication * type.mutationCoefficient(sequence) * population.parameters.mutation_coefficient,
         type.mean_recombination_crossovers * type.recombinationCoefficient(sequence) * population.parameters.recombination_coefficient,
@@ -13,10 +15,11 @@ function newPathogen!(sequence::String, population::Population, type::PathogenTy
 end
 
 function newResponse!(
-    imprinted_pathogen::Pathogen, matured_pathogen::Pathogen, parent::Tuple{String,String,String},
-    population::Population, type::ResponseType)
+    imprinted_pathogen::Pathogen, matured_pathogen::Pathogen,
+    population::Population, type::ResponseType;
+    parents::MVector{2, Union{Response, Nothing}}=MVector{2, Union{Response, Nothing}}([nothing, nothing]))
     population.responses[(imprinted_pathogen.sequence, matured_pathogen.sequence, type.id)] = Response(
-        parent, imprinted_pathogen, matured_pathogen,
+        parents, imprinted_pathogen, matured_pathogen,
         responseStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type),
         type
     )

@@ -1,8 +1,59 @@
 # jOpqua Changelog
 
+## 14 February 2025
+- Added references to actual parent entities in `Pathogen` and `Response` using
+CLM's `Union{X, Nothing}` trick (PCR)
+
+## 13 February 2025
+No changes yet, but based on (unnecessarily, sorry) lengthy discussion, we conclude
+that the optimal implementation of random weighted sampling of `Host` entities is
+a modified version of the binary level rejection sampling technique described by
+[Aaron DeFazio](https://www.aarondefazio.com/tangentially/?p=58) based on work
+from Donald Knuth and others ("The technique used is not novel, indeed it is
+based on publications from the 1960s" says DeFazio--but who?!).
+
+We will implement rejection sampling with binary levels as described by DeFazio &
+1960s, including optimizations such as random number renormalizing as done in Opqua
+already and also explained by DeFazio in the "Enhancements" section. We discussed
+whether we should include in the algorithm a check on whether to add a new level
+at the top or bottom of the vector of levels, in case the ratio between the largest
+and smallest weights exceeded the 2^20-fold recommended by DeFazio (who argues for
+20 intervals, given that the dynamic range of weight values is usually less than
+1 million, but nothing guarantees this). We decided to do this, and we might as
+well also remove unnecessary levels at the top or bottom of the level list if they
+become empty of weights. In order to most efficiently add and remove levels both at
+the start and end of the list of levels, CLM suggested we use a linked list. We
+also discussed whether rejection sampling of the list of levels itself would
+outperform linear searching our way through it, as implemented by DeFazio, but we're
+unsure, given the potentially lopsided differences in the sums of weights between
+different levels. We decided we will stick with linear search across levels.
+
+We are pretty confident this is a good idea for `Host` sampling given the number of
+hosts in a `Population`. We suspect the current linear search algorithm implemented in
+`randChoose` is optimal for sampling event types, given there are only 9 events:
+according to tests done by CLM in Julia, a uniformly-balanced weights vector is
+sampled faster by linear search than by simple rejection sampling if there are fewer
+than 10 weights being sampled* (PCR is now unsure of this, see note below). We are
+unsure whether sampling of `Pathogen` and `Response` entities within a `Host` is best
+done with linear search or rejection sampling given that the distribution of the
+number of pathogens and responses is both variable and skewed in favor of smaller
+numbers. Because of the latter, we will remain on linear search for the time being.
+
+*Bear in mind that sampling from a uniform weight array represents the best possible
+scenario for simple rejection sampling, since the algorithm reduces to indexing into
+a particular position in the vector based on a random integer and then always
+accepting the given element regardless of the second random number that accepts or
+rejects the chosen weight/element. However, I now remember that this second random
+number can be obtained by renormalization instead of fresh regeneration. CLM did not
+implement this detail in the test, so maybe the vector size at which rejection
+sampling becomes faster than linear search is closer to 5 than 10? This makes me less
+confident that linear search is preferrable now; perhaps testing binary level
+rejection sampling for events and even pathogens and responses is actually worth it.
+
 ## 12 February 2025
 - Removed `total_hosts`, replaced with instances of `length(population.hosts)` (PCR)
 - Optimized `Host` initialization at startup (CLM)
+- Made `event_functions` into constant `EVENT_FUNCTIONS` (PCR)
 
 ## 11 February 2025
 - Added interventions (PCR)

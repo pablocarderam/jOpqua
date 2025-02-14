@@ -15,7 +15,7 @@ function simulate!(model::Model, time_vector::Vector{Float64})
             dt = randexp() / model.event_rates_sum
             if (intervention_tracker < length(interventions) &&
                 time + dt >= interventions[intervention_tracker].time)
-                    # if there are any interventions left and if it is time to make one,
+                # if there are any interventions left and if it is time to make one,
                 time = interventions[intervention_tracker].time
                 interventions[intervention_tracker].intervention(model)
                 intervention_tracker += 1
@@ -32,18 +32,18 @@ function simulate!(model::Model, time_vector::Vector{Float64})
                     model.event_rates_sum, regenerate_rand=true
                 )
                 # println((time, model.event_rates, evt_idx))
-                event_functions[evt_idx](model, rand_n)
+                EVENT_FUNCTIONS[evt_idx](model, rand_n)
 
                 # alternative sampling method:
                 # evt_idx = sample(1:length(evt_funcs), Weights(model.event_rates))
-                # event_functions[evt_idx](model, rand_n)
+                # EVENT_FUNCTIONS[evt_idx](model, rand_n)
 
                 evt_count += 1
             end
         else
             if (intervention_tracker < length(interventions) &&
                 time >= interventions[intervention_tracker].time)
-                    # if there are any interventions left
+                # if there are any interventions left
                 time = interventions[intervention_tracker].time
                 interventions[intervention_tracker].intervention(model)
                 intervention_tracker += 1

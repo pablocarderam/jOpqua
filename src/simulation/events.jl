@@ -18,7 +18,9 @@ function mutantPathogen!(pathogen::Pathogen, population::Population)
     if haskey(population.pathogens, seq)
         return population.pathogens[seq]
     else
-        return newPathogen!(seq, population, pathogen.type)
+        return newPathogen!(
+            seq, population, pathogen.type, parents=MVector{2, Union{Pathogen, Nothing}}([pathogen, nothing]),
+        )
     end
 end
 
@@ -50,14 +52,20 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
 
     # for seq in children
     #     if !haskey(population.pathogens, seq)
-    #         newPathogen!(seq, population, pathogen_1.type)
+    #         newPathogen!(
+    #             seq, population, pathogen_1.type,
+    #             parents=MVector{2, Union{Pathogen, Nothing}}([pathogen_1, pathogen_2]),
+    #         )
     #     end
     # end
 
     # return SA[population.pathogens[children[1]], population.pathogens[children[2]]]
 
     if !haskey(population.pathogens, children[1])
-        newPathogen!(children[1], population, pathogen_1.type)
+        newPathogen!(
+            children[1], population, pathogen_1.type,
+            parents=MVector{2, Union{Pathogen, Nothing}}([pathogen_1, pathogen_2]),
+        )
     end
     return population.pathogens[children[1]]
 end
@@ -184,9 +192,9 @@ function addHostsToPopulation!(num_hosts::Int64, population::Population, model::
     population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
 
     for i in 1:num_hosts
-        propagateWeightsOnAddHost!(num_starting_hosts+i, population, model)
+        propagateWeightsOnAddHost!(num_starting_hosts + i, population, model)
     end
-end 
+end
 
 function removeHostFromPopulation!(host_idx::Int64, population::Population, model::Model)
     for coef in EVENTS
@@ -474,7 +482,7 @@ function transition!(model::Model, rand_n::Float64)
     removeHostFromPopulation!(host_idx, model.populations[pop_idx_1], model)
 end
 
-event_functions = SA[
+const EVENT_FUNCTIONS = SA[
     establishMutant!, clearPathogen!, acquireResponse!,
     establishRecombinant!, hostContact!, loseResponse!,
     birth!, death!
