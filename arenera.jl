@@ -69,7 +69,7 @@ function testRun(seed::Int64)
     pop::jOpqua.Population = jOpqua.newPopulation!("pop", pop_parameters, model)
     jOpqua.addHostsToPopulation!(num_hosts, pop, model)
     pat::jOpqua.Pathogen = jOpqua.newPathogen!("AAAA", pop, pa_type)
-    res::jOpqua.Response = jOpqua.newResponse!(pat, pat, (pat.sequence, pat.sequence, re_type.id), pop, re_type)
+    res::jOpqua.Response = jOpqua.newResponse!(pat, pat, pop, re_type)
 
     for h in 1:num_infected
         # println(h)
@@ -90,8 +90,8 @@ function testRun(seed::Int64)
 end
 
 # @profview testRun()
-@time testRun(0)
 @time testRun(1)
+@time testRun(0)
 # for i in 1:200
 #     println(i)
 #     @time testRun(i)

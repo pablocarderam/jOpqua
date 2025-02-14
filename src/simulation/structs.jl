@@ -60,6 +60,8 @@ end
 
 # Model entities:
 struct Pathogen
+    parents::MVector{2, Union{Pathogen, Nothing}} # parent pathogen objects, if any
+    # This is only useful for response lineage tracing, but not the simulation?
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
     mean_effective_inoculum::Float64
@@ -69,7 +71,7 @@ struct Pathogen
 end
 
 struct Response
-    parent::Tuple{String,String,String} # imprinted genome, matured genome, type ID
+    parents::MVector{2, Union{Response, Nothing}} # parent response objects, if any
     # This is only useful for response lineage tracing, but not the simulation?
     imprinted_pathogen::Pathogen # This will track the Pathogen imprinted in the naive response
     matured_pathogen::Pathogen

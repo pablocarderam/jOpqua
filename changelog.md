@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 14 February 2025
+- Added references to actual parent entities in `Pathogen` and `Response` using
+CLM's `Union{X, Nothing}` trick (PCR)
+
 ## 13 February 2025
 No changes yet, but based on (unnecessarily, sorry) lengthy discussion, we conclude
 that the optimal implementation of random weighted sampling of `Host` entities is

@@ -18,7 +18,9 @@ function mutantPathogen!(pathogen::Pathogen, population::Population)
     if haskey(population.pathogens, seq)
         return population.pathogens[seq]
     else
-        return newPathogen!(seq, population, pathogen.type)
+        return newPathogen!(
+            seq, population, pathogen.type, parents=MVector{2, Union{Pathogen, Nothing}}([pathogen, nothing]),
+        )
     end
 end
 
@@ -50,14 +52,20 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
 
     # for seq in children
     #     if !haskey(population.pathogens, seq)
-    #         newPathogen!(seq, population, pathogen_1.type)
+    #         newPathogen!(
+    #             seq, population, pathogen_1.type,
+    #             parents=MVector{2, Union{Pathogen, Nothing}}([pathogen_1, pathogen_2]),
+    #         )
     #     end
     # end
 
     # return SA[population.pathogens[children[1]], population.pathogens[children[2]]]
 
     if !haskey(population.pathogens, children[1])
-        newPathogen!(children[1], population, pathogen_1.type)
+        newPathogen!(
+            children[1], population, pathogen_1.type,
+            parents=MVector{2, Union{Pathogen, Nothing}}([pathogen_1, pathogen_2]),
+        )
     end
     return population.pathogens[children[1]]
 end
