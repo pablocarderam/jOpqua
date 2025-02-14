@@ -3,6 +3,25 @@
 ## 14 February 2025
 - Added references to actual parent entities in `Pathogen` and `Response` using
 CLM's `Union{X, Nothing}` trick (PCR)
+- Implemented flexible level + rejection sampling (current working titles "FlexLev
+sampling", or perhaps "Flexle sampling") as described in PCR's note yesterday.
+However, in discussions today re: the relative benefits of using a linked list
+structure for `FlexLevel` entities in a `FlexlevSampler` as opposed to an array,
+we decided that the primary LL advantage—namely the ability to easily add new
+`FlexLevel` without copying data—is likely to be outweighed by both (1) that arrays
+allow for constant-time indexing, meaning adding, removing, and moving weights
+to/from/between levels (actions which are all likely to be far more common than
+creating new levels) are much faster for arrays than for linked lists, and (2) that
+the "add level" operation is actually still _O(n)_ in the number of levels for linked
+lists when levels are added in the middle of the list, thereby partially negating the
+linked list's primary benefit. (As a side note, arrays actually lose their constant-time
+indexing property for our use case if you allow for non-contiguous `FlexLevel`s in a
+`FlexlevSampler`. However, we have decided for now at least that the additional
+space/time to enforce level contiguousness is an appropriate price to pay for
+constant-time indexing.) All of that is to say that
+*flexle sampling as currently implemented using linked lists will not remain*.
+CLM will rework the implementation to use arrays instead. Nevertheless, this iteration
+of flexle sampling is being committed for posterity. (CLM)
 
 ## 13 February 2025
 No changes yet, but based on (unnecessarily, sorry) lengthy discussion, we conclude
