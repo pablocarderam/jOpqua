@@ -1,4 +1,5 @@
 using PoissonRandom
+using Printf
 
 catCol(a, b) = reshape(append!(vec(a), vec(b)), size(a)[1:end-1]..., :)
 # Simeon Schaub https://discourse.julialang.org/t/adding-rows-to-a-matrix-dynamically/52984
@@ -25,3 +26,13 @@ end
 # who took it from https://stackoverflow.com/questions/23561551/a-efficient-binomial-random-number-generator-code-in-java
 # where it was cited as a variant of Luc Devroye's "Second Waiting Time Method" on page 522 of his text "Non-Uniform Random
 # Variate Generation."
+
+"""
+    logBounds(n)
+
+Returns a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
+"""
+function logBounds(n::Float64)
+    l = 2.0^(floor(log2(n)))
+    return l, l*2.0
+end

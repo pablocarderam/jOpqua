@@ -151,3 +151,18 @@ mutable struct Model
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64
 end
+
+mutable struct FlexLevel
+    bounds::Tuple{Float64, Float64}
+    sum::Float64
+    max::Float64
+    indices::Vector{Int64}
+    next::Union{FlexLevel, Nothing}
+end
+
+mutable struct FlexlevSampler
+    min_level::Float64
+    max_level::Float64
+    levels::FlexLevel
+    weights::AbstractVector{Float64}
+end
