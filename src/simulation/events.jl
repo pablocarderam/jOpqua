@@ -19,7 +19,7 @@ function mutantPathogen!(pathogen::Pathogen, population::Population)
         return population.pathogens[seq]
     else
         return newPathogen!(
-            seq, population, pathogen.type, parents=MVector{2, Union{Pathogen, Nothing}}([pathogen, nothing]),
+            seq, population, pathogen.type, parents=MVector{2,Union{Pathogen,Nothing}}([pathogen, nothing]),
         )
     end
 end
@@ -64,7 +64,7 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
     if !haskey(population.pathogens, children[1])
         newPathogen!(
             children[1], population, pathogen_1.type,
-            parents=MVector{2, Union{Pathogen, Nothing}}([pathogen_1, pathogen_2]),
+            parents=MVector{2,Union{Pathogen,Nothing}}([pathogen_1, pathogen_2]),
         )
     end
     return population.pathogens[children[1]]
@@ -541,7 +541,7 @@ end
 function death!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(DEATH, model, rand_n)
 
-    population.compartment_vars[DEAD] += 1
+    model.populations[pop_idx].compartment_vars[DEAD] += 1
     # done here because removeHostFromPopulation doesn't advance deaths,
     # but does remove from other vars
 
