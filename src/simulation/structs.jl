@@ -79,6 +79,12 @@ struct Response
     type::ResponseType
 end
 
+struct StaticHost
+    id::Int64
+    pathogens::Vector{Pathogen} # size MAX_PATHOGENS
+    responses::Vector{Response} # size MAX_RESPONSES
+end
+
 mutable struct Host
     id::Int64
 
@@ -119,6 +125,9 @@ mutable struct Population
 
     population_contact_coefficients::Vector{Float64} # size POPULATIONS
     population_transition_coefficients::Vector{Float64} # size POPULATIONS
+
+    compartment_vars::MVector{NUM_COMPARTMENTS,Int64}
+    # uninfected naive, infected naive, uninfected immune, infected immune, dead
 end
 
 struct Intervention

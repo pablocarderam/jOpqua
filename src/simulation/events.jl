@@ -71,6 +71,16 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
 end
 
 function addPathogenToHost!(pathogen::Pathogen, host_idx::Int64, population::Population, model::Model)
+    if length(population.hosts[host_idx].pathogens) == 0
+        if length(population.hosts[host_idx].responses) == 0
+            population.compartment_vars[INFECTED_NAIVE] += 1
+            population.compartment_vars[UNINFECTED_NAIVE] -= 1
+        else
+            population.compartment_vars[INFECTED_IMMUNE] += 1
+            population.compartment_vars[UNINFECTED_IMMUNE] -= 1
+        end
+    end
+
     push!(population.hosts[host_idx].pathogens, pathogen)
     push!(population.hosts[host_idx].pathogen_fractions, 0.0)
     population.hosts[host_idx].pathogen_weights = catCol(
@@ -81,6 +91,16 @@ function addPathogenToHost!(pathogen::Pathogen, host_idx::Int64, population::Pop
 end
 
 function addResponseToHost!(response::Response, host_idx::Int64, population::Population, model::Model)
+    if length(population.hosts[host_idx].responses) == 0
+        if length(population.hosts[host_idx].pathogens) == 0
+            population.compartment_vars[UNINFECTED_IMMUNE] += 1
+            population.compartment_vars[UNINFECTED_NAIVE] -= 1
+        else
+            population.compartment_vars[INFECTED_IMMUNE] += 1
+            population.compartment_vars[INFECTED_NAIVE] -= 1
+        end
+    end
+
     push!(population.hosts[host_idx].responses, response)
     population.hosts[host_idx].response_weights = catCol(
         population.hosts[host_idx].response_weights, zeros(Float64, NUM_RESPONSE_EVENTS)
@@ -94,12 +114,32 @@ function removePathogenFromHost!(pathogen_idx::Int64, host_idx::Int64, populatio
     deleteat!(population.hosts[host_idx].pathogen_fractions, pathogen_idx)
     population.hosts[host_idx].pathogen_weights = population.hosts[host_idx].pathogen_weights[:, begin:end.!=pathogen_idx]
 
+    if length(population.hosts[host_idx].pathogens) == 0
+        if length(population.hosts[host_idx].responses) == 0
+            population.compartment_vars[INFECTED_NAIVE] -= 1
+            population.compartment_vars[UNINFECTED_NAIVE] += 1
+        else
+            population.compartment_vars[INFECTED_IMMUNE] -= 1
+            population.compartment_vars[UNINFECTED_IMMUNE] += 1
+        end
+    end
+
     hostWeights!(host_idx, population, model)
 end
 
 function removeResponseFromHost!(response_idx::Int64, host_idx::Int64, population::Population, model::Model)
     deleteat!(population.hosts[host_idx].responses, response_idx)
     population.hosts[host_idx].response_weights = population.hosts[host_idx].response_weights[:, begin:end.!=response_idx]
+
+    if length(population.hosts[host_idx].responses) == 0
+        if length(population.hosts[host_idx].pathogens) == 0
+            population.compartment_vars[UNINFECTED_IMMUNE] -= 1
+            population.compartment_vars[UNINFECTED_NAIVE] += 1
+        else
+            population.compartment_vars[INFECTED_IMMUNE] -= 1
+            population.compartment_vars[INFECTED_NAIVE] += 1
+        end
+    end
 
     hostWeights!(host_idx, population, model)
 end
@@ -121,6 +161,20 @@ function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, 
 end
 
 function addHostToPopulation!(new_host::Host, population::Population, model::Model)
+    if length(population.hosts[host_idx].pathogens) == 0
+        if length(population.hosts[host_idx].responses) == 0
+            population.compartment_vars[UNINFECTED_NAIVE] += 1
+        else
+            population.compartment_vars[UNINFECTED_IMMUNE] += 1
+        end
+    else
+        if length(population.hosts[host_idx].responses) == 0
+            population.compartment_vars[INFECTED_NAIVE] += 1
+        else
+            population.compartment_vars[INFECTED_IMMUNE] += 1
+        end
+    end
+
     push!(population.hosts, new_host)
     population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
     population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
@@ -174,6 +228,8 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
 end
 
 function addHostsToPopulation!(num_hosts::Int64, population::Population, model::Model)
+    population.compartment_vars[UNINFECTED_NAIVE] += num_hosts
+
     num_starting_hosts = length(population.hosts)
     for i in 1:num_hosts
         push!(population.hosts, Host(
@@ -197,6 +253,20 @@ function addHostsToPopulation!(num_hosts::Int64, population::Population, model::
 end
 
 function removeHostFromPopulation!(host_idx::Int64, population::Population, model::Model)
+    if length(population.hosts[host_idx].pathogens) == 0
+        if length(population.hosts[host_idx].responses) == 0
+            population.compartment_vars[UNINFECTED_NAIVE] -= 1
+        else
+            population.compartment_vars[UNINFECTED_IMMUNE] -= 1
+        end
+    else
+        if length(population.hosts[host_idx].responses) == 0
+            population.compartment_vars[INFECTED_NAIVE] -= 1
+        else
+            population.compartment_vars[INFECTED_IMMUNE] -= 1
+        end
+    end
+
     for coef in EVENTS
         if population.host_weights[host_idx, coef] != 0.0
             propagateWeightChanges!(
@@ -470,6 +540,10 @@ end
 
 function death!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(DEATH, model, rand_n)
+
+    population.compartment_vars[DEAD] += 1
+    # done here because removeHostFromPopulation doesn't advance deaths,
+    # but does remove from other vars
 
     removeHostFromPopulation!(host_idx, model.populations[pop_idx], model)
 end

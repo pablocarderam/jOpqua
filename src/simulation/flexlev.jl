@@ -1,3 +1,5 @@
+using Printf
+
 # Flexible binary level rejection sampling
 
 # Structs

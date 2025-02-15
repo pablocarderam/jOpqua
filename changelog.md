@@ -3,6 +3,12 @@
 ## 15 February 2025
 - Moved FlexLev/Flexle code into a new file for modularization of the technique
 (PCR)
+- Added `StaticHost` for more lightweight storage of host info in simulation
+history
+- Added history tracking in two ways: accurate counts of compartment variables
+(uninfected naive, infected naive, uninfected immune, infected immune, and dead
+hosts) in each population at each indicated time point, and a sample of hosts
+(each stored as `StaticHost`) from each population at each time point (PCR)
 
 ## 14 February 2025
 - Added references to actual parent entities in `Pathogen` and `Response` using

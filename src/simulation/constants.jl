@@ -58,5 +58,17 @@ const START_COEFFICIENTS = SVector{NUM_COEFFICIENTS,Float64}(
     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0]
 )
 
+# History variable trackers
+const UNINFECTED_NAIVE = 1
+const UNINFECTED_IMMUNE = 2
+const INFECTED_NAIVE = 3
+const INFECTED_IMMUNE = 4
+const DEAD = 5
+const COMPARTMENTS = SA[
+    UNINFECTED_NAIVE, UNINFECTED_IMMUNE,
+    INFECTED_NAIVE, INFECTED_IMMUNE, DEAD
+    ]
+const NUM_COMPARTMENTS = length(COMPARTMENTS)
+
 # Misc constants
 const CHROMOSOME_SEPARATOR = "/"

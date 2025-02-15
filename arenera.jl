@@ -79,19 +79,24 @@ function testRun(seed::Int64)
         jOpqua.addResponseToHost!(res, h, pop, model)
     end
 
-    t_vec = collect(0.0:50.0)
+    t_vec = collect(0.0:1.0:50.0)
 
     Random.seed!(seed)
 
     # @profview jOpqua.simulate!(model, t_vec)
     # @time jOpqua.simulate!(model, t_vec)
-    jOpqua.simulate!(model, t_vec)
-    println(model.event_rates)
+    model, compartment_vars, host_samples = jOpqua.simulate!(
+        model, t_vec, host_samples_population=Dict("pop"=>100)
+    )
+    # println(model.event_rates)
+    println(compartment_vars["pop"][:,end])
+    println(host_samples["pop"][:,end][1:3])
 end
 
 # @profview testRun()
 @time testRun(1)
 @time testRun(0)
+
 # for i in 1:200
 #     println(i)
 #     @time testRun(i)

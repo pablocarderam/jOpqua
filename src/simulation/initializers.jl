@@ -43,6 +43,10 @@ function newHost!(population::Population, model::Model)
     return population.hosts[end]
 end
 
+function staticHost(host::Host)
+    return StaticHost(host.id, copy(host.pathogens), copy(host.responses))
+end
+
 function newPopulation!(id::String, parameters::PopulationType, model::Model)
     push!(model.populations, Population(
         id, parameters,
@@ -55,6 +59,7 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         0.0, 0.0,
         zeros(Float64, length(model.populations)),
         zeros(Float64, length(model.populations)),
+        zeros(Int64, NUM_COMPARTMENTS),
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))
