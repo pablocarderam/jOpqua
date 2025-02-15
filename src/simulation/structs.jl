@@ -60,7 +60,7 @@ end
 
 # Model entities:
 struct Pathogen
-    parents::MVector{2, Union{Pathogen, Nothing}} # parent pathogen objects, if any
+    parents::MVector{2,Union{Pathogen,Nothing}} # parent pathogen objects, if any
     # This is only useful for response lineage tracing, but not the simulation?
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
@@ -71,7 +71,7 @@ struct Pathogen
 end
 
 struct Response
-    parents::MVector{2, Union{Response, Nothing}} # parent response objects, if any
+    parents::MVector{2,Union{Response,Nothing}} # parent response objects, if any
     # This is only useful for response lineage tracing, but not the simulation?
     imprinted_pathogen::Pathogen # This will track the Pathogen imprinted in the naive response
     matured_pathogen::Pathogen
@@ -152,19 +152,4 @@ mutable struct Model
 
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64
-end
-
-mutable struct FlexLevel
-    bounds::Tuple{Float64, Float64}
-    sum::Float64
-    max::Float64
-    indices::Vector{Int64}
-    next::Union{FlexLevel, Nothing}
-end
-
-mutable struct FlexlevSampler
-    min_level::Float64
-    max_level::Float64
-    levels::FlexLevel
-    weights::AbstractVector{Float64}
 end

@@ -1,8 +1,12 @@
 using Random
 
 function simulate!(model::Model, time_vector::Vector{Float64})
+    # Interventions
     interventions = sort(model.interventions, by=intervention -> intervention.time)
     intervention_tracker = 0 # keeps track of what the next intervention should be
+
+    # History
+    his_tracker = 0
 
     # Gillespie
     time = 0.0

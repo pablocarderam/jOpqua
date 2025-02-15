@@ -1,8 +1,9 @@
 using StaticArrays
 
+# Model entity initializers
 function newPathogen!(
-        sequence::String, population::Population, type::PathogenType;
-        parents::MVector{2, Union{Pathogen, Nothing}}=MVector{2, Union{Pathogen, Nothing}}([nothing, nothing]))
+    sequence::String, population::Population, type::PathogenType;
+    parents::MVector{2,Union{Pathogen,Nothing}}=MVector{2,Union{Pathogen,Nothing}}([nothing, nothing]))
     population.pathogens[sequence] = Pathogen(
         parents, sequence, pathogenSequenceCoefficients(sequence, type),
         type.mean_effective_inoculum * type.inoculumCoefficient(sequence) * population.parameters.inoculum_coefficient,
@@ -17,7 +18,7 @@ end
 function newResponse!(
     imprinted_pathogen::Pathogen, matured_pathogen::Pathogen,
     population::Population, type::ResponseType;
-    parents::MVector{2, Union{Response, Nothing}}=MVector{2, Union{Response, Nothing}}([nothing, nothing]))
+    parents::MVector{2,Union{Response,Nothing}}=MVector{2,Union{Response,Nothing}}([nothing, nothing]))
     population.responses[(imprinted_pathogen.sequence, matured_pathogen.sequence, type.id)] = Response(
         parents, imprinted_pathogen, matured_pathogen,
         responseStaticCoefficients(imprinted_pathogen.sequence, matured_pathogen.sequence, type),
@@ -100,42 +101,4 @@ function newModel()
         zeros(SVector{NUM_EVENTS,Float64}),
         0.0
     )
-end
-
-function newFlexlevSampler(weights::AbstractVector{Float64})
-    if length(weights) == 0
-        throw("Cannot create FlexlevSampler from AbstractVector of length 0.")
-    end
-
-    head = newFlexLevel(1, weights[1])
-    min, max = head.bounds
-    for i in firstindex(weights)+1:lastindex(weights)
-        w = weights[i]
-
-        # if need new level at beginning
-        if w >= head.bounds[2]
-            new_head = newFlexLevel(i, w, next=head)
-            head = new_head
-            max = head.bounds[2]
-            continue
-        end
-
-        curr::Union{FlexLevel, Nothing} = head
-        while true
-            if curr.bounds[1] <= w < curr.bounds[2]     # belongs in current level 
-                addToFlexLevel!(i, w, curr)
-                break
-            elseif isnothing(curr.next)                 # need new level at end
-                curr.next = newFlexLevel(i, w)
-                min = curr.next.bounds[1]
-                break
-            elseif w >= curr.next.bounds[2]             # need new level between curr and next
-                curr.next = newFlexLevel(i, w, next=curr.next)
-                break
-            end
-            curr = curr.next
-        end
-    end
-
-    return FlexlevSampler(min, max, head, weights)
 end

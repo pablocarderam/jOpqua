@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 15 February 2025
+- Moved FlexLev/Flexle code into a new file for modularization of the technique
+(PCR)
+
 ## 14 February 2025
 - Added references to actual parent entities in `Pathogen` and `Response` using
 CLM's `Union{X, Nothing}` trick (PCR)
