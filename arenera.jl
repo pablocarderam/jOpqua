@@ -85,12 +85,12 @@ function testRun(seed::Int64)
 
     # @profview jOpqua.simulate!(model, t_vec)
     # @time jOpqua.simulate!(model, t_vec)
-    model, compartment_vars, host_samples = jOpqua.simulate!(
+    model, output = jOpqua.simulate!(
         model, t_vec, host_samples_population=Dict("pop"=>100)
     )
     # println(model.event_rates)
-    println(compartment_vars["pop"][:,end])
-    println(host_samples["pop"][:,end][1:3])
+    println(output.compartment_vars["pop"][:,end])
+    println(output.host_samples["pop"][:,end][1:3])
 end
 
 # @profview testRun()

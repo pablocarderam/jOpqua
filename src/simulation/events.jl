@@ -161,14 +161,14 @@ function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, 
 end
 
 function addHostToPopulation!(new_host::Host, population::Population, model::Model)
-    if length(population.hosts[host_idx].pathogens) == 0
-        if length(population.hosts[host_idx].responses) == 0
+    if length(new_host.pathogens) == 0
+        if length(new_host.responses) == 0
             population.compartment_vars[UNINFECTED_NAIVE] += 1
         else
             population.compartment_vars[UNINFECTED_IMMUNE] += 1
         end
     else
-        if length(population.hosts[host_idx].responses) == 0
+        if length(new_host.responses) == 0
             population.compartment_vars[INFECTED_NAIVE] += 1
         else
             population.compartment_vars[INFECTED_IMMUNE] += 1

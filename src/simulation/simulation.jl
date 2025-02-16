@@ -89,5 +89,5 @@ function simulate!(
 
     println(evt_count)
 
-    return model, compartment_vars, host_samples
+    return model, Output(model, time_vector, compartment_vars, host_samples)
 end

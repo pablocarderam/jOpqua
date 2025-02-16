@@ -162,3 +162,10 @@ mutable struct Model
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64
 end
+
+struct Output
+    model::Model
+    time::Vector{Float64}
+    compartment_vars::Dict{String, Matrix{Int64}}
+    host_samples::Dict{String, Matrix{StaticHost}}
+end

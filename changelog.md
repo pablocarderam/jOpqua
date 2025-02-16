@@ -1,10 +1,14 @@
 # jOpqua Changelog
 
+## 16 February 2025
+- Bug fix in compartment variable handling (PCR)
+- New `Output` struct for simulation output (PCR)
+
 ## 15 February 2025
 - Moved FlexLev/Flexle code into a new file for modularization of the technique
 (PCR)
 - Added `StaticHost` for more lightweight storage of host info in simulation
-history
+history (PCR)
 - Added history tracking in two ways: accurate counts of compartment variables
 (uninfected naive, infected naive, uninfected immune, infected immune, and dead
 hosts) in each population at each indicated time point, and a sample of hosts
