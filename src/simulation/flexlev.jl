@@ -9,17 +9,39 @@ mutable struct FlexLevel
     sum::Float64
     max::Float64
     indices::Vector{Int64}
-    next::Union{FlexLevel,Nothing}
 end
 
 mutable struct FlexlevSampler
-    min_level::Float64
-    max_level::Float64
-    levels::FlexLevel
+    levels::Vector{FlexLevel}
     weights::AbstractVector{Float64}
+    min::Float64
+    max::Float64
+    sum::Float64
 end
 
 # Methods
+
+"""
+    levelIndex(w, u)
+
+Given a weight `w`, returns the index of the level in some `FlexlevSampler.levels` with maximum upper bound `2^u` where `w` belongs.
+
+Returns `0` if `w` is `0.0`, indicating that `w` belongs in no level.
+
+# Examples
+
+`levelIndex(14.2, 6)` ==>  `3`
+
+The value `14.2` belongs in the `(8.0, 16.0)` level, which in a `FlexlevSampler` that
+starts with a level of bounds `(32.0, 64.0)` (`64` being `2^6`) is at `levels[3]`.
+
+`levelIndex(8.0, 4)` ==> `1`
+
+`levelIndex(8.0, 5)` ==> `2`
+"""
+function levelIndex(w::Float64, u::Int64)
+    return iszero(w) ? 0 : u - Int64(floor(log2(w)))
+end
 
 # Initialization
 
@@ -28,41 +50,56 @@ function newFlexlevSampler(weights::AbstractVector{Float64})
         throw("Cannot create FlexlevSampler from AbstractVector of length 0.")
     end
 
-    head = newFlexLevel(1, weights[1])
-    min, max = head.bounds
-    for i in firstindex(weights)+1:lastindex(weights)
-        w = weights[i]
-
-        # if need new level at beginning
-        if w >= head.bounds[2]
-            new_head = newFlexLevel(i, w, next=head)
-            head = new_head
-            max = head.bounds[2]
-            continue
+    w_sum = 0.0
+    weights_nonzero = filter(x->!iszero(x), weights)
+    all_zero = isempty(weights_nonzero)
+    
+    if all_zero
+        w_min, w_max = 0.0, 0.0
+        num_levels = 0
+    else
+        w_min, w_max = Inf, 0.0
+        for w in weights_nonzero
+            (w < w_min) && (w_min = w)
+            (w > w_max) && (w_max = w)
         end
 
-        curr::Union{FlexLevel,Nothing} = head
-        while true
-            if curr.bounds[1] <= w < curr.bounds[2]     # belongs in current level
-                addToFlexLevel!(i, w, curr)
-                break
-            elseif isnothing(curr.next)                 # need new level at end
-                curr.next = newFlexLevel(i, w)
-                min = curr.next.bounds[1]
-                break
-            elseif w >= curr.next.bounds[2]             # need new level between curr and next
-                curr.next = newFlexLevel(i, w, next=curr.next)
-                break
+        max_u_log   = Int64(ceil(log2(w_max)))
+        max_l_log   = Int64(floor(log2(w_max)))
+
+        min_l_log_f = floor(log2(w_min))
+        min_l_log   = Int64(min_l_log_f)
+
+        l_bound     = 2.0^min_l_log_f
+        num_levels = max_l_log - min_l_log + 1     # e.g. -2,4 ==> 7 levels [4,3,2,1,0,-1,-2]
+    end
+
+    levels = Vector{FlexLevel}(undef, num_levels)   # add check for unreasonable number of levels before allocating space?
+    
+    if !all_zero
+        for i in num_levels:-1:1
+            u_bound = l_bound * 2.0
+            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}()) 
+            l_bound = u_bound
+        end
+
+        for i in eachindex(weights)
+            w = weights[i]
+            if !iszero(w)
+                l = levels[levelIndex(w, max_u_log)]
+                push!(l.indices, i)
+                (w > l.max) && (l.max = w)
+                l.sum += w
+                w_sum += w
             end
-            curr = curr.next
         end
     end
 
-    return FlexlevSampler(min, max, head, weights)
+    return FlexlevSampler(levels, weights, w_min, w_max, w_sum)
 end
 
-function newFlexLevel(i::Int64, w::Float64; next::Union{FlexLevel,Nothing}=nothing)
-    return FlexLevel(logBounds(w), w, w, [i], next)
+function newFlexLevel(i::Int64, w::Float64)
+    return FlexLevel(logBounds(w), w, w, [i])
 end
 
 function addToFlexLevel!(i::Int64, w::Float64, level::FlexLevel)
@@ -78,44 +115,41 @@ end
 function verifyFlexlevSampler(sampler::FlexlevSampler)
     errors = 0
 
-    # ]all weights in sampler.weights are represented in some level?
+    # all weights in sampler.weights are represented in some level?
     for i in eachindex(sampler.weights)
-        if !inSampler(i, sampler)
+        if !iszero(sampler.weights[i]) && !inSampler(i, sampler)
             errors += 1
             @printf "Error %i: index %i (weight %f) not in any level\n" errors i sampler.weights[i]
         end
     end
 
     # all weights in levels are represented in sampler.weights, and if so, in the correct level?
-    curr = sampler.levels
     num_weights = length(sampler.weights)
-    while !isnothing(curr)
-        for i in curr.indices
+    for level in sampler.levels
+        for i in level.indices
             if !(1 <= i <= num_weights)
                 errors += 1
-                @printf "Error %i: index %i present in level (%f, %f) but not in weights\n" errors i curr.bounds[1] curr.bounds[2]
-            elseif !(curr.bounds[1] <= sampler.weights[i] < curr.bounds[2])
+                @printf "Error %i: index %i present in level (%f, %f) but not in weights\n" errors i level.bounds[1] level.bounds[2]
+            elseif !(level.bounds[1] <= sampler.weights[i] < level.bounds[2])
                 errors += 1
-                @printf "Error %i: index %i (weight %f) present in level (%f, %f)\n" errors i sampler.weights[i] curr.bounds[1] curr.bounds[2]
+                @printf "Error %i: index %i (weight %f) present in level (%f, %f)\n" errors i sampler.weights[i] level.bounds[1] level.bounds[2]
             end
         end
-        curr = curr.next
     end
 
     # all level sums/maxes correct?
-    curr = sampler.levels
-    while !isnothing(curr)
-        expected_sum = sum(sampler.weights[i] for i in curr.indices)
-        if expected_sum != curr.sum
+    for level in sampler.levels
+        empty = isempty(level.indices)
+        expected_sum = empty ? 0.0 : sum(sampler.weights[i] for i in level.indices)
+        if expected_sum != level.sum
             errors += 1
-            @printf "Error %i: level (%f, %f) sum incorrect (expected %f, got %f)\n" errors curr.bounds[1] curr.bounds[2] expected_sum curr.sum
+            @printf "Error %i: level (%f, %f) sum incorrect (expected %f, got %f)\n" errors level.bounds[1] level.bounds[2] expected_sum level.sum
         end
-        expected_max = maximum(sampler.weights[i] for i in curr.indices)
-        if expected_max != curr.max
+        expected_max = empty ? 0.0 : maximum(sampler.weights[i] for i in level.indices)
+        if expected_max != level.max
             errors += 1
-            @printf "Error %i: level (%f, %f) max incorrect (expected %f, got %f)\n" errors curr.bounds[1] curr.bounds[2] expected_max curr.max
+            @printf "Error %i: level (%f, %f) max incorrect (expected %f, got %f)\n" errors level.bounds[1] level.bounds[2] expected_max level.max
         end
-        curr = curr.next
     end
 
     @printf"Final error count: %i" errors
@@ -123,26 +157,27 @@ function verifyFlexlevSampler(sampler::FlexlevSampler)
 end
 
 function inSampler(i::Int64, sampler::FlexlevSampler)
-    curr = sampler.levels
-    while !isnothing(curr)
-        if i in curr.indices
+    for level in sampler.levels
+        if i in level.indices
             return true
         end
-        curr = curr.next
     end
     return false
 end
 
 function printFlexlevSampler(sampler::FlexlevSampler)
-    @printf "\nFlexlevSampler (%f, %f)\n" sampler.min_level sampler.max_level
+    @printf "\nFlexlevSampler (%f, %f)\n" sampler.min sampler.max
     show(sampler.weights)
+    @printf "\nSum %f" sampler.sum
     println()
-    curr = sampler.levels
-    while !isnothing(curr)
-        @printf "\nLevel (%f, %f)\n" curr.bounds[1] curr.bounds[2]
-        @printf "sum=%f\n" curr.sum
-        @printf "max=%f\n" curr.max
-        println(curr.indices)
-        curr = curr.next
+    if isempty(sampler.levels)
+        println("(sampler contains no levels)")
+    else
+        for l in sampler.levels
+            @printf "\nLevel (%f, %f)\n" l.bounds[1] l.bounds[2]
+            @printf "sum=%f\n" l.sum
+            @printf "max=%f\n" l.max
+            println(l.indices)
+        end
     end
 end
