@@ -8,6 +8,15 @@ their section (PCR)
 - Replace abstract `Function` type definitions in structs and function
 arguments with `FunctionWrapper` functions with defined outputs and inputs (PCR)
 - Type-define default argument functions (PCR)
+- Identified performance issue using flamegraph in which mutable static vector
+defining `inocula` within `hostContact!` resulted in runtime function resolution;
+made `inocula` into a regular `Vector` and this removed the runtime resolution
+of the calls (but addded orange bars on the flamegraph in what I'd consider
+unrelated parts of the code, the return lines of `choosePathogen!` and
+`chooseHost!`--worth keeping an eye on, maybe with `inocula` of length > 1 we
+will be able to spot performance problems and `MVector` will be better)
+
+At this point, the flamegraph shows no runtime (red) calls!
 
 ## 16 February 2025
 - Bug fix in compartment variable handling (PCR)

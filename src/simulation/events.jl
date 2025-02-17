@@ -408,7 +408,8 @@ function hostContact!(model::Model, rand_n::Float64)
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]
-        inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
+        inocula = Vector{Int64}([
+        # inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
             pois_rand(
                 host1.pathogens[p_idx].mean_effective_inoculum *
                 host1.pathogen_fractions[p_idx]
