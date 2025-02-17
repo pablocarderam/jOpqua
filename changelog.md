@@ -5,6 +5,8 @@
 - Changed argument order in Type structs to put coefficients last within
 their section (PCR)
 - Finish model setup parameter initialization functions, default values (PCR)
+- Extend `FlexleSampler` levels to include higher and lower bounds (CLM)
+- `FlexleSampler` testing (CLM)
 
 ## 16 February 2025
 - Bug fix in compartment variable handling (PCR)
@@ -12,6 +14,7 @@ their section (PCR)
 - Population compartment plot (PCR)
 - Moved sandbox file to examples folder (PCR)
 - Default model setup functions (PCR)
+- Add/remove/move indices to/from/between `FlexleSampler` levels (CLM)
 
 Next:
 - Finish model setup functions
@@ -26,6 +29,7 @@ history (PCR)
 (uninfected naive, infected naive, uninfected immune, infected immune, and dead
 hosts) in each population at each indicated time point, and a sample of hosts
 (each stored as `StaticHost`) from each population at each time point (PCR)
+- Reworked `Flexle` sampling to use arrays as described below (CLM)
 
 ## 14 February 2025
 - Added references to actual parent entities in `Pathogen` and `Response` using
