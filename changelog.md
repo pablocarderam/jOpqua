@@ -1,5 +1,11 @@
 # jOpqua Changelog
 
+## 17 February 2025
+- Small bug fix: `mean_recombination_crossovers` type corrected (PCR)
+- Changed argument order in Type structs to put coefficients last within
+their section (PCR)
+- Finish model setup parameter initialization functions, default values (PCR)
+
 ## 16 February 2025
 - Bug fix in compartment variable handling (PCR)
 - New `Output` struct for simulation output (PCR)

@@ -9,35 +9,39 @@ struct PathogenType
 
     mean_effective_inoculum::Float64
     mean_mutations_per_replication::Float64
-    mean_recombination_crossovers::Int64
+    mean_recombination_crossovers::Float64
 
     vertical_transmission::Float64
 
-    coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
     inoculumCoefficient::Function # takes seq argument, returns Float64
     mutationCoefficient::Function # takes seq argument, returns Float64
     recombinationCoefficient::Function # takes seq argument, returns Float64
 
     verticalTransmission::Function # takes seq argument, returns Float64
+
+    coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
 end
 
 struct ResponseType
     id::String
-    static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured sequences and returns Float64 coefficient
-    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
     inherit_response::Float64
     infectionCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
     reactivityCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-
+    static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured sequences and returns Float64 coefficient
+    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
 struct PopulationType
     id::String
 
-    base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
-
     constant_contact_density::Bool
     constant_transition_density::Bool
+
+    inoculum_coefficient::Float64
+    mutation_coefficient::Float64
+    recombination_coefficient::Float64
+
+    base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
     pathogenFractions::Function
     # Takes Host and Population entities, returns vector with fractional representation of each pathogen present
@@ -52,10 +56,6 @@ struct PopulationType
     # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
     # (this handles how many and which responses to choose when adding a response to a host)
     #TODO: maybe doesn't need Population? Probably does to ensure responses don't already exist
-
-    inoculum_coefficient::Float64
-    mutation_coefficient::Float64
-    recombination_coefficient::Float64
 end
 
 # Model entities:
@@ -166,6 +166,6 @@ end
 struct Output
     model::Model
     time::Vector{Float64}
-    compartment_vars::Dict{String, Matrix{Int64}}
-    host_samples::Dict{String, Matrix{StaticHost}}
+    compartment_vars::Dict{String,Matrix{Int64}}
+    host_samples::Dict{String,Matrix{StaticHost}}
 end
