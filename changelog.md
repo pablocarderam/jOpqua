@@ -16,7 +16,7 @@ made `inocula` into a regular `Vector` and this removed the runtime resolution
 of the calls (but addded orange bars on the flamegraph in what I'd consider
 unrelated parts of the code, the return lines of `choosePathogen!` and
 `chooseHost!`--worth keeping an eye on, maybe with `inocula` of length > 1 we
-will be able to spot performance problems and `MVector` will be better)
+will be able to spot performance problems and `MVector` will be better) (PCR)
 
 At this point, the flamegraph shows no runtime (red) calls!
 

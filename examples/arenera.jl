@@ -1,5 +1,6 @@
 # Run from base jOpqua directory as
 # julia --project=. examples/arenera.jl
+# unless viewing flamegraph, then run from console
 
 using Revise
 using jOpqua
@@ -49,8 +50,9 @@ function testRun(seed::Int64)
 end
 
 @time testRun(1)
-@time testRun(0)
+
 @profview testRun(0)
+@time testRun(0)
 
 # Result M3 Max 64 GB 9 Feb (second run) seed 0:
 # 94438
