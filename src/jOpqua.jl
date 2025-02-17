@@ -7,16 +7,16 @@ include("utils.jl")
 include("simulation/constants.jl")
 include("simulation/structs.jl")
 
-# Input
-include("parameters/parameters.jl")
-
-# Core
+# Simulation
 include("simulation/initializers.jl")
-include("simulation/flexlev.jl")
+include("simulation/flexle.jl")
 include("simulation/choice.jl")
 include("simulation/weights.jl")
 include("simulation/events.jl")
 include("simulation/simulation.jl")
+
+# Input
+include("parameters/parameters.jl")
 
 # Output
 include("analysis/data.jl")

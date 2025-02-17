@@ -5,9 +5,11 @@
 - New `Output` struct for simulation output (PCR)
 - Population compartment plot (PCR)
 - Moved sandbox file to examples folder (PCR)
-TODO
-- Default model setup (PCR)
-- Immunity draft (PCR)
+- Default model setup functions (PCR)
+
+Next:
+- Finish model setup functions
+- Immunity draft
 
 ## 15 February 2025
 - Moved FlexLev/Flexle code into a new file for modularization of the technique
