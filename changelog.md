@@ -3,6 +3,11 @@
 ## 16 February 2025
 - Bug fix in compartment variable handling (PCR)
 - New `Output` struct for simulation output (PCR)
+- Population compartment plot (PCR)
+- Moved sandbox file to examples folder (PCR)
+TODO
+- Default model setup (PCR)
+- Immunity draft (PCR)
 
 ## 15 February 2025
 - Moved FlexLev/Flexle code into a new file for modularization of the technique
