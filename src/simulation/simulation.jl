@@ -2,10 +2,11 @@ using Random
 
 function simulate!(
         model::Model, time_vector::Vector{Float64};
-        host_samples_population::Dict{String, Int64}=Dict{String, Int64}())
+        host_samples_population::Dict{String, Int64}=Dict{String, Int64}(),
+        interventions::Vector{Intervention}=Vector{Intervention}(undef,0))
 
     # Interventions
-    interventions = sort(model.interventions, by=intervention -> intervention.time)
+    interventions = sort(interventions, by=intervention -> intervention.time)
     intervention_tracker = 0 # keeps track of what the next intervention should be
 
     # History

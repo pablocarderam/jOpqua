@@ -48,9 +48,9 @@ function testRun(seed::Int64)
     jOpqua.plotCompartments(output, ["pop"], "examples/compartment_test.png")
 end
 
-# @profview testRun()
 @time testRun(1)
 @time testRun(0)
+@profview testRun(0)
 
 # Result M3 Max 64 GB 9 Feb (second run) seed 0:
 # 94438

@@ -186,7 +186,7 @@ end
 
 function hostWeights!(host_idx::Int64, population::Population, model::Model)
     population.hosts[host_idx].pathogen_fractions = population.parameters.pathogenFractions(
-        population.hosts[host_idx], population
+        population.hosts[host_idx], population.parameters.weightedResponse
     )
     prev = 0.0
     for weight in PATHOGEN_EVENTS

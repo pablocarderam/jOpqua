@@ -1,6 +1,10 @@
 using StaticArrays
+using FunctionWrappers
+import FunctionWrappers: FunctionWrapper
 
+# Lower level (Pathogens, Responses)
 # Parameters structs (entity types):
+
 struct PathogenType
     id::String
 
@@ -13,52 +17,31 @@ struct PathogenType
 
     vertical_transmission::Float64
 
-    inoculumCoefficient::Function # takes seq argument, returns Float64
-    mutationCoefficient::Function # takes seq argument, returns Float64
-    recombinationCoefficient::Function # takes seq argument, returns Float64
+    inoculumCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
+    mutationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
+    recombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
-    verticalTransmission::Function # takes seq argument, returns Float64
+    verticalTransmission::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
-    coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # Each element takes seq argument, returns Float64
+    coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
+    # Each element takes seq argument, returns Float64
 end
 
 struct ResponseType
     id::String
     inherit_response::Float64
-    infectionCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-    reactivityCoefficient::Function # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-    static_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured sequences and returns Float64 coefficient
-    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,Function} # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-end
-
-struct PopulationType
-    id::String
-
-    constant_contact_density::Bool
-    constant_transition_density::Bool
-
-    inoculum_coefficient::Float64
-    mutation_coefficient::Float64
-    recombination_coefficient::Float64
-
-    base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
-
-    pathogenFractions::Function
-    # Takes Host and Population entities, returns vector with fractional representation of each pathogen present
-    weightedResponse::Function
-    # Takes Pathogen entity, Host entity, and event number;
-    # returns aggregated response coefficient against that Pathogen for that event
-    infectionProbability::Function
-    # Takes Pathogen and Host entities,
-    # returns probability that a contact results in successful infection given the Responses in Host
-
-    developResponses::Function
-    # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
-    # (this handles how many and which responses to choose when adding a response to a host)
-    #TODO: maybe doesn't need Population? Probably does to ensure responses don't already exist
+    infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String}}
+    # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
+    reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String}}
+    # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
+    static_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String}} }
+    # each takes imprinted, matured sequences and returns Float64 coefficient
+    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}} }
+    # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
 # Model entities:
+
 struct Pathogen
     parents::MVector{2,Union{Pathogen,Nothing}} # parent pathogen objects, if any
     # This is only useful for response lineage tracing, but not the simulation?
@@ -103,6 +86,36 @@ mutable struct Host
     # and larger at the Population level.
 end
 
+# Higher-level (Populations, Model)
+# Parameters structs (entity types):
+
+struct PopulationType
+    id::String
+
+    constant_contact_density::Bool
+    constant_transition_density::Bool
+
+    inoculum_coefficient::Float64
+    mutation_coefficient::Float64
+    recombination_coefficient::Float64
+
+    base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
+
+    pathogenFractions::FunctionWrapper{Vector{Float64},Tuple{Host,FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}}}
+    # Takes Host entity and Population's weightedResponse function,
+    # returns vector with fractional representation of each pathogen present
+    weightedResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
+    # Takes Pathogen entity, Host entity, and event number;
+    # returns aggregated response coefficient against that Pathogen for that event
+    infectionProbability::FunctionWrapper{Float64,Tuple{Pathogen,Host}}
+    # Takes Pathogen and Host entities,
+    # returns probability that a contact results in successful infection given the Responses in Host
+
+    developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Vector{Response}}}
+    # takes in Pathogen, Host, list of Responses as arguments, returns Response entities to be added
+    # (this handles how many and which responses to choose when adding a response to a host)
+end
+
 mutable struct Population
     id::String
     parameters::PopulationType
@@ -130,11 +143,6 @@ mutable struct Population
     # uninfected naive, infected naive, uninfected immune, infected immune, dead
 end
 
-struct Intervention
-    time::Float64
-    intervention::Function
-end
-
 mutable struct Model
     populations::Vector{Population} # size POPULATIONS
     population_dict::Dict{String,Int64}
@@ -157,10 +165,13 @@ mutable struct Model
     population_transition_weights_receive_sums::Vector{Float64}
     # size POPULATIONS
 
-    interventions::Vector{Intervention}
-
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64
+end
+
+struct Intervention
+    time::Float64
+    intervention::FunctionWrapper{Nothing,Tuple{Model}} # Takes Model as argument
 end
 
 struct Output

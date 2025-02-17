@@ -5,6 +5,9 @@
 - Changed argument order in Type structs to put coefficients last within
 their section (PCR)
 - Finish model setup parameter initialization functions, default values (PCR)
+- Replace abstract `Function` type definitions in structs and function
+arguments with `FunctionWrapper` functions with defined outputs and inputs (PCR)
+- Type-define default argument functions (PCR)
 
 ## 16 February 2025
 - Bug fix in compartment variable handling (PCR)

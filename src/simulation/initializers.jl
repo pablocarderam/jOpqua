@@ -1,4 +1,6 @@
 using StaticArrays
+using FunctionWrappers
+import FunctionWrappers: FunctionWrapper
 
 # Model parameter setup initializers
 
@@ -14,24 +16,24 @@ function newPathogenType(
         mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
         vertical_transmission::Union{Nothing,Float64}=nothing,
 
-        inoculumCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
-        mutationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
-        recombinationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
-        verticalTransmission::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+        inoculumCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing, # takes seq argument, returns Float64
+        mutationCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing, # takes seq argument, returns Float64
+        recombinationCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing, # takes seq argument, returns Float64
+        verticalTransmission::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing, # takes seq argument, returns Float64
 
         # Each element takes seq argument, returns Float64
-        mutantEstablishmentCoefficient::Union{Nothing,Function}=nothing,
-        clearanceCoefficient::Union{Nothing,Function}=nothing,
-        responseAcquisitionCoefficient::Union{Nothing,Function}=nothing,
-        recombinantEstablishmentCoefficient::Union{Nothing,Function}=nothing,
-        contactCoefficient::Union{Nothing,Function}=nothing,
-        responseLossCoefficient::Union{Nothing,Function}=nothing,
-        birthCoefficient::Union{Nothing,Function}=nothing,
-        deathCoefficient::Union{Nothing,Function}=nothing,
-        transitionCoefficient::Union{Nothing,Function}=nothing,
-        receiveTransitionCoefficient::Union{Nothing,Function}=nothing,
-        receiveContactCoefficient::Union{Nothing,Function}=nothing,
-        intrahostFitnessCoefficient::Union{Nothing,Function}=nothing,
+        mutantEstablishmentCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        clearanceCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        responseAcquisitionCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        recombinantEstablishmentCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        contactCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        responseLossCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        birthCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        deathCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        transitionCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        receiveTransitionCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        receiveContactCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
+        intrahostFitnessCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing,
         )
 
     isnothing(num_loci) ? num_loci=template.num_loci : num_loci=num_loci
@@ -83,38 +85,38 @@ function newResponseType(
 
         inherit_response::Union{Nothing,Float64}=nothing,
 
-        infectionCoefficient::Union{Nothing,Function}=nothing,
+        infectionCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
         # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-        reactivityCoefficient::Union{Nothing,Function}=nothing,
+        reactivityCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
         # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
 
         # Each takes imprinted, matured sequences and returns Float64 coefficient
-        mutantEstablishmentStaticCoefficient::Union{Nothing,Function}=nothing,
-        clearanceStaticCoefficient::Union{Nothing,Function}=nothing,
-        responseAcquisitionStaticCoefficient::Union{Nothing,Function}=nothing,
-        recombinantEstablishmentStaticCoefficient::Union{Nothing,Function}=nothing,
-        contactStaticCoefficient::Union{Nothing,Function}=nothing,
-        responseLossStaticCoefficient::Union{Nothing,Function}=nothing,
-        birthStaticCoefficient::Union{Nothing,Function}=nothing,
-        deathStaticCoefficient::Union{Nothing,Function}=nothing,
-        transitionStaticCoefficient::Union{Nothing,Function}=nothing,
-        receiveTransitionStaticCoefficient::Union{Nothing,Function}=nothing,
-        receiveContactStaticCoefficient::Union{Nothing,Function}=nothing,
-        intrahostFitnessStaticCoefficient::Union{Nothing,Function}=nothing,
+        mutantEstablishmentStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        clearanceStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        responseAcquisitionStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        recombinantEstablishmentStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        contactStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        responseLossStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        birthStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        deathStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        transitionStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        receiveTransitionStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        receiveContactStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
+        intrahostFitnessStaticCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String}}}=nothing,
 
         # Each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-        mutantEstablishmentSpecificCoefficient::Union{Nothing,Function}=nothing,
-        clearanceSpecificCoefficient::Union{Nothing,Function}=nothing,
-        responseAcquisitionSpecificCoefficient::Union{Nothing,Function}=nothing,
-        recombinantEstablishmentSpecificCoefficient::Union{Nothing,Function}=nothing,
-        contactSpecificCoefficient::Union{Nothing,Function}=nothing,
-        responseLossSpecificCoefficient::Union{Nothing,Function}=nothing,
-        birthSpecificCoefficient::Union{Nothing,Function}=nothing,
-        deathSpecificCoefficient::Union{Nothing,Function}=nothing,
-        transitionSpecificCoefficient::Union{Nothing,Function}=nothing,
-        receiveTransitionSpecificCoefficient::Union{Nothing,Function}=nothing,
-        receiveContactSpecificCoefficient::Union{Nothing,Function}=nothing,
-        intrahostFitnessSpecificCoefficient::Union{Nothing,Function}=nothing,
+        mutantEstablishmentSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        clearanceSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        responseAcquisitionSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        recombinantEstablishmentSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        contactSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        responseLossSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        birthSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        deathSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        transitionSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        receiveTransitionSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        receiveContactSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
+        intrahostFitnessSpecificCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String,String,String}}}=nothing,
         )
 
     isnothing(inherit_response) ? inherit_response=template.inherit_response : inherit_response=inherit_response
@@ -194,19 +196,22 @@ function newPopulationType(
         receive_contact_coefficient::Union{Nothing,Float64}=nothing,
         intrahost_fitness_coefficient::Union{Nothing,Float64}=nothing,
 
-        pathogenFractions::Union{Nothing,Function}=nothing,
-        # Takes Host and Population entities, returns vector with fractional representation of each pathogen present
-        weightedResponse::Union{Nothing,Function}=nothing,
+        pathogenFractions::Union{Nothing, FunctionWrapper{Vector{Float64},Tuple{
+                    Host,
+                    FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
+                    }}}=nothing,
+        # Takes Host entity and Population's weightedResponse function,
+        # returns vector with fractional representation of each pathogen present
+        weightedResponse::Union{Nothing,FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}}=nothing,
         # Takes Pathogen entity, Host entity, and event number;
         # returns aggregated response coefficient against that Pathogen for that event
-        infectionProbability::Union{Nothing,Function}=nothing,
+        infectionProbability::Union{Nothing,FunctionWrapper{Float64,Tuple{Pathogen,Host}}}=nothing,
         # Takes Pathogen and Host entities,
         # returns probability that a contact results in successful infection given the Responses in Host
 
-        developResponses::Union{Nothing,Function}=nothing,
-        # takes in Pathogen, Host, Population as arguments, returns Response objects to be added
+        developResponses::Union{Nothing,FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Vector{Response}}}}=nothing,
+        # takes in Pathogen, Host, list of Responses as arguments, returns Response entities to be added
         # (this handles how many and which responses to choose when adding a response to a host)
-        #TODO: maybe doesn't need Population? Probably does to ensure responses don't already exist
         )
 
     isnothing(constant_contact_density) ? constant_contact_density=template.constant_contact_density : constant_contact_density=constant_contact_density
@@ -355,7 +360,6 @@ function newModel()
         Matrix{Float64}(undef, 0, 0),
         Vector{Float64}(undef, 0),
         Vector{Float64}(undef, 0),
-        Vector{Intervention}(undef, 0),
         zeros(SVector{NUM_EVENTS,Float64}),
         0.0
     )
