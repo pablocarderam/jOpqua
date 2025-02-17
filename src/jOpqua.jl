@@ -12,7 +12,7 @@ include("parameters/parameters.jl")
 
 # Core
 include("simulation/initializers.jl")
-include("simulation/flexlev.jl")
+include("simulation/flexle.jl")
 include("simulation/choice.jl")
 include("simulation/weights.jl")
 include("simulation/events.jl")
