@@ -1,5 +1,11 @@
 # jOpqua Changelog
 
+## 18 February 2025
+- Added data csv export of compartments data (PCR)
+- Added csv plotting of compartments data (PCR)
+- Added option of `nothing` for `Response.matured.pathogen` (PCR)
+- Added data csv export of full data, can't believe it worked easily (PCR)
+
 ## 17 February 2025
 - Small bug fix: `mean_recombination_crossovers` type corrected (PCR)
 - Changed argument order in Type structs to put coefficients last within

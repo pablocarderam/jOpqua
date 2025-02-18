@@ -70,5 +70,13 @@ const COMPARTMENTS = SA[
     ]
 const NUM_COMPARTMENTS = length(COMPARTMENTS)
 
-# Misc constants
+# Misc model constants
 const CHROMOSOME_SEPARATOR = "/"
+
+# Output constants
+const WITHIN_HOST_SEPARATOR = ";"
+const PARENT_SEPARATOR = "+"
+const COMPARTMENT_LABELS = [
+    "Uninfected Naive", "Uninfected Immune", "Infected Naive",
+    "Infected Immune", "Dead"
+]

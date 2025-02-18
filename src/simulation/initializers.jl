@@ -274,7 +274,7 @@ function newPathogen!(
 end
 
 function newResponse!(
-    imprinted_pathogen::Pathogen, matured_pathogen::Pathogen,
+    imprinted_pathogen::Pathogen, matured_pathogen::Union{Pathogen,Nothing},
     population::Population, type::ResponseType;
     parents::MVector{2,Union{Response,Nothing}}=MVector{2,Union{Response,Nothing}}([nothing, nothing]))
     population.responses[(imprinted_pathogen.sequence, matured_pathogen.sequence, type.id)] = Response(
