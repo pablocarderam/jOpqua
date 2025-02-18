@@ -88,7 +88,9 @@ function simulate!(
                 compartment_vars[p.id][:,his_tracker] = p.compartment_vars
                 if haskey(host_samples_idxs, p.id)
                     if max_sample_idx[p.id] > length(p.hosts)
-                        host_samples_idxs[p.id] = sort(rand(1:length(p.hosts), length(host_samples_idxs[p.id])))
+                        host_samples_idxs[p.id] = sort(
+                            rand(1:length(p.hosts), length(host_samples_idxs[p.id]))
+                        )
                     end
                     for (i,host_idx) in enumerate(host_samples_idxs[p.id])
                         host_samples[p.id][i,his_tracker] = staticHost(p.hosts[host_idx])
