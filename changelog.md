@@ -5,6 +5,8 @@
 - Added csv plotting of compartments data (PCR)
 - Added option of `nothing` for `Response.matured.pathogen` (PCR)
 - Added data csv export of full data, can't believe it worked easily (PCR)
+- Change `Host` sampling for history to a random sample of hosts fixed over
+time (PCR)
 
 ## 17 February 2025
 - Small bug fix: `mean_recombination_crossovers` type corrected (PCR)

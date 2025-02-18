@@ -41,7 +41,7 @@ function testRun(seed::Int64)
 
     # @profview , @time
     model, output = jOpqua.simulate!(
-        model, t_vec, host_samples_population=Dict("pop" => 100)
+        model, t_vec, population_host_samples=Dict("pop" => 100)
     )
     println(output.compartment_vars["pop"][:, end])
     println(output.host_samples["pop"][:, end][1:3])
