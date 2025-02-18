@@ -57,4 +57,28 @@ function saveHistory(output::Output, file_name::String)
     open(file_name, "w") do file
         write(file, out)
     end
+
+    return DataFrame(CSV.File(file_name))
+end
+
+function saveComposition(
+        data::DataFrame, file_name::String;
+        type_of_composition::String="Pathogens", num_top_sequences::Int64=-1,
+        genomic_positions::Vector{String}=[], track_specific_sequences::Vector{String}=[],
+        fitness_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
+
+    return -1
+end
+
+function saveComposition(
+        output::Output, file_name::String;
+        type_of_composition::String="Pathogens", num_top_sequences::Int64=-1,
+        genomic_positions::Vector{String}=[], track_specific_sequences::Vector{String}=[],
+        fitness_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
+    return saveComposition(
+        saveHistory(output, file_name*".csv"), file_name,
+        type_of_composition=type_of_composition, num_top_sequences=num_top_sequences,
+        genomic_positions=genomic_positions, track_specific_sequences=track_specific_sequences,
+        fitness_function=fitness_function
+    )
 end

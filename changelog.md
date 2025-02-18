@@ -7,6 +7,9 @@
 - Added data csv export of full data, can't believe it worked easily (PCR)
 - Change `Host` sampling for history to a random sample of hosts fixed over
 time (PCR)
+- Started work on composition dataframe creation (PCR)
+
+Next: composition dataframe and plot, then immunity
 
 ## 17 February 2025
 - Small bug fix: `mean_recombination_crossovers` type corrected (PCR)
