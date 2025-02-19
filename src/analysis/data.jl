@@ -1,4 +1,5 @@
 using DataFrames
+using StatsBase
 using CSV
 
 function saveCompartments(output::Output, file_name::String)
@@ -21,38 +22,34 @@ function saveHistory(output::Output, file_name::String)
     for i in eachindex(pop_ids)
         for t in eachindex(output.time)
             out_strs[i] = out_strs[i] * join(
-                [
-                    join(
-                        [
-                            string(output.time[t]), string(pop_ids[i]),
-                            output.host_samples[pop_ids[i]][h, t].id,
-                            "\"" * join([p.type.id for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
-                            "\"" * join([p.sequence for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
-                            "\"" * join([
-                                    join([isnothing(a) ? "None" : a.sequence for a in p.parents], PARENT_SEPARATOR)
-                                    for p in output.host_samples[pop_ids[i]
-                                    ][h, t].pathogens
-                                ], WITHIN_HOST_SEPARATOR) * "\"",
-                            "\"" * join([r.type.id for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
-                            "\"" * join([r.imprinted_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
-                            "\"" * join([isnothing(r.matured_pathogen) ? "None" : r.matured_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
-                            "\"" * join([
-                                    join([isnothing(a) ? "None" : a.id for a in r.parents], PARENT_SEPARATOR)
-                                    for r in output.host_samples[pop_ids[i]][h, t].responses
-                                ], WITHIN_HOST_SEPARATOR) * "\"",
-                        ], ","
-                    )
-                    for h in 1:size(output.host_samples[pop_ids[i]])[1]
-                ], "\n"
-            )
+                              [
+                                  join(
+                                      [
+                                          string(output.time[t]), string(pop_ids[i]),
+                                          output.host_samples[pop_ids[i]][h, t].id,
+                                          "\"" * join([p.type.id for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
+                                          "\"" * join([p.sequence for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
+                                          "\"" * join([
+                                                  join([isnothing(a) ? "None" : a.sequence for a in p.parents], PARENT_SEPARATOR)
+                                                  for p in output.host_samples[pop_ids[i]
+                                                  ][h, t].pathogens
+                                              ], WITHIN_HOST_SEPARATOR) * "\"",
+                                          "\"" * join([r.type.id for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
+                                          "\"" * join([r.imprinted_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
+                                          "\"" * join([isnothing(r.matured_pathogen) ? "None" : r.matured_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
+                                          "\"" * join([
+                                                  join([isnothing(a) ? "None" : a.id for a in r.parents], PARENT_SEPARATOR)
+                                                  for r in output.host_samples[pop_ids[i]][h, t].responses
+                                              ], WITHIN_HOST_SEPARATOR) * "\"",
+                                      ], ","
+                                  )
+                                  for h in 1:size(output.host_samples[pop_ids[i]])[1]
+                              ], "\n"
+                          ) * "\n"
         end
     end
 
-    out = "Time, Population, Host, Pathogen_id, Pathogen_sequence, Pathogen_parents, Response_id, Response_imprinted_sequence, Response_matured_sequence, Response_parents\n" * join(out_strs, "\n")
-
-    # fname = "foobar.csv"
-    # dirpath = "/tmp"
-    # fpath = joinpath(dirpath, fname)
+    out = "Time,Population,Host,Pathogen_id,Pathogen_sequence,Pathogen_parents,Response_id,Response_imprinted_sequence,Response_matured_sequence,Response_parents\n" * join(out_strs, "\n")
 
     open(file_name, "w") do file
         write(file, out)
@@ -100,11 +97,41 @@ function saveComposition(
             end
         end
         dat[type_of_composition] = dat["patpop"]
+
+        all_seqs = split(join(dat[(dat[type_of_composition]!=""), type_of_composition], WITHIN_HOST_SEPARATOR), WITHIN_HOST_SEPARATOR)
+        counts = countmap(all_seqs)
+        unique_seqs = collect(keys(counts))
+        top_sequences = DataFrame(unique_seqs', hcat([counts[seq] for seq in unique_seqs]'), ["Sequence", "Frequency"])
+        if num_top_sequences < 0 || length(top_sequences) < num_top_sequences
+            num_top_sequences = length(top_sequences)
+        end
+
+        seqs_to_track = track_specific_sequences
+        for seq in top_sequences[0:num_top_sequences, "Sequence"]
+            if !(seq in seqs_to_track)
+                push!(seqs_to_track, seq)
+            end
+        end
+
+        out = DataFrame(
+            zeros(Int64, length(unique(dat["Time"])), length(seqs_to_track) + 1),
+            [seqs_to_track..., "Other"]
+        )
+
+        for row in eachrow(dat)
+            for seq in split(row[type_of_composition], WITHIN_HOST_SEPARATOR)
+                if seq in seqs_to_track
+                    out[out["Time"]==row["Time"], seq] += 1
+                else
+                    out[out["Time"]==row["Time"], "Other"] += 1
+                end
+            end
+        end
     end
 
+    CSV.write(file_name, out)
 
-
-    return -1
+    return out
 end
 
 function saveComposition(
@@ -115,8 +142,9 @@ function saveComposition(
     top_host_sequence_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
     return saveComposition(
         saveHistory(output, file_name * ".csv"), file_name,
+        populations=populations,
         type_of_composition=type_of_composition, num_top_sequences=num_top_sequences,
         genomic_positions=genomic_positions, track_specific_sequences=track_specific_sequences,
-        fitness_function=fitness_function
+        top_host_sequence_function=top_host_sequence_function
     )
 end
