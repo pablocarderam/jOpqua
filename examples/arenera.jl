@@ -48,7 +48,8 @@ function testRun(seed::Int64)
 
     jOpqua.plotCompartments(output, ["pop"], "examples/compartment_test.png")
     jOpqua.saveCompartments(output, "examples/compartment_test.csv")
-    jOpqua.saveHistory(output, "examples/history_test.csv")
+    his_dat = jOpqua.saveHistory(output, "examples/history_test.csv")
+    jOpqua.saveComposition(his_dat, "examples/composition_test.csv")
 end
 
 @time testRun(1)

@@ -1,8 +1,8 @@
 # jOpqua Changelog
 
 ## 19 February 2025
-- Progress on composition df (PCR)
-- Bug fix on history df saving (PCR)
+- Finished composition dataframe (PCR)
+- Bug fix on history dataframe saving (PCR)
 
 ## 18 February 2025
 - Added data csv export of compartments data (PCR)

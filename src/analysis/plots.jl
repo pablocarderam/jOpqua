@@ -38,12 +38,12 @@ function plotCompartments(
 
     compartment_vars = zeros(Float64, NUM_COMPARTMENTS, length(output[!,"time"]))
     for id in population_ids
-        compartment_vars .+= output[(output["Population"]==id),:]
+        compartment_vars .+= output[(output["Population"].==id),:]
     end
 
     Plots.scalefontsizes(font_scale)
     plot(
-        output[!,"time"], compartment_vars',
+        output[:,"time"], compartment_vars',
         labels=reshape([
             "Uninfected naive", "Uninfected immune",
             "Infected naive", "Infected immune", "Dead"
