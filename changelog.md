@@ -1,5 +1,8 @@
 # jOpqua Changelog
 
+## 19 February 2025
+- Small progress on composition df (PCR)
+
 ## 18 February 2025
 - Added data csv export of compartments data (PCR)
 - Added csv plotting of compartments data (PCR)

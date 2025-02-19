@@ -62,21 +62,59 @@ function saveHistory(output::Output, file_name::String)
 end
 
 function saveComposition(
-        data::DataFrame, file_name::String;
-        type_of_composition::String="Pathogens", num_top_sequences::Int64=-1,
-        genomic_positions::Vector{String}=[], track_specific_sequences::Vector{String}=[],
-        fitness_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
+    data::DataFrame, file_name::String;
+    populations::Vector{String}=[],
+    type_of_composition::String="Pathogen_sequence", num_top_sequences::Int64=-1,
+    genomic_positions::Vector{Int64}=[], track_specific_sequences::Vector{String}=[],
+    top_host_sequence_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
+
+    dat = deepcopy(data)
+    if length(populations) > 0
+        dat = dat[in.(dat["Population"], Ref(Set(populations))), :]
+    end
+
+    dat[type_of_composition] = [
+        join(
+            [
+                join(
+                    [
+                        s[genomic_positions[i]] for i in genomic_positions
+                    ], ""
+                ) for s in split(host_seqs, WITHIN_HOST_SEPARATOR)
+            ], WITHIN_HOST_SEPARATOR
+        ) for host_seqs in dat[type_of_composition]
+    ]
+
+    if !isnothing(top_host_sequence_function)
+        dat["seqpop"] = string.(dat[type_of_composition], ":::", dat["Population"])
+        unique_seqpop = unique(dat["patpop"])
+        for combination in unique_seqpop
+            gen_str = split(combination, ":::")[1]
+            if gen_str != ""
+                genomes = split(gen_str, WITHIN_HOST_SEPARATOR)
+                values = [top_host_sequence_function(p) for p in genomes]
+                top_pathogen = genomes[findmax(values)[2]]
+                dat["patpop"] = replace(dat["patpop"], combination => top_pathogen)
+            else
+                dat["patpop"] = replace(dat["patpop"], combination => "")
+            end
+        end
+        dat[type_of_composition] = dat["patpop"]
+    end
+
+
 
     return -1
 end
 
 function saveComposition(
-        output::Output, file_name::String;
-        type_of_composition::String="Pathogens", num_top_sequences::Int64=-1,
-        genomic_positions::Vector{String}=[], track_specific_sequences::Vector{String}=[],
-        fitness_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
+    output::Output, file_name::String;
+    populations::Vector{String}=[],
+    type_of_composition::String="Pathogen_sequence", num_top_sequences::Int64=-1,
+    genomic_positions::Vector{Int64}=[], track_specific_sequences::Vector{String}=[],
+    top_host_sequence_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
     return saveComposition(
-        saveHistory(output, file_name*".csv"), file_name,
+        saveHistory(output, file_name * ".csv"), file_name,
         type_of_composition=type_of_composition, num_top_sequences=num_top_sequences,
         genomic_positions=genomic_positions, track_specific_sequences=track_specific_sequences,
         fitness_function=fitness_function
