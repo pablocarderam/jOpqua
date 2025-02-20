@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+## 20 February 2025
+- `flexle.jl` additions including sampling; updating sampler `weights`; and
+sample testing (CLM)
+
 ## 19 February 2025
 - Finished composition dataframe (PCR)
 - Bug fix on history dataframe saving (PCR)
