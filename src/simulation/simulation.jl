@@ -2,7 +2,7 @@ using Random
 
 function simulate!(
         model::Model, time_vector::Vector{Float64};
-        host_samples_population::Dict{String, Int64}=Dict{String, Int64}(),
+        population_host_samples::Dict{String, Int64}=Dict{String, Int64}(),
         interventions::Vector{Intervention}=Vector{Intervention}(undef,0))
 
     # Interventions
@@ -19,11 +19,19 @@ function simulate!(
         # tracks uninfected naive, infected naive, uninfected immune, infected immune,
         # and dead for this population at each time point
     end
-    host_samples = Dict{String, Matrix{StaticHost}}()
+    host_samples_idxs = Dict{String, Vector{Int64}}() # this contains indexes of hosts to be sampled
+    max_sample_idx = Dict{String, Int64}() # this is used to track max of each vector in host_samples_idxs
+    host_samples = Dict{String, Matrix{StaticHost}}() # this stores history
     for p in model.populations
-        if haskey(host_samples_population, p.id)
+        if haskey(population_host_samples, p.id)
+            if isa(population_host_samples[p.id], Number)
+                host_samples_idxs[p.id] = sort(rand(1:length(p.hosts), population_host_samples[p.id]))
+            else
+                host_samples_idxs[p.id] = population_host_samples[p.id]
+            end
+            max_sample_idx[p.id] = maximum(host_samples_idxs[p.id])
             host_samples[p.id] = Matrix{StaticHost}(
-                undef, host_samples_population[p.id], length(time_vector)
+                undef, length(host_samples_idxs[p.id]), length(time_vector)
             )
         end
     end
@@ -78,9 +86,14 @@ function simulate!(
         while his_tracker <= length(time_vector) && time >= time_vector[his_tracker]
             for p in model.populations
                 compartment_vars[p.id][:,his_tracker] = p.compartment_vars
-                if haskey(host_samples_population, p.id)
-                    for i in 1:min(host_samples_population[p.id], length(p.hosts))
-                        host_samples[p.id][i,his_tracker] = staticHost(p.hosts[i])
+                if haskey(host_samples_idxs, p.id)
+                    if max_sample_idx[p.id] > length(p.hosts)
+                        host_samples_idxs[p.id] = sort(
+                            rand(1:length(p.hosts), length(host_samples_idxs[p.id]))
+                        )
+                    end
+                    for (i,host_idx) in enumerate(host_samples_idxs[p.id])
+                        host_samples[p.id][i,his_tracker] = staticHost(p.hosts[host_idx])
                     end
                 end
             end

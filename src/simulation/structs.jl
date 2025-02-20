@@ -57,7 +57,7 @@ struct Response
     parents::MVector{2,Union{Response,Nothing}} # parent response objects, if any
     # This is only useful for response lineage tracing, but not the simulation?
     imprinted_pathogen::Pathogen # This will track the Pathogen imprinted in the naive response
-    matured_pathogen::Pathogen
+    matured_pathogen::Union{Pathogen,Nothing}
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     type::ResponseType
 end
@@ -179,4 +179,5 @@ struct Output
     time::Vector{Float64}
     compartment_vars::Dict{String,Matrix{Int64}}
     host_samples::Dict{String,Matrix{StaticHost}}
+    # Matrix is of size host sample size x time vector length
 end
