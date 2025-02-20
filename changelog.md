@@ -3,6 +3,36 @@
 ## 20 February 2025
 - `flexle.jl` additions including sampling; updating sampler `weights`; and
 sample testing (CLM)
+- Removed commented code for harmonic means and alternate algorithms in
+immunity (PCR)
+- Small bug fix in `developResponse` to pass correct arguments (PCR)
+
+TODO:
+- Add second parent selection and recombination during `Host` birth events
+- Change `weightedResponse` and `infectionProbability` defaults to not be
+the arithmetic means, but rather an imprinting-like function. Perhaps
+something like winner takes all? or top N respondents? Or actually, probably
+a competition-based algorithm, something like you have a set amount of
+resource for your total response (or response to a specific epitope,
+corresponding to a `ResponseType`) and you allocate that resource to each
+`Response` (of that `ResponseType`) starting from the one with the strongest
+`weightedResponse` and going as far down the list as you still have resource
+left to allocate? I don't love that specific idea though, not very mechanistic.
+Maybe as a default it's best to do winner takes all, just like we're doing
+with the default for intrahost pathogen fractions. For the "advanced" immunity
+expansion/DLC, we might have different classes of `ResponseTypes` corresponding
+to naive B cells, memory B cells, and long-lived plasmablasts, and at that
+point we can rethink the best algorithm to use.
+
+Based on intuition from this paper Amanda Elyssa Ruiz posted on Slack:
+[10.1016/j.celrep.2025.115334](https://doi.org/10.1016/j.celrep.2025.115334)
+which (copying from my Slack message) "vibes with the point Rachel \[Hecht]
+raised during lab meeting that (if I'm remembering correctly) during
+flu imprinting, when people look at GCs, they see a lot of B cell diversity,
+but when they look at serum antibodies, they just see imprinted responses.
+It vibes in the sense that this also suggests imprinting doesn't occur at
+the level of selecting B cells that undergo maturation, but at the level of
+selecting B cells to produce plasmablasts? If I understand things correctly?"
 
 ## 19 February 2025
 - Finished composition dataframe (PCR)

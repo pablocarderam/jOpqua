@@ -373,7 +373,7 @@ function acquireResponse!(model::Model, rand_n::Float64)
     responses = model.populations[pop_idx].parameters.developResponses(
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
         model.populations[pop_idx].hosts[host_idx],
-        model.populations[pop_idx],
+        model.populations[pop_idx].responses,
     )
 
     for response in responses

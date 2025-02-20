@@ -114,6 +114,9 @@ struct PopulationType
     developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Vector{Response}}}
     # takes in Pathogen, Host, list of Responses as arguments, returns Response entities to be added
     # (this handles how many and which responses to choose when adding a response to a host)
+    # The list of Responses is the Population level vector of Responses,
+    # and is used to return a reference to an existing Response struct rather than
+    # creating a new instance of the struct
 end
 
 mutable struct Population

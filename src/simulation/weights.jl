@@ -42,7 +42,7 @@ function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int
         # (could be inversely proportional to fraction?)
         host.pathogen_weights[evt, p] = host.pathogen_weights[evt, p]
     elseif evt == RECOMBINANT_ESTABLISHMENT && length(host.pathogens) < 2
-        # if nobody to recombine with, no recombinatioin happens
+        # if nobody to recombine with, no recombination happens
         host.pathogen_weights[evt, p] = 0.0
         #TODO: regarding recombination and mutation establishment, each of these
         # depend on other parameters within Pathogen (mean_mutations_per_replication
