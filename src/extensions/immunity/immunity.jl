@@ -78,7 +78,7 @@ function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int
     end
 end
 
-function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int64)
+function infectionProbabilityWinnerTakesAll(pathogen::Pathogen, host::Host)
     if length(host.responses) > 0
         dominant_reaction = 1.0
         for response in host.responses
