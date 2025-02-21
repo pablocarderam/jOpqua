@@ -53,3 +53,51 @@ function infectionProbabilityArithmeticMean(pathogen::Pathogen, host::Host)
         return 1.0
     end
 end
+
+function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int64)
+    if length(host.responses) > 0
+        dominant_reaction = 1.0
+        for response in host.responses
+            reaction = response.type.reactivityCoefficient(
+                response.imprinted_pathogen.sequence,
+                response.matured_pathogen.sequence,
+                pathogen.sequence
+            ) * response.type.specific_coefficient_functions[evt](
+                response.imprinted_pathogen.sequence,
+                response.matured_pathogen.sequence,
+                pathogen.sequence
+            )
+            if reaction < dominant_reaction
+                dominant_reaction = reaction
+            end
+        end
+
+        return dominant_reaction
+    else
+        return 1.0
+    end
+end
+
+function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int64)
+    if length(host.responses) > 0
+        dominant_reaction = 1.0
+        for response in host.responses
+            reaction = response.type.reactivityCoefficient(
+                response.imprinted_pathogen.sequence,
+                response.matured_pathogen.sequence,
+                pathogen.sequence
+            ) * response.type.infectionCoefficient(
+                response.imprinted_pathogen.sequence,
+                response.matured_pathogen.sequence,
+                pathogen.sequence
+            )
+            if reaction < dominant_reaction
+                dominant_reaction = reaction
+            end
+        end
+
+        return dominant_reaction
+    else
+        return 1.0
+    end
+end
