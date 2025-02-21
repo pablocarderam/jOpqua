@@ -24,15 +24,18 @@ function mutantPathogen!(pathogen::Pathogen, population::Population)
     end
 end
 
-function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population)
-    children = MVector{2,String}(pathogen_1.sequence, pathogen_2.sequence)
+function recombinantSequences(
+    seq_1::String, seq_2::String, num_loci::Int64,
+    mean_recombination_crossovers_1::Float64, mean_recombination_crossovers_2::Float64)
 
-    if pathogen_1.mean_recombination_crossovers > 0.0 && pathogen_2.mean_recombination_crossovers > 0.0
+    children = MVector{2,String}(seq_1, seq_2)
+
+    if mean_recombination_crossovers_1 > 0.0 && mean_recombination_crossovers_2 > 0.0
         num_evts = zeroTruncatedPoisson(mean(
-            pathogen_1.mean_recombination_crossovers,
-            pathogen_2.mean_recombination_crossovers
+            mean_recombination_crossovers_1,
+            mean_recombination_crossovers_2
         ))
-        loci = rand(1:pathogen_1.type.num_loci, num_evts)
+        loci = rand(1:num_loci, num_evts)
         for l in loci
             temp_child_1 = children[1]
             children[1] = children[1][1:l-1] + children[2][l:end]
@@ -49,6 +52,15 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
         join([children[parent[i]+1][i] for i in 1:length(children[1])], CHROMOSOME_SEPARATOR),
         join([children[(parent[i]!=true)+1][i] for i in 1:length(children[2])], CHROMOSOME_SEPARATOR)
     ])
+
+    return children
+end
+
+function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population)
+    children = recombinantSequences(
+        pathogen_1.sequence, pathogen_2.sequence, pathogen_1.type.num_loci,
+        pathogen_1.mean_recombination_crossovers, pathogen_2.mean_recombination_crossovers
+    )
 
     # for seq in children
     #     if !haskey(population.pathogens, seq)
@@ -67,6 +79,7 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
             parents=MVector{2,Union{Pathogen,Nothing}}([pathogen_1, pathogen_2]),
         )
     end
+
     return population.pathogens[children[1]]
 end
 
@@ -408,8 +421,8 @@ function hostContact!(model::Model, rand_n::Float64)
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]
-        inocula = Vector{Int64}([
         # inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
+        inocula = Vector{Int64}([
             pois_rand(
                 host1.pathogens[p_idx].mean_effective_inoculum *
                 host1.pathogen_fractions[p_idx]
@@ -509,6 +522,56 @@ function loseResponse!(model::Model, rand_n::Float64)
         response_idx, host_idx, model.populations[pop_idx], model
     )
 end
+
+# function birth!(model::Model, rand_n::Float64)
+#     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
+#     parents = MVector{2,Union{Nothing,Host}}[model.populations[pop_idx].hosts[host_idx], nothing]
+#     if model.populations[pop_idx].sexual_reproduction
+#         host_idx_2, pop_idx_2, rand_n = chooseHost(BIRTH, model, rand_n)
+#         parents[2] = model.populations[pop_idx_2].hosts[host_idx_2]
+#         if !model.populations[pop_idx].sexualCompatibility(parents[1], parents[2])
+#             parents = MVector{2,Union{Nothing,Host}}[nothing, nothing]
+#         end
+#     end
+
+#     if !isnothing(parent[1])
+#         jOpqua.newHost!(model.populations[pop_idx], model)
+
+#         for parent in parents
+#             if !isnothing(parent)
+#                 for response in parent.responses
+#                     if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
+#                         if response.type.recombine_response > 0.0 && rand() < response.type.recombine_response
+#                             children = recombinantSequences(
+#                                 response.imprinted_pathogen.sequence, response_2.imprinted_pathogen.sequence,
+#                                 response.imprinted_pathogen.type.num_loci,
+#                                 pathogen_1.mean_recombination_crossovers, pathogen_2.mean_recombination_crossovers
+#                             )
+#                         end
+#                         addResponseToHost!(
+#                             response, length(model.populations[pop_idx].hosts),
+#                             model.populations[pop_idx], model
+#                         )
+#                     end
+#                 end
+
+#                 for pathogen_idx in 1:length(parent.pathogens)
+#                     if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
+#                         rand() < parent.pathogens[pathogen_idx].type.vertical_transmission *
+#                                  parent.pathogens[pathogen_idx].type.verticalTransmission(
+#                                      parent.pathogens[pathogen_idx].sequence
+#                                  ) *
+#                                  parent.pathogen_fractions[pathogen_idx])
+#                         attemptInfection!(
+#                             parent.pathogens[pathogen_idx],
+#                             length(model.populations[pop_idx].hosts), pop_idx, model
+#                         )
+#                     end
+#                 end
+#             end
+#         end
+#     end
+# end
 
 function birth!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)

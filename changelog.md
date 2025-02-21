@@ -6,6 +6,9 @@ sample testing (CLM)
 - Removed commented code for harmonic means and alternate algorithms in
 immunity (PCR)
 - Small bug fix in `developResponse` to pass correct arguments (PCR)
+- Added a commented out `birth!` function to be used as a starting point for
+sexual reproduction
+- Separated out `recombineSequences` function (PCR)
 - Changed `weightedResponse` and `infectionProbability` defaults to not be
 the arithmetic means, but rather winner takes all style functions (PCR)
 
@@ -35,7 +38,9 @@ the level of selecting B cells that undergo maturation, but at the level of
 selecting B cells to produce plasmablasts? If I understand things correctly?"
 
 TODO:
-- Add second parent selection and recombination during `Host` birth events
+- Add `Host` genome sequences, pass them to `developResponse`
+- Add `Host` sexual reproduction, with second parent selection and
+recombination during `Host` birth events
 
 ## 19 February 2025
 - Finished composition dataframe (PCR)
