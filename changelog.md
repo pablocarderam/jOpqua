@@ -1,5 +1,8 @@
 # jOpqua Changelog
 
+## 21 February 2025
+- decided on `flexle.jl` API, functions written but not yet fully tested
+
 ## 20 February 2025
 - `flexle.jl` additions including sampling; updating sampler `weights`; and
 sample testing (CLM)

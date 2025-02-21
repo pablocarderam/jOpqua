@@ -19,68 +19,11 @@ end
 
 # Initialization
 
-function newFlexleSampler(weights::AbstractVector{Float64})
-    if length(weights) == 0
-        throw("Cannot create FlexleSampler from AbstractVector of length 0.")
-    end
-
-    w_sum = 0.0
-    weights_nonzero = filter(x -> !iszero(x), weights)
-    all_zero = isempty(weights_nonzero)
-
-    if all_zero
-        w_min, w_max = 0.0, 0.0
-        num_levels = 0
-    else
-        w_min, w_max = Inf, 0.0
-        for w in weights_nonzero
-            (w < w_min) && (w_min = w)
-            (w > w_max) && (w_max = w)
-        end
-
-        logmax = log2(w_max)
-        if logmax == ceil(logmax)   # if w_max is a power of 2, can't take its ceiling to get its upper bound; need to add 1 instead
-            max_u_log = Int64(logmax) + 1
-        else
-            max_u_log = Int64(ceil(logmax))
-        end
-
-        min_l_log_f = floor(log2(w_min))
-        min_l_log = Int64(min_l_log_f)
-
-        l_bound = 2.0^min_l_log_f
-        num_levels = max_u_log - min_l_log     # e.g. -2,5 ==> 7 levels [4,3,2,1,0,-1,-2]
-    end
-
-    levels = Vector{FlexLevel}(undef, num_levels)   # add check for unreasonable number of levels before allocating space?
-
-    if !all_zero
-        for i in num_levels:-1:1
-            u_bound = l_bound * 2.0
-            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
-            l_bound = u_bound
-        end
-
-        for i in eachindex(weights)
-            w = weights[i]
-            if !iszero(w)
-                l = levels[levelIndex(w, max_u_log)]
-                push!(l.indices, i)
-                (w > l.max) && (l.max = w)
-                l.sum += w
-                w_sum += w
-            end
-        end
-    end
-
-    return FlexleSampler(levels, weights, w_sum)
-end
-
 function newFlexLevel(i::Int64, w::Float64)
     return FlexLevel(logBounds(w), w, w, [i])
 end
 
-# Maintenance methods
+# Utility methods
 
 """
     levelIndex(w, u)
@@ -136,8 +79,11 @@ function inSampler(bounds::Tuple{Float64,Float64}, sampler::FlexleSampler)
     return (sampler.levels[begin].bounds[1] >= bounds[1]) && (bounds[1] >= sampler.levels[end].bounds[1])     # bounds between largest and smallest levels' bounds (inclusive)
 end
 
-function addToFlexLevel!(i::Int64, w::Float64, level::FlexLevel, sampler::FlexleSampler)
+# Maintenance methods
+
+function addToFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler)
     push!(level.indices, i)
+    w = sampler.weights[i]
     level.sum += w
     sampler.sum += w
     if w > level.max
@@ -145,7 +91,8 @@ function addToFlexLevel!(i::Int64, w::Float64, level::FlexLevel, sampler::Flexle
     end
 end
 
-function removeFromFlexLevel!(i::Int64, w::Float64, level::FlexLevel, sampler::FlexleSampler)
+function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler)
+    w = sampler.weights[i]
     len = length(level.indices)
     idx = findfirst(x -> x == i, level.indices)
     last = pop!(level.indices)
@@ -159,11 +106,6 @@ function removeFromFlexLevel!(i::Int64, w::Float64, level::FlexLevel, sampler::F
     elseif w == level.max
         level.max = maximum([sampler.weights[j] for j in level.indices]) # potential slowdown: maximum updated by searching the whole vector if max is removed
     end
-end
-
-function moveBetweenFlexLevels!(i::Int64, w_old::Float64, to::FlexLevel, from::FlexLevel, sampler::FlexleSampler)
-    removeFromFlexLevel!(i, w_old, from, sampler)
-    addToFlexLevel!(i, sampler.weights[i], to, sampler)
 end
 
 function extendLevels!(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
@@ -204,28 +146,10 @@ end
 function trimTrailingLevels!(sampler::FlexleSampler)
     first = findfirst(levelIsPopulated, sampler.levels)
     last = findlast(levelIsPopulated, sampler.levels)
-    if !(first == 1 && last == length(sampler.levels))
-        sampler.levels = sampler.levels[first:last]
-    end
+    sampler.levels = sampler.levels[first:last]
 end
 
-function updateFlexleSamplerWeight!(i::Int64, w_old::Float64, sampler::FlexleSampler)
-    levels = sampler.levels
-    bounds = logBounds(sampler.weights[i])
-    if !inSampler(bounds, sampler)
-        extendLevels!(bounds, levels)
-    end
-    to = getLevel(bounds, levels)
-    from = getLevel(w_old, levels)
-    moveBetweenFlexLevels!(i, w_old, to, from, sampler)
-
-    # trim excess levels (to save time, only if removed element from a level on the end)
-    if (from === levels[begin] && isempty(from.indices)) || (from == levels[end] && isempty(to.indices))
-        trimTrailingLevels!(sampler)
-    end
-end
-
-function recalculateSamplerStats!(sampler::FlexleSampler)
+function recalculateFlexleStats!(sampler::FlexleSampler)
     trimTrailingLevels!(sampler)
     # sampler.max = isempty(sampler.levels) ? 0.0 : sampler.levels[begin].max
     sampler.sum = sum(sampler.weights)
@@ -247,18 +171,186 @@ end
 
 function rejectionSample(level::FlexLevel, weights::Vector{Float64})
     while true
-        r = rand() * level.indices
+        r = rand() * length(level.indices)
         i = floor(r)
-        if weights[Int64(i)] > (r - i) * level.max
-            # i = rand(level.indices)
-            # if weights[i] > rand() * level.max
-            return i
+        idx = level.indices[Int64(i) + 1]   # +1 to offset for 1-indexing
+        if weights[idx] > (r - i) * level.max
+            return idx
         end
     end
 end
 
+# function rejectionSample(level::FlexLevel, weights::Vector{Float64})
+#     while true
+#         i = rand(level.indices)
+#         if weights[i] > rand() * level.max
+#             return i
+#         end
+#     end
+# end
+
+"""
+
+        --- USER FUNCTIONS ---
+
+"""
+
+"""
+    FlexleSampler(weights)
+
+Create a `FlexleSampler` from a `Vector` of `weights`.
+"""
+function FlexleSampler(weights::AbstractVector{Float64})
+    if length(weights) == 0
+        throw("Cannot create FlexleSampler from AbstractVector of length 0.")
+    end
+
+    w_sum = 0.0
+    weights_nonzero = filter(x -> !iszero(x), weights)
+    all_zero = isempty(weights_nonzero)
+
+    if all_zero
+        w_min, w_max = 0.0, 0.0
+        num_levels = 0
+    else
+        w_min, w_max = Inf, 0.0
+        for w in weights_nonzero
+            (w < w_min) && (w_min = w)
+            (w > w_max) && (w_max = w)
+        end
+
+        logmax = log2(w_max)
+        if logmax == ceil(logmax)   # if w_max is a power of 2, can't take its ceiling to get its upper bound; need to add 1 instead
+            max_u_log = Int64(logmax) + 1
+        else
+            max_u_log = Int64(ceil(logmax))
+        end
+
+        min_l_log_f = floor(log2(w_min))
+        min_l_log = Int64(min_l_log_f)
+
+        l_bound = 2.0^min_l_log_f
+        num_levels = max_u_log - min_l_log     # e.g. -2,5 ==> 7 levels [4,3,2,1,0,-1,-2]
+    end
+
+    levels = Vector{FlexLevel}(undef, num_levels)   # add check for unreasonable number of levels before allocating space?
+
+    if !all_zero
+        for i in num_levels:-1:1
+            u_bound = l_bound * 2.0
+            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
+            l_bound = u_bound
+        end
+
+        for i in eachindex(weights)
+            w = weights[i]
+            if !iszero(w)
+                l = levels[levelIndex(w, max_u_log)]
+                push!(l.indices, i)
+                (w > l.max) && (l.max = w)
+                l.sum += w
+                w_sum += w
+            end
+        end
+    end
+
+    return FlexleSampler(levels, Vector(weights), w_sum)
+end
+
+"""
+    updateFlexleWeight!(sampler, i, w)
+
+Update the weight of element `i` in `sampler` to be `w`, returning the difference between the new and old values of `sampler.weights[i]`.
+"""
+function updateFlexleSamplerWeight!(sampler::FlexleSampler, i::Int64, w::Float64)
+    # remove from current level
+    w_old = sampler.weights[i]
+    levels = sampler.levels
+    from = getLevel(w_old, levels)
+    removeFromFlexLevel!(i, from, sampler)
+    
+    # update weights vector - has to be done between removal and addition
+    sampler.weights[i] = w
+
+    # move to new level
+    bounds = logBounds(w)
+    if !inSampler(bounds, sampler)
+        extendLevels!(bounds, levels)
+    end
+    to = getLevel(bounds, levels)  
+    addToFlexLevel!(i,  to, sampler)
+
+    # trim excess levels (to save time, only if removed element from a level on the end)
+    if (from === levels[begin] || from === levels[end]) && isempty(from.indices)
+        trimTrailingLevels!(sampler)
+    end
+    
+    return w - w_old
+end
+
+"""
+    addToFlexleSampler!(sampler, w)
+
+Add a new element with weight `w` to `sampler`, updating all fields accordingly.
+
+Returns the new length of `sampler.weights`.
+
+Element will be added to the end of `sampler.weights`.
+"""
+function addToFlexleSampler!(sampler::FlexleSampler, w::Float64)
+    sampler.weights[i] = w
+    bounds = logBounds(w)
+    if !inSampler(bounds, sampler)
+        extendLevels!(bounds, sampler.levels)
+    end
+    to = getLevel(bounds, sampler.levels)
+    addToFlexLevel!(i, to, sampler)
+    return length(sampler.weights)
+end
+
+"""
+    removeFromFlexleSampler!(sampler, i)
+
+Remove element `i` from `sampler` completely, updating all fields accordingly.
+
+Returns the new length of `sampler.weights`.
+
+All elements of index `>i` are updated to account for the removal of element `i`.
+"""
+function removeFromFlexleSampler!(sampler::FlexleSampler, i::Int64)
+    bounds = logBounds(sampler.weights[i])
+    from = getLevel(bounds, sampler.levels)
+    removeFromFlexLevel!(i, from, sampler)
+    deleteat!(sampler.weights, i)
+    for level in sampler.levels
+        for j in eachindex(level.indices)
+            if level.indices[j] > i
+                level.indices[j] -= 1
+            end
+        end
+    end
+    if (from === sampler.levels[begin] || from === sampler.levels[end]) && isempty(from.indices)
+        trimTrailingLevels!(sampler)
+    end
+    return length(sampler.weights)
+end
+
+"""
+    flexleSample(sampler)
+
+Take a single random sample from `sampler`, returning the index of the element sampled.
+"""
 function flexleSample(sampler::FlexleSampler)
     return rejectionSample(cdfSample(sampler), sampler.weights)
+end
+
+"""
+    getWeight(sampler, i)
+
+Get the weight of element `i` in `sampler`.
+"""
+function getWeight(sampler::FlexleSampler, i::Int64)
+    return sampler.weights[i]
 end
 
 # Testing
@@ -341,17 +433,17 @@ function testFlexleSampler()
 
     push!(names, "(random weights vector, len 100)")
     push!(weightss, rand(100))
-    push!(samplers, newFlexleSampler(weightss[end]))
+    push!(samplers, FlexleSampler(weightss[end]))
     verifyFlexleSampler(samplers[end], name=names[end])
 
     push!(names, "(all zero weights vector, len 100)")
     push!(weightss, zeros(100))
-    push!(samplers, newFlexleSampler(weightss[end]))
+    push!(samplers, FlexleSampler(weightss[end]))
     verifyFlexleSampler(samplers[end], name=names[end])
 
     push!(names, "(some zeros in weights vector, len 100)")
     push!(weightss, zeros(100) .+ [((n >= 0.5) || (n < 0.25) ? n : 0.0) for n in rand(100)])
-    push!(samplers, newFlexleSampler(weightss[end]))
+    push!(samplers, FlexleSampler(weightss[end]))
     verifyFlexleSampler(samplers[end], name=names[end])
 
 
@@ -359,55 +451,35 @@ function testFlexleSampler()
 
     push!(names, "(move between levels, test 1)")
     push!(weightss, [1.5 * n for n in 1.0:100.0])
-    push!(samplers, newFlexleSampler(weightss[end]))
+    push!(samplers, FlexleSampler(weightss[end]))
     # printFlexleSampler(samplers[end])
     verifyFlexleSampler(samplers[end], name="(move test, pre-move)")
 
     # between two levels - element in middle of indices vector
     idx = 24
-    w_old = weightss[end][idx]
-    w_new = 24.0
-    weightss[end][idx] = w_new    # now belongs in (16.0, 32.0) instead of (32.0, 64.0)
-    moveBetweenFlexLevels!(idx, w_old,
-        samplers[end].levels[levelIndex(logBounds(w_new), samplers[end].levels)],
-        samplers[end].levels[levelIndex(logBounds(w_old), samplers[end].levels)],
-        samplers[end])
+    w_new = 24.0 # now belongs in (16.0, 32.0) instead of (32.0, 64.0)
+    updateFlexleSamplerWeight!(samplers[end], idx, w_new)
     # printFlexleSampler(samplers[end])
     verifyFlexleSampler(samplers[end], name="(move test, changed weights[24] from 36.0 to 24.0)")
 
     # between two levels - element at end of indices vector
     idx = 85
-    w_old = weightss[end][idx]
-    w_new = 60.0
-    weightss[end][idx] = w_new    # now belongs in (32.0, 64.0) instead of (64.0, 128.0)
-    moveBetweenFlexLevels!(idx, w_old,
-        samplers[end].levels[levelIndex(logBounds(w_new), samplers[end].levels)],
-        samplers[end].levels[levelIndex(logBounds(w_old), samplers[end].levels)],
-        samplers[end])
+    w_new = 60.0 # now belongs in (32.0, 64.0) instead of (64.0, 128.0)
+    updateFlexleSamplerWeight!(samplers[end], idx, w_new)
     # printFlexleSampler(samplers[end])
     verifyFlexleSampler(samplers[end], name="(move test, changed weights[85] from 127.5 to 60.0)")
 
     # within same level
     idx = 96
-    w_old = weightss[end][idx]
-    w_new = 140.0
-    weightss[end][idx] = w_new    # still belongs in (128.0, 256.0)
-    moveBetweenFlexLevels!(idx, w_old,
-        samplers[end].levels[levelIndex(logBounds(w_new), samplers[end].levels)],
-        samplers[end].levels[levelIndex(logBounds(w_old), samplers[end].levels)],
-        samplers[end])
+    w_new = 140.0 # still belongs in (128.0, 256.0)
+    updateFlexleSamplerWeight!(samplers[end], idx, w_new)
     # printFlexleSampler(samplers[end])
     verifyFlexleSampler(samplers[end], name="(move test, changed weights[96] from 144.0 to 140.0)")
 
-    # between two levels - "from" level is now empty        TODO: trim empty levels on ends of sampler
+    # between two levels - "from" level is now empty
     idx = 1
-    w_old = weightss[end][idx]
-    w_new = 3.2
-    weightss[end][idx] = w_new    # now belongs in (2.0, 4.0) instead of (1.0, 2.0)
-    moveBetweenFlexLevels!(idx, w_old,
-        samplers[end].levels[levelIndex(logBounds(w_new), samplers[end].levels)],
-        samplers[end].levels[levelIndex(logBounds(w_old), samplers[end].levels)],
-        samplers[end])
+    w_new = 3.2 # now belongs in (2.0, 4.0) instead of (1.0, 2.0)
+    updateFlexleSamplerWeight!(samplers[end], idx, w_new)
     # printFlexleSampler(samplers[end])
     verifyFlexleSampler(samplers[end], name="(move test, changed weights[1] from 1.5 to 3.2)")
 
