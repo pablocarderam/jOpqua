@@ -1,7 +1,10 @@
 # jOpqua Changelog
 
 ## 21 February 2025
-- decided on `flexle.jl` API, functions written but not yet fully tested
+- decided on `flexle.jl` API, functions written but not yet fully tested (CLM)
+- Added genome sequence to `Host` (PCR)
+- Made `Response` entities store the `Host` genome sequence they were derived in (PCR)
+- Made functions in `ResponseType` take host genome sequences into account (PCR)
 
 ## 20 February 2025
 - `flexle.jl` additions including sampling; updating sampler `weights`; and

@@ -5,17 +5,19 @@ using StaticArrays
 # Bottom-level coefficients (Response and Pathogen)
 
 function responseStaticCoefficients(
-    imprinted_pathogen_genome::String, matured_pathogen_genome::String, type::ResponseType)
+    host_sequence::String, imprinted_pathogen_sequence::String,
+    matured_pathogen_sequence::String, type::ResponseType)
     return [
         type.static_coefficient_functions[evt_id](
-            imprinted_pathogen_genome, matured_pathogen_genome
+            host_sequence, imprinted_pathogen_sequence, matured_pathogen_sequence
         )
         for evt_id in 1:NUM_COEFFICIENTS
     ]
 end
 
-function responseSpecificCoefficient(pathogen::Pathogen, response::Response, coefficient::Int64)
+function responseSpecificCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
     return response.type.specific_coefficient_functions[coefficient](
+        host.sequence,
         response.imprinted_pathogen.sequence,
         response.matured_pathogen.sequence,
         pathogen.sequence
@@ -83,6 +85,7 @@ function responseWeights!(re::Int64, host::Host, evt::Int64)
     host.response_weights[evt-RESPONSE_EVENTS[1]+1, re] =
     # No Response fraction weighting here, just presence of Response is enough
         host.responses[re].type.static_coefficient_functions[evt](
+            host.sequence,
             host.responses[re].imprinted_pathogen.sequence,
             host.responses[re].matured_pathogen.sequence
         )
@@ -131,6 +134,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
             population.host_weights[evt, h] *
             sum([ # no response fraction weighting, see above
                 re.type.static_coefficient_functions[evt](
+                    sequence,
                     re.imprinted_pathogen.sequence,
                     re.matured_pathogen.sequence
                 )
@@ -172,6 +176,7 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
             population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
             sum([ # no response fraction weighting, see above
                 re.type.static_coefficient_functions[evt](
+                    population.hosts[h].sequence,
                     re.imprinted_pathogen.sequence,
                     re.matured_pathogen.sequence
                 )
