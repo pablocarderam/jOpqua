@@ -5,15 +5,18 @@ function weightedResponseArithmeticMean(pathogen::Pathogen, host::Host, evt::Int
         numerator_sum = 0.0
         for response in host.responses
             reac_sum += response.type.reactivityCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
             )
             numerator_sum += response.type.reactivityCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
             ) * response.type.specific_coefficient_functions[evt](
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
@@ -33,15 +36,18 @@ function infectionProbabilityArithmeticMean(pathogen::Pathogen, host::Host)
         numerator_sum = 0.0
         for response in host.responses
             reac_sum += response.type.reactivityCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
             )
             numerator_sum += response.type.reactivityCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
             ) * response.type.infectionCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
@@ -59,10 +65,12 @@ function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int
         dominant_reaction = 1.0
         for response in host.responses
             reaction = response.type.reactivityCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
             ) * response.type.specific_coefficient_functions[evt](
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
@@ -83,10 +91,12 @@ function infectionProbabilityWinnerTakesAll(pathogen::Pathogen, host::Host)
         dominant_reaction = 1.0
         for response in host.responses
             reaction = response.type.reactivityCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence
             ) * response.type.infectionCoefficient(
+                host.sequence,
                 response.imprinted_pathogen.sequence,
                 response.matured_pathogen.sequence,
                 pathogen.sequence

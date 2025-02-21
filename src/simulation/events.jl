@@ -240,13 +240,14 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     end
 end
 
-function addHostsToPopulation!(num_hosts::Int64, population::Population, model::Model)
+function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, population::Population, model::Model)
     population.compartment_vars[UNINFECTED_NAIVE] += num_hosts
 
     num_starting_hosts = length(population.hosts)
-    for i in 1:num_hosts
+    for _ in 1:num_hosts
         push!(population.hosts, Host(
             length(population.hosts) + 1,
+            host_sequence,
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),

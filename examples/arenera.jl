@@ -21,12 +21,13 @@ function testRun(seed::Int64)
     num_hosts = 10000
     num_infected = Int(num_hosts * 0.5)
     num_immune = 0
+    host_genome = ""
 
     model = jOpqua.newModel()
     pop = jOpqua.newPopulation!("pop", pop_type, model)
-    jOpqua.addHostsToPopulation!(num_hosts, pop, model)
+    jOpqua.addHostsToPopulation!(num_hosts, host_genome, pop, model)
     pat = jOpqua.newPathogen!("AAAA", pop, pat_type)
-    res = jOpqua.newResponse!(pat, pat, pop, res_type)
+    res = jOpqua.newResponse!(pat, pat, host_genome, pop, res_type)
 
     for h in 1:num_infected
         jOpqua.addPathogenToHost!(pat, h, pop, model)

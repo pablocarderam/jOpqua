@@ -1,5 +1,11 @@
 # jOpqua Changelog
 
+## 21 February 2025
+- Added genome sequence to `Host`
+- Made `Response` entities store the `Host` genome sequence they were derived in
+- Made functions in `ResponseType` take host genome sequences into account
+-
+
 ## 20 February 2025
 - `flexle.jl` additions including sampling; updating sampler `weights`; and
 sample testing (CLM)

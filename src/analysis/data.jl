@@ -27,6 +27,7 @@ function saveHistory(output::Output, file_name::String)
                                       [
                                           string(output.time[t]), string(pop_ids[i]),
                                           output.host_samples[pop_ids[i]][h, t].id,
+                                          output.host_samples[pop_ids[i]][h, t].sequence,
                                           "\"" * join([p.type.id for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
                                           "\"" * join([p.sequence for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
                                           "\"" * join([
@@ -49,7 +50,7 @@ function saveHistory(output::Output, file_name::String)
         end
     end
 
-    out = "Time,Population,Host,Pathogen_id,Pathogen_sequence,Pathogen_parents,Response_id,Response_imprinted_sequence,Response_matured_sequence,Response_parents\n" * join(out_strs, "\n")
+    out = "Time,Population,Host,Host_sequence,Pathogen_id,Pathogen_sequence,Pathogen_parents,Response_id,Response_imprinted_sequence,Response_matured_sequence,Response_parents\n" * join(out_strs, "\n")
 
     open(file_name, "w") do file
         write(file, out)

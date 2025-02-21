@@ -30,14 +30,14 @@ end
 struct ResponseType
     id::String
     inherit_response::Float64
-    infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String}}
-    # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-    reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String}}
-    # takes imprinted, matured, and infecting sequences and returns Float64 coefficient
-    static_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String}} }
-    # each takes imprinted, matured sequences and returns Float64 coefficient
-    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}} }
-    # each takes imprinted, matured, and infecting sequences and returns Float64 coefficient
+    infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    static_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
+    # each takes host, imprinted, matured sequences and returns Float64 coefficient
+    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
+    # each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
 # Model entities:
@@ -56,7 +56,8 @@ end
 struct Response
     parents::MVector{2,Union{Response,Nothing}} # parent response objects, if any
     # This is only useful for response lineage tracing, but not the simulation?
-    imprinted_pathogen::Pathogen # This will track the Pathogen imprinted in the naive response
+    host_sequence::String
+    imprinted_pathogen::Union{Pathogen,Nothing} # This will track the Pathogen imprinted in the naive response
     matured_pathogen::Union{Pathogen,Nothing}
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     type::ResponseType
@@ -64,12 +65,15 @@ end
 
 struct StaticHost
     id::Int64
+    sequence::String
     pathogens::Vector{Pathogen} # size MAX_PATHOGENS
     responses::Vector{Response} # size MAX_RESPONSES
 end
 
 mutable struct Host
     id::Int64
+
+    sequence::String
 
     pathogens::Vector{Pathogen} # size MAX_PATHOGENS
     responses::Vector{Response} # size MAX_RESPONSES
@@ -124,8 +128,8 @@ mutable struct Population
     parameters::PopulationType
 
     pathogens::Dict{String,Pathogen}
-    responses::Dict{Tuple{String,String,String},Response}
-    # keys are tuples of imprinted genome, matured genome, type ID
+    responses::Dict{Tuple{String,String,String,String},Response}
+    # keys are tuples of host genome, imprinted genome, matured genome, type ID
     hosts::Vector{Host} # size MAX_HOSTS
 
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
