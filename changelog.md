@@ -8,6 +8,9 @@
 - Add sexual reproduction option for `birth` (PCR)
 - Added parameters for mutation and recombination of `Host` genome sequences
 (PCR)
+- Changed `mutateSequence` to account for chromosome separators (PCR)
+
+Note: I think flexle's `addToFlexleSampler!` has an undeclared variable `i`
 
 ## 21 February 2025
 - decided on `flexle.jl` API, functions written but not yet fully tested (CLM)

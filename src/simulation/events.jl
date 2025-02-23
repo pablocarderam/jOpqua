@@ -6,17 +6,26 @@ using Random
 # General actions
 
 function mutantSequence!(
-        sequence::String, num_loci::Int64, possible_alleles::String,
-        mean_mutations_per_replication::Float64)
-    loci = rand(
-        1:num_loci, zeroTruncatedPoisson(mean_mutations_per_replication)
-    )
-    seq = ""
-    for locus in loci
-        seq = seq * sequence[length(seq)+1:locus-1] * rand(possible_alleles)
+    sequence::String, num_loci::Int64, possible_alleles::String,
+    mean_mutations_per_replication::Float64)
+
+    chromosomes = split(sequence, CHROMOSOME_SEPARATOR)
+    for (i, chromosome_pair) in enumerate(chromosomes)
+        homologous_chromosomes = split(chromosome_pair, HOMOLOGOUS_CHROMOSOME_SEPARATOR)
+        for (j, chromosome) in enumerate(homologous_chromosomes)
+            loci = rand(
+                1:length(chromosome), zeroTruncatedPoisson(mean_mutations_per_replication * length(chromosome) / num_loci)
+            )
+            seq = ""
+            for locus in loci
+                seq = seq * chromosome[length(seq)+1:locus-1] * rand(possible_alleles)
+            end
+            homologous_chromosomes[j] = seq * sequence[length(seq)+1:end]
+        end
+        chromosomes[i] = join(homologous_chromosomes, HOMOLOGOUS_CHROMOSOME_SEPARATOR)
     end
 
-    return seq * sequence[length(seq)+1:end]
+    return join(chromosomes, CHROMOSOME_SEPARATOR)
 end
 
 function mutantPathogen!(pathogen::Pathogen, population::Population)
@@ -541,8 +550,8 @@ function loseResponse!(model::Model, rand_n::Float64)
 end
 
 function generateGamete(
-        sequence::String, num_loci::Int64,
-        possible_alleles::String, mean_mutations_per_replication::Float64)
+    sequence::String, num_loci::Int64,
+    possible_alleles::String, mean_mutations_per_replication::Float64)
     gamete = join(
         [
             rand(split(homologous_chromosome_pair, HOMOLOGOUS_CHROMOSOME_SEPARATOR))
@@ -560,6 +569,17 @@ function generateGamete(
     return gamete
 end
 
+function generateZygote(gamete_1::String, gamete_2::String)
+    chromosomes_1 = split(gamete_1, CHROMOSOME_SEPARATOR)
+    chromosomes_2 = split(gamete_2, CHROMOSOME_SEPARATOR)
+    zygote = ""
+    for chromosome_idx in eachindex(chromosomes_1)
+        zygote = zygote * chromosomes_1[chromosome_idx] * HOMOLOGOUS_CHROMOSOME_SEPARATOR * chromosomes_2[chromosome_idx] * CHROMOSOME_SEPARATOR
+    end
+
+    return zygote[1:end-length(CHROMOSOME_SEPARATOR)]
+end
+
 function birth!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
     parents = MVector{2,Union{Nothing,Host}}[model.populations[pop_idx].hosts[host_idx], nothing]
@@ -574,7 +594,7 @@ function birth!(model::Model, rand_n::Float64)
     if !isnothing(parent[1])
         child_sequence = ""
 
-        parent_gametes = MVector{2,Union{String, Nothing}}[
+        parent_gametes = MVector{2,Union{String,Nothing}}[
             generateGamete(
                 parent[1].sequence,
                 model.populations[pop_idx].host_num_loci,
