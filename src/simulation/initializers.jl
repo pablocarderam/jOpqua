@@ -180,6 +180,16 @@ function newPopulationType(
         mutation_coefficient::Union{Nothing,Float64}=nothing,
         recombination_coefficient::Union{Nothing,Float64}=nothing,
 
+        host_num_loci::Union{Nothing,Int64}=nothing,
+        host_possible_alleles::Union{Nothing,String}=nothing,
+        host_mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
+        host_sexual_reproduction::Union{Nothing,Bool}=nothing,
+        host_mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
+
+        hostSexualCompatibility::Union{Nothing,FunctionWrapper{Bool,Tuple{String,String}}}=nothing,
+        hostMutationCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing, # takes seq argument, returns Float64
+        hostRecombinationCoefficient::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing, # takes seq argument, returns Float64
+
         # Rate coefficients:
         mutant_establishment_coefficient::Union{Nothing,Float64}=nothing,
         clearance_coefficient::Union{Nothing,Float64}=nothing,
@@ -220,6 +230,16 @@ function newPopulationType(
     isnothing(mutation_coefficient) ? mutation_coefficient=template.mutation_coefficient : mutation_coefficient=mutation_coefficient
     isnothing(recombination_coefficient) ? recombination_coefficient=template.recombination_coefficient : recombination_coefficient=recombination_coefficient
 
+    isnothing(host_num_loci) ? host_num_loci=template.host_num_loci : host_num_loci=host_num_loci
+    isnothing(host_possible_alleles) ? host_possible_alleles=template.host_possible_alleles : host_possible_alleles=host_possible_alleles
+    isnothing(host_mean_mutations_per_replication) ? host_mean_mutations_per_replication=template.host_mean_mutations_per_replication : host_mean_mutations_per_replication=host_mean_mutations_per_replication
+    isnothing(host_sexual_reproduction) ? host_sexual_reproduction=template.host_sexual_reproduction : host_sexual_reproduction=host_sexual_reproduction
+    isnothing(host_mean_recombination_crossovers) ? host_mean_recombination_crossovers=template.host_mean_recombination_crossovers : host_mean_recombination_crossovers=host_mean_recombination_crossovers
+
+    isnothing(hostSexualCompatibility) ? hostSexualCompatibility=template.hostSexualCompatibility : hostSexualCompatibility=hostSexualCompatibility
+    isnothing(hostMutationCoefficient) ? hostMutationCoefficient=template.hostMutationCoefficient : hostMutationCoefficient=hostMutationCoefficient
+    isnothing(hostRecombinationCoefficient) ? hostRecombinationCoefficient=template.hostRecombinationCoefficient : hostRecombinationCoefficient=hostRecombinationCoefficient
+
     isnothing(mutant_establishment_coefficient) ? mutant_establishment_coefficient=template.base_coefficients[MUTANT_ESTABLISHMENT] : mutant_establishment_coefficient=mutant_establishment_coefficient
     isnothing(clearance_coefficient) ? clearance_coefficient=template.base_coefficients[CLEARANCE] : clearance_coefficient=clearance_coefficient
     isnothing(response_acquisition_coefficient) ? response_acquisition_coefficient=template.base_coefficients[RESPONSE_ACQUISITION] : response_acquisition_coefficient=response_acquisition_coefficient
@@ -244,6 +264,14 @@ function newPopulationType(
         inoculum_coefficient,
         mutation_coefficient,
         recombination_coefficient,
+        host_num_loci,
+        host_possible_alleles,
+        host_mean_mutations_per_replication,
+        host_sexual_reproduction,
+        host_mean_recombination_crossovers,
+        hostSexualCompatibility,
+        hostMutationCoefficient, # takes seq argument, returns Float64
+        hostRecombinationCoefficient, # takes seq argument, returns Float64
         SA[ # order defined in COEFFICIENTS
             mutant_establishment_coefficient, clearance_coefficient, response_acquisition_coefficient,
             recombinant_establishment_coefficient, contact_coefficient, response_loss_coefficient,
@@ -291,6 +319,12 @@ function newHost!(sequence::String, population::Population, model::Model)
         Host(
             length(population.hosts) + 1,
             sequence,
+            population.parameters.host_mean_mutations_per_replication * population.type.hostMutationCoefficient(
+                sequence
+            ),
+            population.parameters.host_mean_recombination_crossovers * population.type.hostRecombinationCoefficient(
+                sequence
+            ),
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),

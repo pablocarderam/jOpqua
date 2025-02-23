@@ -1,10 +1,9 @@
 using PoissonRandom
-using Printf
 
-catCol(a, b) = reshape(append!(vec(a), vec(b)), size(a)[1:end-1]..., :)
+catCol(a::AbstractMatrix{Float64}, b::AbstractVector{Float64}) = reshape(append!(vec(a), vec(b)), size(a)[1:end-1]..., :)
 # Simeon Schaub https://discourse.julialang.org/t/adding-rows-to-a-matrix-dynamically/52984
 
-zeroTruncatedPoisson(rate) = 1.0 + pois_rand(rate - 1.0)
+zeroTruncatedPoisson(rate::Float64) = 1.0 + pois_rand(rate - 1.0)
 # this is a hack of what possibly should be done
 # (but also maybe this is correct and I just shouldn't call it a
 # zero-truncated Poisson at all, I have to think #TODO:)
@@ -26,13 +25,3 @@ end
 # who took it from https://stackoverflow.com/questions/23561551/a-efficient-binomial-random-number-generator-code-in-java
 # where it was cited as a variant of Luc Devroye's "Second Waiting Time Method" on page 522 of his text "Non-Uniform Random
 # Variate Generation."
-
-"""
-    logBounds(n)
-
-Returns a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
-"""
-function logBounds(n::Float64)
-    l = 2.0^(floor(log2(n)))
-    return l, l*2.0
-end

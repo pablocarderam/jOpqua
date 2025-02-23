@@ -134,7 +134,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
             population.host_weights[evt, h] *
             sum([ # no response fraction weighting, see above
                 re.type.static_coefficient_functions[evt](
-                    sequence,
+                    population.hosts[h].sequence,
                     re.imprinted_pathogen.sequence,
                     re.matured_pathogen.sequence
                 )

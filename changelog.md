@@ -1,9 +1,19 @@
 # jOpqua Changelog
 
+## 22 February 2025
+- Moved `logbounds` to `flexle.jl` (PCR)
+- Type-defined `zeroTruncatedPoisson` and `catcol` (PCR)
+- Fixed small bug in host weight calculation from adding host genomes (PCR)
+- Separated out `mutateSequence` function (PCR)
+- Add sexual reproduction option for `birth` (PCR)
+- Added parameters for mutation and recombination of `Host` genome sequences
+(PCR)
+
 ## 21 February 2025
 - decided on `flexle.jl` API, functions written but not yet fully tested (CLM)
 - Added genome sequence to `Host` (PCR)
-- Made `Response` entities store the `Host` genome sequence they were derived in (PCR)
+- Made `Response` entities store the `Host` genome sequence they were derived in
+(PCR)
 - Made functions in `ResponseType` take host genome sequences into account (PCR)
 
 ## 20 February 2025

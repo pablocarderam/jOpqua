@@ -72,6 +72,7 @@ const NUM_COMPARTMENTS = length(COMPARTMENTS)
 
 # Misc model constants
 const CHROMOSOME_SEPARATOR = "/"
+const HOMOLOGOUS_CHROMOSOME_SEPARATOR = "|"
 
 # Output constants
 const WITHIN_HOST_SEPARATOR = ";"

@@ -46,6 +46,14 @@ const DEFAULT_POPULATION_TYPE = PopulationType(
     1.0,
     1.0,
     1.0,
+    10,
+    "ARNDCEQGHILKMFPSTWYV*",
+    0.0,
+    true,
+    0.0,
+    (h_1::String, h_2::String)->true,
+    g::String->1.0, # takes seq argument, returns Float64
+    g::String->1.0, # takes seq argument, returns Float64
     SA[ # order defined in COEFFICIENTS
         0.0, 1.0, 0.0,
         0.0, 1.05, 0.0,

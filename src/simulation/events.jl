@@ -5,15 +5,25 @@ using Random
 
 # General actions
 
-function mutantPathogen!(pathogen::Pathogen, population::Population)
+function mutantSequence!(
+        sequence::String, num_loci::Int64, possible_alleles::String,
+        mean_mutations_per_replication::Float64)
     loci = rand(
-        1:pathogen.type.num_loci, zeroTruncatedPoisson(pathogen.mean_mutations_per_replication)
+        1:num_loci, zeroTruncatedPoisson(mean_mutations_per_replication)
     )
     seq = ""
     for locus in loci
-        seq = seq * pathogen.sequence[length(seq)+1:locus-1] * rand(pathogen.type.possible_alleles)
+        seq = seq * sequence[length(seq)+1:locus-1] * rand(possible_alleles)
     end
-    seq = seq * pathogen.sequence[length(seq)+1:end]
+
+    return seq * sequence[length(seq)+1:end]
+end
+
+function mutantPathogen!(pathogen::Pathogen, population::Population)
+    seq = mutantSequence!(
+        pathogen.sequence, pathogen.type.num_loci, pathogen.type.possible_alleles,
+        pathogen.mean_mutations_per_replication
+    )
 
     if haskey(population.pathogens, seq)
         return population.pathogens[seq]
@@ -248,6 +258,12 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, populati
         push!(population.hosts, Host(
             length(population.hosts) + 1,
             host_sequence,
+            population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
+                host_sequence
+            ),
+            population.parameters.host_mean_recombination_crossovers * population.parameters.hostRecombinationCoefficient(
+                host_sequence
+            ),
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
@@ -524,84 +540,155 @@ function loseResponse!(model::Model, rand_n::Float64)
     )
 end
 
-# function birth!(model::Model, rand_n::Float64)
-#     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
-#     parents = MVector{2,Union{Nothing,Host}}[model.populations[pop_idx].hosts[host_idx], nothing]
-#     if model.populations[pop_idx].sexual_reproduction
-#         host_idx_2, pop_idx_2, rand_n = chooseHost(BIRTH, model, rand_n)
-#         parents[2] = model.populations[pop_idx_2].hosts[host_idx_2]
-#         if !model.populations[pop_idx].sexualCompatibility(parents[1], parents[2])
-#             parents = MVector{2,Union{Nothing,Host}}[nothing, nothing]
-#         end
-#     end
+function generateGamete(
+        sequence::String, num_loci::Int64,
+        possible_alleles::String, mean_mutations_per_replication::Float64)
+    gamete = join(
+        [
+            rand(split(homologous_chromosome_pair, HOMOLOGOUS_CHROMOSOME_SEPARATOR))
+            for homologous_chromosome_pair in split(sequence, CHROMOSOME_SEPARATOR)
+        ],
+        CHROMOSOME_SEPARATOR
+    )
+    if mean_mutations_per_replication > 0.0
+        gamete = mutantSequence!(
+            gamete, num_loci, possible_alleles,
+            mean_mutations_per_replication
+        )
+    end
 
-#     if !isnothing(parent[1])
-#         jOpqua.newHost!(model.populations[pop_idx], model)
-
-#         for parent in parents
-#             if !isnothing(parent)
-#                 for response in parent.responses
-#                     if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
-#                         if response.type.recombine_response > 0.0 && rand() < response.type.recombine_response
-#                             children = recombinantSequences(
-#                                 response.imprinted_pathogen.sequence, response_2.imprinted_pathogen.sequence,
-#                                 response.imprinted_pathogen.type.num_loci,
-#                                 pathogen_1.mean_recombination_crossovers, pathogen_2.mean_recombination_crossovers
-#                             )
-#                         end
-#                         addResponseToHost!(
-#                             response, length(model.populations[pop_idx].hosts),
-#                             model.populations[pop_idx], model
-#                         )
-#                     end
-#                 end
-
-#                 for pathogen_idx in 1:length(parent.pathogens)
-#                     if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
-#                         rand() < parent.pathogens[pathogen_idx].type.vertical_transmission *
-#                                  parent.pathogens[pathogen_idx].type.verticalTransmission(
-#                                      parent.pathogens[pathogen_idx].sequence
-#                                  ) *
-#                                  parent.pathogen_fractions[pathogen_idx])
-#                         attemptInfection!(
-#                             parent.pathogens[pathogen_idx],
-#                             length(model.populations[pop_idx].hosts), pop_idx, model
-#                         )
-#                     end
-#                 end
-#             end
-#         end
-#     end
-# end
+    return gamete
+end
 
 function birth!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
-
-    jOpqua.newHost!(model.populations[pop_idx], model)
-
-    for response in model.populations[pop_idx].hosts[host_idx].responses
-        if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
-            addResponseToHost!(
-                response, length(model.populations[pop_idx].hosts),
-                model.populations[pop_idx], model
-            )
+    parents = MVector{2,Union{Nothing,Host}}[model.populations[pop_idx].hosts[host_idx], nothing]
+    if model.populations[pop_idx].host_sexual_reproduction
+        host_idx_2, pop_idx_2, rand_n = chooseHost(BIRTH, model, rand_n)
+        parents[2] = model.populations[pop_idx_2].hosts[host_idx_2]
+        if !model.populations[pop_idx].sexualCompatibility(parents[1], parents[2])
+            parents = MVector{2,Union{Nothing,Host}}[nothing, nothing]
         end
     end
 
-    for pathogen_idx in 1:length(model.populations[pop_idx].hosts[host_idx].pathogens)
-        if (model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
-            rand() < model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission *
-                     model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.verticalTransmission(
-                         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].sequence
-                     ) *
-                     model.populations[pop_idx].hosts[host_idx].pathogen_fractions[pathogen_idx])
-            attemptInfection!(
-                model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
-                length(model.populations[pop_idx].hosts), pop_idx, model
+    if !isnothing(parent[1])
+        child_sequence = ""
+
+        parent_gametes = MVector{2,Union{String, Nothing}}[
+            generateGamete(
+                parent[1].sequence,
+                model.populations[pop_idx].host_num_loci,
+                model.populations[pop_idx].host_possible_alleles,
+                parents[1].host_mean_mutations_per_replication
+            ), nothing
+        ]
+
+        if model.populations[pop_idx].diploid_host
+            parent_gametes[1] = recombinantSequences(
+                parent_gametes[1],
+                generateGamete(
+                    parent[1].sequence,
+                    model.populations[pop_idx].host_num_loci,
+                    model.populations[pop_idx].host_possible_alleles,
+                    parents[1].host_mean_mutations_per_replication
+                ),
+                model.populations[pop_idx].host_num_loci,
+                parents[1].mean_recombination_crossovers,
+                parents[1].mean_recombination_crossovers
             )
+            if !isnothing(parent[2])
+                parent_gametes[2] = recombinantSequences(
+                    parent_gametes[2],
+                    generateGamete(
+                        parent[2].sequence,
+                        model.populations[pop_idx_2].host_num_loci,
+                        model.populations[pop_idx_2].host_possible_alleles,
+                        parents[2].host_mean_mutations_per_replication
+                    ),
+                    model.populations[pop_idx_2].host_num_loci,
+                    parents[2].mean_recombination_crossovers,
+                    parents[2].mean_recombination_crossovers
+                )
+            end
+            child_sequence = generateZygote(parent_gametes[1], parent_gametes[2])
+        else
+            if !isnothing(parent[2]) && parents[1].host_mean_recombination_crossovers > 0.0 && parents[2].host_mean_recombination_crossovers > 0.0
+                child_sequence = recombinantSequences(
+                    parent_gametes[1],
+                    generateGamete(
+                        parent[2].sequence,
+                        model.populations[pop_idx].host_num_loci,
+                        model.populations[pop_idx].host_possible_alleles,
+                        parents[2].host_mean_mutations_per_replication
+                    ),
+                    model.populations[pop_idx].host_num_loci,
+                    parents[1].mean_recombination_crossovers,
+                    parents[2].mean_recombination_crossovers
+                )
+            else
+                child_sequence = parent_gametes[1]
+            end
+        end
+
+        jOpqua.newHost!(child_sequence, model.populations[pop_idx], model)
+
+        for parent in parents
+            if !isnothing(parent)
+                for response in parent.responses
+                    if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
+                        addResponseToHost!(
+                            response, length(model.populations[pop_idx].hosts),
+                            model.populations[pop_idx], model
+                        )
+                    end
+                end
+
+                for pathogen_idx in 1:length(parent.pathogens)
+                    if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
+                        rand() < parent.pathogens[pathogen_idx].type.vertical_transmission *
+                                 parent.pathogens[pathogen_idx].type.verticalTransmission(
+                                     parent.pathogens[pathogen_idx].sequence
+                                 ) *
+                                 parent.pathogen_fractions[pathogen_idx])
+                        attemptInfection!(
+                            parent.pathogens[pathogen_idx],
+                            length(model.populations[pop_idx].hosts), pop_idx, model
+                        )
+                    end
+                end
+            end
         end
     end
 end
+
+# function birth!(model::Model, rand_n::Float64)
+#     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
+
+#     jOpqua.newHost!(model.populations[pop_idx].sequence, model.populations[pop_idx], model)
+
+#     for response in model.populations[pop_idx].hosts[host_idx].responses
+#         if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
+#             addResponseToHost!(
+#                 response, length(model.populations[pop_idx].hosts),
+#                 model.populations[pop_idx], model
+#             )
+#         end
+#     end
+
+#     for pathogen_idx in 1:length(model.populations[pop_idx].hosts[host_idx].pathogens)
+#         if (model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
+#             rand() < model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission *
+#                      model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.verticalTransmission(
+#                          model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].sequence
+#                      ) *
+#                      model.populations[pop_idx].hosts[host_idx].pathogen_fractions[pathogen_idx])
+#             attemptInfection!(
+#                 model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
+#                 length(model.populations[pop_idx].hosts), pop_idx, model
+#             )
+#         end
+#     end
+# end
 
 function death!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(DEATH, model, rand_n)

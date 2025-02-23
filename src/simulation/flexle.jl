@@ -26,6 +26,16 @@ end
 # Utility methods
 
 """
+    logBounds(n)
+
+Returns a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
+"""
+function logBounds(n::Float64)
+    l = 2.0^(floor(log2(n)))
+    return l, l*2.0
+end
+
+"""
     levelIndex(w, u)
 
 Given a weight `w`, returns the index of the level in some `FlexleSampler.levels` with maximum upper bound `2^u` where `w` belongs.
@@ -268,7 +278,7 @@ function updateFlexleSamplerWeight!(sampler::FlexleSampler, i::Int64, w::Float64
     levels = sampler.levels
     from = getLevel(w_old, levels)
     removeFromFlexLevel!(i, from, sampler)
-    
+
     # update weights vector - has to be done between removal and addition
     sampler.weights[i] = w
 
@@ -277,14 +287,14 @@ function updateFlexleSamplerWeight!(sampler::FlexleSampler, i::Int64, w::Float64
     if !inSampler(bounds, sampler)
         extendLevels!(bounds, levels)
     end
-    to = getLevel(bounds, levels)  
+    to = getLevel(bounds, levels)
     addToFlexLevel!(i,  to, sampler)
 
     # trim excess levels (to save time, only if removed element from a level on the end)
     if (from === levels[begin] || from === levels[end]) && isempty(from.indices)
         trimTrailingLevels!(sampler)
     end
-    
+
     return w - w_old
 end
 
