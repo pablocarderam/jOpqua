@@ -14,6 +14,8 @@ function saveCompartments(output::Output, file_name::String)
     df = df[:, ["Time", "Population", COMPARTMENT_LABELS...]]
 
     CSV.write(file_name, df)
+
+    return df
 end
 
 function saveHistory(output::Output, file_name::String)
@@ -139,6 +141,8 @@ function saveComposition(
         end
     end
 
+    out[:,"Total"] = sum([out[:, c] for c in names(out)[2:end]])
+
     CSV.write(file_name, out)
 
     return out
@@ -157,4 +161,94 @@ function saveComposition(
         genomic_positions=genomic_positions, track_specific_sequences=track_specific_sequences,
         top_host_sequence_function=top_host_sequence_function
     )
+end
+
+function addToPhylogenyDicts!(
+        nodes_dict::Dict, node_info::Dict, pop::Population,
+        node::Union{Pathogen, Response, Host}, node_id::String, info_separator::String)
+    if !haskey(nodes_dict, node)
+        nodes_dict[node] = []
+        node_info[node] = pop.id * info_separator * node.type.id * info_separator * node_id
+    end
+    if !isnothing(node.parents[1]) # using only first parent for now because I'm not sure how to handle recombination
+        for parent in node.parents[1]
+            if !isnothing(parent)
+                if haskey(nodes_dict, parent)
+                    push!(nodes_dict[parent], node)
+                else
+                    nodes_dict[parent] = [node]
+                end
+            end
+        end
+    end
+end
+
+function saveNewick(model::Model, file_name::String; type::String="Pathogens", info_separator::String="|")
+    nodes_dict = Dict()
+    node_info = Dict()
+    for pop in model.populations
+        if type == "Pathogens"
+            for (id,node) in pop.pathogens
+                addToPhylogenyDicts!(nodes_dict, node_info, pop, node, id, info_separator)
+            end
+        elseif type == "Responses"
+            for (id,node) in pop.responses
+                addToPhylogenyDicts!(nodes_dict, node_info, pop, node, join(id, info_separator), info_separator)
+            end
+        elseif type == "Host"
+            for node in pop.hosts
+                addToPhylogenyDicts!(nodes_dict, node_info, pop, node, node.sequence, info_separator)
+            end
+        end
+    end
+
+    trees = Dict()
+    for (node,children) in nodes_dict
+        if length(children) > 0
+            node_str = ""
+            for child in children
+                child_contents = ""
+                if haskey(trees, node_info[child])
+                    child_contents = trees[node_info[child]]
+                    delete!(trees, node_info[child])
+                end
+                node_str = node_str * child_contents * node_info[child] * ":" * string(distance(node.sequence, child.sequence)) * ","
+            end
+            node_str = "(" * node_str[1:end-1] * ")"
+        end
+
+        found = false
+        tree_i = 0
+        roots = collect(keys(trees))
+        while !found && tree_i < length(roots)
+            tree_i += 1
+            if occursin(node_info[node], trees[roots[tree_i]])
+                found = true
+            end
+        end
+        if length(children) > 0
+            if found
+                trees[roots[tree_i]] = trees[roots[tree_i]][1:findfirst(node_info[node], trees[roots[tree_i]])[1]-1] * node_str * node_info[node] * trees[roots[tree_i]][findfirst(node_info[node], trees[roots[tree_i]])[1]:end]
+            else
+                trees[node_info[node]] = node_str
+            end
+        elseif !found
+            trees[node_info[node]] = ""
+        end
+    end
+
+    out = []
+
+    for (root,stem) in trees
+        push!(out, stem * root * ":0.0;")
+        open(file_name, "w") do file
+            write(file, out[end])
+        end
+    end
+
+    return out
+end
+
+function saveNewick(output::Output, file_name::String; type::String="Pathogens", info_separator::String="|")
+    return saveNewick(output.model, file_name, type=type, info_separator=info_separator)
 end

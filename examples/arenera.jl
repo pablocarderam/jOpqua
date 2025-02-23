@@ -47,10 +47,17 @@ function testRun(seed::Int64)
     println(output.compartment_vars["pop"][:, end])
     println(output.host_samples["pop"][:, end][1:3])
 
-    jOpqua.plotCompartments(output, ["pop"], "examples/compartment_test.png")
-    jOpqua.saveCompartments(output, "examples/compartment_test.csv")
+    compartment_data = jOpqua.saveCompartments(output, "examples/compartment_test.csv")
+    jOpqua.plotCompartments(compartment_data, ["pop"], "examples/compartment_test.png")
+
     his_dat = jOpqua.saveHistory(output, "examples/history_test.csv")
-    jOpqua.saveComposition(his_dat, "examples/composition_test.csv")
+    composition_data = jOpqua.saveComposition(his_dat, "examples/composition_test.csv")
+    jOpqua.plotComposition(composition_data, "examples/composition_test.png", normalized=false)
+
+    nwks = jOpqua.saveNewick(output, "examples/pathogen_newick_test.nwk")
+    for nwk in nwks
+        jOpqua.plotPhylogeny(nwk, "examples/pathogen_newick_test.png")
+    end
 end
 
 @time testRun(1)

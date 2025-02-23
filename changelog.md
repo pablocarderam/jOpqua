@@ -1,5 +1,14 @@
 # jOpqua Changelog
 
+## 23 February 2025
+- Remove function that plots compartments from output object to standardize
+all plotting functions as working with `DataFrames` (PCR)
+- Fix bugs in `compartmentPlot` function that works with `DataFrame` input (PCR)
+- Add total calculation to `saveComposition` (PCR)
+- Make composition plots (PCR)
+- Make Newick format phylogenies of pathogens, hosts, and responses (PCR)
+- Plot phylogenies using the `NewickTree.jl` package (PCR)
+
 ## 22 February 2025
 - Moved `logbounds` to `flexle.jl` (PCR)
 - Type-defined `zeroTruncatedPoisson` and `catcol` (PCR)
