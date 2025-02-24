@@ -7,7 +7,16 @@ all plotting functions as working with `DataFrames` (PCR)
 - Add total calculation to `saveComposition` (PCR)
 - Make composition plots (PCR)
 - Make Newick format phylogenies of pathogens, hosts, and responses (PCR)
-- Plot phylogenies using the `NewickTree.jl` package (PCR)
+- Plot phylogenies using the `NewickTree.jl` package--might be easier to plot
+the newicks online though (PCR)
+- Fix variable type bug in `zeroTruncatedPoisson` (PCR)
+- Fix missing `transition!` function in event function constant vector (PCR)
+- Change weight calculation at top level to minimize imprecision (overflow?)
+errors (PCR)
+- Removed `FunctionWrapper` type definitions in arguments of setup functions
+because they can't handle passing functions as arguments apparently... hopefully
+the type definitions at the struct level keep performance okay; the flamegraph
+still doesn't show any non-compiled code at least (PCR)
 
 ## 22 February 2025
 - Moved `logbounds` to `flexle.jl` (PCR)

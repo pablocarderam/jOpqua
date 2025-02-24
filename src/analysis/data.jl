@@ -1,5 +1,6 @@
 using DataFrames
 using StatsBase
+using Distances
 using CSV
 
 function saveCompartments(output::Output, file_name::String)
@@ -168,19 +169,26 @@ function addToPhylogenyDicts!(
         node::Union{Pathogen, Response, Host}, node_id::String, info_separator::String)
     if !haskey(nodes_dict, node)
         nodes_dict[node] = []
+    end
+    if !haskey(node_info, node)
         node_info[node] = pop.id * info_separator * node.type.id * info_separator * node_id
     end
     if !isnothing(node.parents[1]) # using only first parent for now because I'm not sure how to handle recombination
-        for parent in node.parents[1]
-            if !isnothing(parent)
-                if haskey(nodes_dict, parent)
-                    push!(nodes_dict[parent], node)
-                else
-                    nodes_dict[parent] = [node]
-                end
-            end
+        if haskey(nodes_dict, node.parents[1])
+            push!(nodes_dict[node.parents[1]], node)
+        else
+            nodes_dict[node.parents[1]] = [node]
         end
     end
+    # for parent in node.parents
+    #     if !isnothing(parent)
+    #         if haskey(nodes_dict, parent)
+    #             push!(nodes_dict[parent], node)
+    #         else
+    #             nodes_dict[parent] = [node]
+    #         end
+    #     end
+    # end
 end
 
 function saveNewick(model::Model, file_name::String; type::String="Pathogens", info_separator::String="|")
@@ -204,15 +212,15 @@ function saveNewick(model::Model, file_name::String; type::String="Pathogens", i
 
     trees = Dict()
     for (node,children) in nodes_dict
+        node_str = ""
         if length(children) > 0
-            node_str = ""
             for child in children
                 child_contents = ""
                 if haskey(trees, node_info[child])
                     child_contents = trees[node_info[child]]
                     delete!(trees, node_info[child])
                 end
-                node_str = node_str * child_contents * node_info[child] * ":" * string(distance(node.sequence, child.sequence)) * ","
+                node_str = node_str * child_contents * node_info[child] * ":" * string(hamming(node.sequence, child.sequence)) * ","
             end
             node_str = "(" * node_str[1:end-1] * ")"
         end
@@ -228,7 +236,7 @@ function saveNewick(model::Model, file_name::String; type::String="Pathogens", i
         end
         if length(children) > 0
             if found
-                trees[roots[tree_i]] = trees[roots[tree_i]][1:findfirst(node_info[node], trees[roots[tree_i]])[1]-1] * node_str * node_info[node] * trees[roots[tree_i]][findfirst(node_info[node], trees[roots[tree_i]])[1]:end]
+                trees[roots[tree_i]] = trees[roots[tree_i]][1:findfirst(node_info[node], trees[roots[tree_i]])[1]-1] * node_str * trees[roots[tree_i]][findfirst(node_info[node], trees[roots[tree_i]])[1]:end]
             else
                 trees[node_info[node]] = node_str
             end

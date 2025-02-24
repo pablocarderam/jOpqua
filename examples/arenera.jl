@@ -8,13 +8,20 @@ using jOpqua
 using StaticArrays
 using Random
 
+using Distances
+
 using BenchmarkTools
 using ProfileView
 
 # Model setup
 function testRun(seed::Int64)
     # Parameters
-    pat_type = jOpqua.newPathogenType("pat_type")
+    pat_type = jOpqua.newPathogenType(
+        "pat_type", possible_alleles="AB",
+        mean_mutations_per_replication=0.001,
+        contactCoefficient=s::String->1.0+(0.1*(4.0-hamming(s,"BBBB"))/4.0),
+    )
+
     res_type = jOpqua.newResponseType("res_type")
     pop_type = jOpqua.newPopulationType("pop_type")
 
@@ -36,23 +43,26 @@ function testRun(seed::Int64)
         jOpqua.addResponseToHost!(res, h, pop, model)
     end
 
-    t_vec = collect(0.0:0.1:50.0)
+    t_vec = collect(0.0:2.0:1000.0)
 
     Random.seed!(seed)
 
     # @profview , @time
     model, output = jOpqua.simulate!(
-        model, t_vec, population_host_samples=Dict("pop" => 100)
+        model, t_vec, population_host_samples=Dict("pop" => 200)
     )
     println(output.compartment_vars["pop"][:, end])
-    println(output.host_samples["pop"][:, end][1:3])
+    # println(output.host_samples["pop"][:, end][1:3])
 
     compartment_data = jOpqua.saveCompartments(output, "examples/compartment_test.csv")
     jOpqua.plotCompartments(compartment_data, ["pop"], "examples/compartment_test.png")
 
     his_dat = jOpqua.saveHistory(output, "examples/history_test.csv")
-    composition_data = jOpqua.saveComposition(his_dat, "examples/composition_test.csv")
-    jOpqua.plotComposition(composition_data, "examples/composition_test.png", normalized=false)
+    composition_data = jOpqua.saveComposition(
+        his_dat, "examples/composition_test.csv",
+        num_top_sequences=7, track_specific_sequences=["AAAA","BBBB"]
+    )
+    jOpqua.plotComposition(composition_data, "examples/composition_test.png", normalized=true)
 
     nwks = jOpqua.saveNewick(output, "examples/pathogen_newick_test.nwk")
     for nwk in nwks
@@ -62,7 +72,7 @@ end
 
 @time testRun(1)
 
-@profview testRun(0)
+# @profview testRun(0)
 @time testRun(0)
 
 # Result M3 Max 64 GB 9 Feb (second run) seed 0:

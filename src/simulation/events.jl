@@ -731,5 +731,5 @@ end
 const EVENT_FUNCTIONS = SA[
     establishMutant!, clearPathogen!, acquireResponse!,
     establishRecombinant!, hostContact!, loseResponse!,
-    birth!, death!
+    birth!, death!, transition!
 ]

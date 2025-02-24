@@ -64,6 +64,10 @@ function simulate!(
                     model.event_rates_sum, regenerate_rand=true
                 )
                 # println((time, model.event_rates, evt_idx))
+                if evt_idx > CONTACT
+                    println(("WTF",evt_idx, time, model.event_rates_sum, model.event_rates))
+                    println((model.population_weights))
+                end
                 EVENT_FUNCTIONS[evt_idx](model, rand_n)
 
                 # alternative sampling method:

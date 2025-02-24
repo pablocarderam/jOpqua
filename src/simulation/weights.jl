@@ -268,8 +268,10 @@ end
 # Weight change propagation:
 
 function propagateWeightChanges!(change::Float64, evt::Int64, model::Model)
-    model.event_rates[evt] += change
-    model.event_rates_sum += change
+    model.event_rates[evt] = max(model.event_rates[evt] + change, 0.0)
+    model.event_rates_sum = sum(model.event_rates)
+    # model.event_rates[evt] += change
+    # model.event_rates_sum += change
 end
 
 function propagateWeightChanges!(change::Float64, population::Population, evt::Int64, model::Model)

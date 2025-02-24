@@ -3,7 +3,7 @@ using PoissonRandom
 catCol(a::AbstractMatrix{Float64}, b::AbstractVector{Float64}) = reshape(append!(vec(a), vec(b)), size(a)[1:end-1]..., :)
 # Simeon Schaub https://discourse.julialang.org/t/adding-rows-to-a-matrix-dynamically/52984
 
-zeroTruncatedPoisson(rate::Float64) = 1.0 + pois_rand(rate - 1.0)
+zeroTruncatedPoisson(rate::Float64) = 1 + pois_rand(rate - 1.0)
 # this is a hack of what possibly should be done
 # (but also maybe this is correct and I just shouldn't call it a
 # zero-truncated Poisson at all, I have to think #TODO:)

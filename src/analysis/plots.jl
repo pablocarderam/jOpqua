@@ -39,11 +39,15 @@ function plotComposition(
         dimensions=(800, 800), palette=:tab10, font_scale=2.0, grid=false,
         legend_location=:outerbottom, linewidth=0.0, thickness_scaling=1.0)
 
-    dat = deepcopy(output)
+    dat = DataFrame()
+    dat[:,"Time"] = output[:,"Time"]
     if normalized
-        for i in 2:length(names(dat))-2
-            dat[:,i] = dat[:,i] ./ max.(dat[:,"Total"], 1.0)
+        for col in names(output)[2:end-1]
+            dat[:,col] = output[:,col] ./ max.(output[:,"Total"], 1.0)
         end
+        dat[:,"Total"] = output[:,"Total"]
+    else
+        dat = deepcopy(output)
     end
 
     Plots.scalefontsizes(font_scale)
@@ -64,8 +68,8 @@ end
 
 function plotPhylogeny(
         newick_string::String, file_name::String;
-        dimensions=(800, 800), palette=:tab10, font_scale=2.0, grid=false,
-        linewidth=0.0, thickness_scaling=1.0)
+        dimensions=(1600, 800), palette=:tab10, font_scale=2.0, grid=false,
+        linewidth=2.0, thickness_scaling=1.0)
     Plots.scalefontsizes(font_scale)
     plot(
         readnw(newick_string), transform=true,
