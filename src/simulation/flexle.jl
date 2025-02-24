@@ -65,7 +65,8 @@ function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
 end
 
 function getLevel(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
-    return levels[levelIndex(bounds, levels)]
+    l = levelIndex(bounds, levels)
+    return l==0 ? nothing : levels[l]
 end
 
 function getLevel(w::Float64, levels::Vector{FlexLevel})
@@ -276,22 +277,26 @@ function updateFlexleSamplerWeight!(sampler::FlexleSampler, i::Int64, w::Float64
     # remove from current level
     w_old = sampler.weights[i]
     levels = sampler.levels
-    from = getLevel(w_old, levels)
-    removeFromFlexLevel!(i, from, sampler)
+    if !iszero(w_old)
+        from = getLevel(w_old, levels)
+        removeFromFlexLevel!(i, from, sampler)
+    end
 
     # update weights vector - has to be done between removal and addition
     sampler.weights[i] = w
 
     # move to new level
-    bounds = logBounds(w)
-    if !inSampler(bounds, sampler)
-        extendLevels!(bounds, levels)
+    if !iszero(w)
+        bounds = logBounds(w)
+        if !inSampler(bounds, sampler)
+            extendLevels!(bounds, levels)
+        end
+        to = getLevel(bounds, levels)
+        addToFlexLevel!(i, to, sampler)
     end
-    to = getLevel(bounds, levels)
-    addToFlexLevel!(i,  to, sampler)
 
     # trim excess levels (to save time, only if removed element from a level on the end)
-    if (from === levels[begin] || from === levels[end]) && isempty(from.indices)
+    if !iszero(w_old) && (from === levels[begin] || from === levels[end]) && isempty(from.indices)
         trimTrailingLevels!(sampler)
     end
 
@@ -308,13 +313,15 @@ Returns the new length of `sampler.weights`.
 Element will be added to the end of `sampler.weights`.
 """
 function addToFlexleSampler!(sampler::FlexleSampler, w::Float64)
-    sampler.weights[i] = w
-    bounds = logBounds(w)
-    if !inSampler(bounds, sampler)
-        extendLevels!(bounds, sampler.levels)
+    push!(sampler.weights, w)
+    if !iszero(w)
+        bounds = logBounds(w)
+        if !inSampler(bounds, sampler)
+            extendLevels!(bounds, sampler.levels)
+        end
+        to = getLevel(bounds, sampler.levels)
+        addToFlexLevel!(length(sampler.weights), to, sampler)
     end
-    to = getLevel(bounds, sampler.levels)
-    addToFlexLevel!(i, to, sampler)
     return length(sampler.weights)
 end
 
@@ -328,9 +335,12 @@ Returns the new length of `sampler.weights`.
 All elements of index `>i` are updated to account for the removal of element `i`.
 """
 function removeFromFlexleSampler!(sampler::FlexleSampler, i::Int64)
-    bounds = logBounds(sampler.weights[i])
-    from = getLevel(bounds, sampler.levels)
-    removeFromFlexLevel!(i, from, sampler)
+    w = sampler.weights[i]
+    if !iszero(w)
+        bounds = logBounds(w)
+        from = getLevel(bounds, sampler.levels)
+        removeFromFlexLevel!(i, from, sampler)
+    end
     deleteat!(sampler.weights, i)
     for level in sampler.levels
         for j in eachindex(level.indices)
@@ -339,7 +349,7 @@ function removeFromFlexleSampler!(sampler::FlexleSampler, i::Int64)
             end
         end
     end
-    if (from === sampler.levels[begin] || from === sampler.levels[end]) && isempty(from.indices)
+    if !iszero(w) && (from === sampler.levels[begin] || from === sampler.levels[end]) && isempty(from.indices)
         trimTrailingLevels!(sampler)
     end
     return length(sampler.weights)
@@ -396,7 +406,7 @@ function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
     for level in sampler.levels
         empty = isempty(level.indices)
         expected_sum = empty ? 0.0 : sum(sampler.weights[i] for i in level.indices)
-        if expected_sum != level.sum
+        if !approxeq(expected_sum, level.sum)
             errors += 1
             @printf "Error %i: level (%f, %f) sum incorrect (expected %f, got %f)\n" errors level.bounds[1] level.bounds[2] expected_sum level.sum
         end
@@ -408,7 +418,7 @@ function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
             @printf "Error %i: level (%f, %f) max incorrect (expected %f, got %f)\n" errors level.bounds[1] level.bounds[2] expected_max level.max
         end
     end
-    if abs(overall_sum - sampler.sum) > 1e-6     # correct for probably floating point error
+    if !approxeq(overall_sum, sampler.sum)     # correct for probably floating point error
         errors += 1
         @printf "Error %i: overall sampler sum incorrect (expected %f, got %f)" errors overall_sum sampler.sum
     end
@@ -626,4 +636,47 @@ function testFlexleSampling(sampler::FlexleSampler, n::Int64)
     end
 
     return d
+end
+
+function testUserFunctions()
+    # test create
+    w0 = zeros(1000)
+    s0 = FlexleSampler(w0)
+    verifyFlexleSampler(s0)
+
+    w1 = w0 .+ [((i < 0.25 || 0.50 < i) ? i : 0.0) for i in rand(1000)]
+    s1 = FlexleSampler(w1)
+    verifyFlexleSampler(s1)
+
+    w2 = zeros(100) .+ [(i > 0.5 ? i : 0.0) for i in 0.0:99.0]
+    s2 = FlexleSampler(w2)
+    verifyFlexleSampler(s2)
+
+    # test update
+    for i in 2:10:92
+        updateFlexleSamplerWeight!(s2, i, 100*rand())
+    end
+    verifyFlexleSampler(s2)
+    
+    updateFlexleSamplerWeight!(s2, 87, 0.0)     # make non-zero element 0.0
+    verifyFlexleSampler(s2)
+
+    updateFlexleSamplerWeight!(s2, 1, 3000.0)   # make 0.0 element non-zero
+    verifyFlexleSampler(s2)
+
+    # test add
+    addToFlexleSampler!(s2, 99.5)       # in existing level (occupied)
+    addToFlexleSampler!(s2, 480.0)      # in existing level (empty)
+    addToFlexleSampler!(s2, 10000.0)    # in non-existing level (above)
+    addToFlexleSampler!(s2, 0.001)      # in non-existing level (below)
+    addToFlexleSampler!(s2, 0.0)        # zero
+    verifyFlexleSampler(s2)
+
+    # test remove
+    removeFromFlexleSampler!(s2, 70)      # in middle level, does not empty level
+    removeFromFlexleSampler!(s2, 101)     # in middle level, empties level
+    removeFromFlexleSampler!(s2, 101)     # empty top level
+    removeFromFlexleSampler!(s2, 101)     # empty bottom level
+    removeFromFlexleSampler!(s2, 86)      # zero
+    verifyFlexleSampler(s2)
 end

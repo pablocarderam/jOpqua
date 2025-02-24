@@ -25,3 +25,7 @@ end
 # who took it from https://stackoverflow.com/questions/23561551/a-efficient-binomial-random-number-generator-code-in-java
 # where it was cited as a variant of Luc Devroye's "Second Waiting Time Method" on page 522 of his text "Non-Uniform Random
 # Variate Generation."
+
+function approxeq(a::Float64, b::Float64; t::Float64=1e-6)
+    return abs(a-b) < t
+end

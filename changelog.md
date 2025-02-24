@@ -1,5 +1,10 @@
 # jOpqua Changelog
 
+## 24 February 2025
+- Write test function for `flexle.jl` user functions (CLM)
+- Fix `flexle.jl` bugs mostly involving improper handling of zero-weight entries,
+plus undeclared variable in `addToFlexleSampler!` as noted by PCR (CLM)
+
 ## 23 February 2025
 - Remove function that plots compartments from output object to standardize
 all plotting functions as working with `DataFrames` (PCR)
