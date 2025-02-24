@@ -98,7 +98,6 @@ function simulate!(
                 end
             end
             his_tracker += 1
-            # println((time, model.populations[1].compartment_vars, model.event_rates, model.population_contact_weights_receive_sums, model.population_contact_weights_receive))
         end
     end
 
