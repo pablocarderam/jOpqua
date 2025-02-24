@@ -26,3 +26,24 @@ function pathogenFractionsWinnerTakesAll(host::Host, weightedResponse::FunctionW
 
     return fracs
 end
+
+function pathogenFractionsProportionalFitness(host::Host, weightedResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
+    fracs = Vector{Float64}(undef, length(host.pathogens))
+    if length(host.pathogens) > 0
+        if length(host.responses) > 0
+            for p in 1:length(host.pathogens)
+                fracs[p] =
+                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedResponse(
+                        host.pathogens[p], host, INTRAHOST_FITNESS
+                    )
+            end
+        else
+            for p in 1:length(host.pathogens)
+                fracs[p] = host.pathogens[p].coefficients[INTRAHOST_FITNESS]
+            end
+        end
+        fracs = fracs ./ sum(fracs)
+    end
+
+    return fracs
+end

@@ -1,9 +1,16 @@
 # jOpqua Changelog
 
+## 24 February 2025
+- Added proportional fitness function for pathogen fractions (PCR)
+- Debugged problems with complex weight calculation (contact, transition,
+receive contact, receive transition), particularly (1) when adding hosts in
+bulk, (2) when removing hosts, (3) in the main `hostWeights!` function (PCR)
+
 ## 23 February 2025
 - Remove function that plots compartments from output object to standardize
 all plotting functions as working with `DataFrames` (PCR)
-- Fix bugs in `compartmentPlot` function that works with `DataFrame` input (PCR)
+- Fix bugs in `compartmentPlot` function so that it works with `DataFrame`
+input (PCR)
 - Add total calculation to `saveComposition` (PCR)
 - Make composition plots (PCR)
 - Make Newick format phylogenies of pathogens, hosts, and responses (PCR)

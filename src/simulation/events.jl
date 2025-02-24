@@ -262,8 +262,14 @@ end
 function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, population::Population, model::Model)
     population.compartment_vars[UNINFECTED_NAIVE] += num_hosts
 
+    # update matrices
+    population.host_weights = hcat(population.host_weights, zeros(Float64, NUM_EVENTS, num_hosts))
+    population.host_weights_receive = hcat(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
+    population.host_weights_with_coefficient = hcat(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS, num_hosts))
+    population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
+
     num_starting_hosts = length(population.hosts)
-    for _ in 1:num_hosts
+    for i in 1:num_hosts
         push!(population.hosts, Host(
             length(population.hosts) + 1,
             host_sequence,
@@ -278,15 +284,7 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, populati
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
         ))
-    end
 
-    # update matrices
-    population.host_weights = hcat(population.host_weights, zeros(Float64, NUM_EVENTS, num_hosts))
-    population.host_weights_receive = hcat(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
-    population.host_weights_with_coefficient = hcat(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS, num_hosts))
-    population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
-
-    for i in 1:num_hosts
         propagateWeightsOnAddHost!(num_starting_hosts + i, population, model)
     end
 end
@@ -308,15 +306,23 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
 
     for coef in EVENTS
         if population.host_weights[host_idx, coef] != 0.0
+            change = -population.host_weights[host_idx, coef]
+            if coef == CONTACT
+                population.contact_sum += change
+                change = change * model.population_contact_weights_receive_sums[model.population_dict[population.id]]
+            elseif coef == TRANSITION
+                population.transition_sum += change
+                change = change * model.population_transition_weights_receive_sums[model.population_dict[population.id]]
+            end
             propagateWeightChanges!(
-                -population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
+                change * population.parameters.base_coefficients[coef], population, coef, model
             )
         end
     end
     for coef in CHOICE_MODIFIERS[begin:end-1]
         if population.host_weights[host_idx, coef] != 0.0
             propagateWeightReceiveChanges!(
-                -population.host_weights[host_idx, coef], length(population.hosts), population, coef, model
+                -population.host_weights[host_idx, coef] * population.parameters.base_coefficients[coef], population, coef, model
             )
         end
     end

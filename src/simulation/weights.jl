@@ -198,8 +198,13 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
         prev = population.host_weights[weight, host_idx]
         hostWeightsPathogen!(host_idx, population, weight)
         if prev != population.host_weights[weight, host_idx] && population.parameters.base_coefficients[weight] != 0.0
+            change = population.host_weights[weight, host_idx] - prev
+            if weight == CONTACT
+                population.contact_sum += change
+                change = change * model.population_contact_weights_receive_sums[model.population_dict[population.id]]
+            end
             propagateWeightChanges!(
-                population.parameters.base_coefficients[weight] * (population.host_weights[weight, host_idx] - prev),
+                population.parameters.base_coefficients[weight] * change,
                 population, weight, model
             )
         end
@@ -218,8 +223,13 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
         prev = population.host_weights[weight, host_idx]
         hostWeightsHost!(host_idx, population, weight)
         if prev != population.host_weights[weight, host_idx] && population.parameters.base_coefficients[weight] != 0.0
+            change = population.host_weights[weight, host_idx] - prev
+            if weight == TRANSITION
+                population.transition_sum += change
+                change = change * model.population_transition_weights_receive_sums[model.population_dict[population.id]]
+            end
             propagateWeightChanges!(
-                population.parameters.base_coefficients[weight] * (population.host_weights[weight, host_idx] - prev),
+                population.parameters.base_coefficients[weight] * change,
                 population, weight, model
             )
         end

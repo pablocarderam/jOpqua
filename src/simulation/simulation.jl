@@ -1,9 +1,9 @@
 using Random
 
 function simulate!(
-        model::Model, time_vector::Vector{Float64};
-        population_host_samples::Dict{String, Int64}=Dict{String, Int64}(),
-        interventions::Vector{Intervention}=Vector{Intervention}(undef,0))
+    model::Model, time_vector::Vector{Float64};
+    population_host_samples::Dict{String,Int64}=Dict{String,Int64}(),
+    interventions::Vector{Intervention}=Vector{Intervention}(undef, 0))
 
     # Interventions
     interventions = sort(interventions, by=intervention -> intervention.time)
@@ -11,7 +11,7 @@ function simulate!(
 
     # History
     his_tracker = 1
-    compartment_vars = Dict{String, Matrix{Int64}}()
+    compartment_vars = Dict{String,Matrix{Int64}}()
     for p in model.populations
         compartment_vars[p.id] = Matrix{Int64}(
             undef, NUM_COMPARTMENTS, length(time_vector)
@@ -19,9 +19,9 @@ function simulate!(
         # tracks uninfected naive, infected naive, uninfected immune, infected immune,
         # and dead for this population at each time point
     end
-    host_samples_idxs = Dict{String, Vector{Int64}}() # this contains indexes of hosts to be sampled
-    max_sample_idx = Dict{String, Int64}() # this is used to track max of each vector in host_samples_idxs
-    host_samples = Dict{String, Matrix{StaticHost}}() # this stores history
+    host_samples_idxs = Dict{String,Vector{Int64}}() # this contains indexes of hosts to be sampled
+    max_sample_idx = Dict{String,Int64}() # this is used to track max of each vector in host_samples_idxs
+    host_samples = Dict{String,Matrix{StaticHost}}() # this stores history
     for p in model.populations
         if haskey(population_host_samples, p.id)
             if isa(population_host_samples[p.id], Number)
@@ -64,10 +64,6 @@ function simulate!(
                     model.event_rates_sum, regenerate_rand=true
                 )
                 # println((time, model.event_rates, evt_idx))
-                if evt_idx > CONTACT
-                    println(("WTF",evt_idx, time, model.event_rates_sum, model.event_rates))
-                    println((model.population_weights))
-                end
                 EVENT_FUNCTIONS[evt_idx](model, rand_n)
 
                 # alternative sampling method:
@@ -89,19 +85,20 @@ function simulate!(
         end
         while his_tracker <= length(time_vector) && time >= time_vector[his_tracker]
             for p in model.populations
-                compartment_vars[p.id][:,his_tracker] = p.compartment_vars
+                compartment_vars[p.id][:, his_tracker] = p.compartment_vars
                 if haskey(host_samples_idxs, p.id)
                     if max_sample_idx[p.id] > length(p.hosts)
                         host_samples_idxs[p.id] = sort(
                             rand(1:length(p.hosts), length(host_samples_idxs[p.id]))
                         )
                     end
-                    for (i,host_idx) in enumerate(host_samples_idxs[p.id])
-                        host_samples[p.id][i,his_tracker] = staticHost(p.hosts[host_idx])
+                    for (i, host_idx) in enumerate(host_samples_idxs[p.id])
+                        host_samples[p.id][i, his_tracker] = staticHost(p.hosts[host_idx])
                     end
                 end
             end
             his_tracker += 1
+            # println((time, model.populations[1].compartment_vars, model.event_rates, model.population_contact_weights_receive_sums, model.population_contact_weights_receive))
         end
     end
 
