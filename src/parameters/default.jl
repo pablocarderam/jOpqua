@@ -63,5 +63,6 @@ const DEFAULT_POPULATION_TYPE = PopulationType(
     pathogenFractionsWinnerTakesAll,
     weightedResponseWinnerTakesAll,
     infectionProbabilityWinnerTakesAll,
-    (p::Pathogen, h::Host, r::Vector{Response}) -> Vector{Response}(undef, 0),
+    deNovoResponse,
+    Dict{String,ResponseType}([(DEFAULT_RESPONSE_TYPE.id => DEFAULT_RESPONSE_TYPE)])
 )

@@ -18,8 +18,8 @@ end
 function responseSpecificCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
     return response.type.specific_coefficient_functions[coefficient](
         host.sequence,
-        response.imprinted_pathogen.sequence,
-        response.matured_pathogen.sequence,
+        isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
+        isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
         pathogen.sequence
     )
 end
@@ -86,8 +86,8 @@ function responseWeights!(re::Int64, host::Host, evt::Int64)
     # No Response fraction weighting here, just presence of Response is enough
         host.responses[re].type.static_coefficient_functions[evt](
             host.sequence,
-            host.responses[re].imprinted_pathogen.sequence,
-            host.responses[re].matured_pathogen.sequence
+            isnothing(host.responses[re].imprinted_pathogen) ? "" : host.responses[re].imprinted_pathogen.sequence,
+            isnothing(host.responses[re].matured_pathogen) ? "" : host.responses[re].matured_pathogen.sequence,
         )
 end
 
@@ -135,8 +135,8 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
             sum([ # no response fraction weighting, see above
                 re.type.static_coefficient_functions[evt](
                     population.hosts[h].sequence,
-                    re.imprinted_pathogen.sequence,
-                    re.matured_pathogen.sequence
+                    isnothing(re.imprinted_pathogen) ? "" : re.imprinted_pathogen.sequence,
+                    isnothing(re.matured_pathogen) ? "" : re.matured_pathogen.sequence,
                 )
                 for re in population.hosts[h].responses
             ])
@@ -177,8 +177,8 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
             sum([ # no response fraction weighting, see above
                 re.type.static_coefficient_functions[evt](
                     population.hosts[h].sequence,
-                    re.imprinted_pathogen.sequence,
-                    re.matured_pathogen.sequence
+                    isnothing(re.imprinted_pathogen) ? "" : re.imprinted_pathogen.sequence,
+                    isnothing(re.matured_pathogen) ? "" : re.matured_pathogen.sequence,
                 )
                 for re in population.hosts[h].responses
             ])

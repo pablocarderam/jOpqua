@@ -419,6 +419,7 @@ function acquireResponse!(model::Model, rand_n::Float64)
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
         model.populations[pop_idx].hosts[host_idx],
         model.populations[pop_idx].responses,
+        model.populations[pop_idx].parameters.response_types,
     )
 
     for response in responses

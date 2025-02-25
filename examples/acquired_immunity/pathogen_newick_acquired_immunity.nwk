@@ -1,0 +1,1 @@
+(pop|pat_type|ABAA:1,pop|pat_type|AABA:1,((pop|pat_type|BBAB:1,((pop|pat_type|BABB:1,pop|pat_type|ABBB:1)pop|pat_type|BBBB:1,pop|pat_type|ABBA:1)pop|pat_type|BBBA:1)pop|pat_type|BBAA:1,pop|pat_type|BAAB:1,pop|pat_type|BABA:1)pop|pat_type|BAAA:1,(pop|pat_type|ABAB:1)pop|pat_type|AAAB:1)pop|pat_type|AAAA:0.0;

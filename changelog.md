@@ -11,6 +11,13 @@ common usage case (PCR)
 - Renamed `parameters.jl` to `default.jl` (PCR)
 - Fixed bug renormalizing the same random number with recombination events
 during transmission (PCR)
+- Changed structure of `developImmunity` arguments (PCR)
+- Added logic to verify whether `Response` entities have actual `Pathogen`
+entities associated, or just `nothing` (PCR)
+- Added `deNovoResponse` as default `developImmunity` function (PCR)
+
+KNOWN ISSUE: runtime didn't finish when I tried with
+`response_acquisition_coefficient=1.0,`!!!
 
 ## 24 February 2025
 - Added proportional fitness function for pathogen fractions (PCR)

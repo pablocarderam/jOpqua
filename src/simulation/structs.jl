@@ -127,12 +127,14 @@ struct PopulationType
     # Takes Pathogen and Host entities,
     # returns probability that a contact results in successful infection given the Responses in Host
 
-    developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Vector{Response}}}
-    # takes in Pathogen, Host, list of Responses as arguments, returns Response entities to be added
+    developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Dict{Tuple{String,String,String,String},Response},Dict{String,ResponseType}}}
+    # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes as arguments, returns Response entities to be added
     # (this handles how many and which responses to choose when adding a response to a host)
     # The list of Responses is the Population level vector of Responses,
     # and is used to return a reference to an existing Response struct rather than
     # creating a new instance of the struct
+
+    response_types::Dict{String,ResponseType}
 end
 
 mutable struct Population

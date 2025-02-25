@@ -3,7 +3,8 @@ using StaticArrays
 # Model parameter setup initializers
 
 function newPathogenType(
-    id::String; template::PathogenType=DEFAULT_PATHOGEN_TYPE,
+    id::String;
+    template::PathogenType=DEFAULT_PATHOGEN_TYPE,
     num_loci::Union{Nothing,Int64}=nothing,
     possible_alleles::Union{Nothing,String}=nothing,
     mean_effective_inoculum::Union{Nothing,Float64}=nothing,
@@ -73,7 +74,8 @@ function newPathogenType(
 end
 
 function newResponseType(
-    id::String; template::ResponseType=DEFAULT_RESPONSE_TYPE,
+    id::String;
+    template::ResponseType=DEFAULT_RESPONSE_TYPE,
     inherit_response::Union{Nothing,Float64}=nothing,
     infectionCoefficient::Union{Nothing,Function}=nothing,
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
@@ -159,7 +161,8 @@ function newResponseType(
 end
 
 function newPopulationType(
-    id::String; template::PopulationType=DEFAULT_POPULATION_TYPE,
+    id::String;
+    template::PopulationType=DEFAULT_POPULATION_TYPE,
     constant_contact_density::Union{Nothing,Bool}=nothing,
     constant_transition_density::Union{Nothing,Bool}=nothing,
     inoculum_coefficient::Union{Nothing,Float64}=nothing,
@@ -201,8 +204,10 @@ function newPopulationType(
     # returns probability that a contact results in successful infection given the Responses in Host
 
     developResponses::Union{Nothing,Function}=nothing,
-    # takes in Pathogen, Host, list of Responses as arguments, returns Response entities to be added
+    # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes as arguments, returns Response entities to be added
     # (this handles how many and which responses to choose when adding a response to a host)
+
+    response_types::Union{Nothing,Dict{String,ResponseType}}=nothing,
 )
 
     isnothing(constant_contact_density) ? constant_contact_density = template.constant_contact_density : constant_contact_density = constant_contact_density
@@ -238,6 +243,8 @@ function newPopulationType(
     isnothing(infectionProbability) ? infectionProbability = template.infectionProbability : infectionProbability = infectionProbability
     isnothing(developResponses) ? developResponses = template.developResponses : developResponses = developResponses
 
+    isnothing(response_types) ? response_types = template.response_types : response_types = response_types
+
     return PopulationType(
         id,
         constant_contact_density, constant_transition_density,
@@ -262,5 +269,6 @@ function newPopulationType(
         weightedResponse,
         infectionProbability,
         developResponses,
+        response_types,
     )
 end
