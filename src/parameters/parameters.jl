@@ -2,9 +2,9 @@ using StaticArrays
 
 const DEFAULT_PATHOGEN_TYPE = PathogenType(
     "Default",
-    10,
-    "ARNDCEQGHILKMFPSTWYV*",
-    1.0,
+    0,
+    "", #"ARNDCEQGHILKMFPSTWYV*",
+    0.0,
     0.0,
     0.0,
     0.0,
@@ -46,8 +46,8 @@ const DEFAULT_POPULATION_TYPE = PopulationType(
     1.0,
     1.0,
     1.0,
-    10,
-    "ARNDCEQGHILKMFPSTWYV*",
+    0,
+    "",
     0.0,
     true,
     0.0,
@@ -55,10 +55,10 @@ const DEFAULT_POPULATION_TYPE = PopulationType(
     g::String -> 1.0, # takes seq argument, returns Float64
     g::String -> 1.0, # takes seq argument, returns Float64
     SA[ # order defined in COEFFICIENTS
-        0.0, 1.0, 0.0,
-        0.0, 1.05, 0.0,
         0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0,
     ],
     pathogenFractionsWinnerTakesAll,
     weightedResponseWinnerTakesAll,

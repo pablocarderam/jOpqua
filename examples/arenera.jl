@@ -16,16 +16,25 @@ using ProfileView
 # Model setup
 function testRun(seed::Int64)
     # Parameters
+    start_genome = "AAAA"
+    optimal_genome = "BBBB"
+
     pat_type = jOpqua.newPathogenType(
-        "pat_type", possible_alleles="AB",
+        "pat_type",
+        num_loci=4,
+        possible_alleles="AB",
+        mean_effective_inoculum=1.0,
         mean_mutations_per_replication=0.001,
-        contactCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, "BBBB")) / 4.0),
+        contactCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
         receiveContactCoefficient=s::String -> 0.0,
     )
 
     res_type = jOpqua.newResponseType("res_type")
     pop_type = jOpqua.newPopulationType(
         "pop_type",
+        clearance_coefficient=1.0,
+        contact_coefficient=1.05,
+        receive_contact_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
     )
 
@@ -37,7 +46,7 @@ function testRun(seed::Int64)
     model = jOpqua.newModel()
     pop = jOpqua.newPopulation!("pop", pop_type, model)
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, pop, model)
-    pat = jOpqua.newPathogen!("AAAA", pop, pat_type)
+    pat = jOpqua.newPathogen!(start_genome, pop, pat_type)
     res = jOpqua.newResponse!(pat, pat, host_genome, pop, res_type)
 
     for h in 1:num_infected

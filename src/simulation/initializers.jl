@@ -190,7 +190,8 @@ function newPopulationType(
     # Receive coefficients
     receive_transition_coefficient::Union{Nothing,Float64}=nothing,
     receive_contact_coefficient::Union{Nothing,Float64}=nothing,
-    intrahost_fitness_coefficient::Union{Nothing,Float64}=nothing,
+
+    # Other functions
     pathogenFractions::Union{Nothing,Function}=nothing,
     # Takes Host entity and Population's weightedResponse function,
     # returns vector with fractional representation of each pathogen present
@@ -233,7 +234,6 @@ function newPopulationType(
     isnothing(transition_coefficient) ? transition_coefficient = template.base_coefficients[TRANSITION] : transition_coefficient = transition_coefficient
     isnothing(receive_transition_coefficient) ? receive_transition_coefficient = template.base_coefficients[RECEIVE_TRANSITION] : receive_transition_coefficient = receive_transition_coefficient
     isnothing(receive_contact_coefficient) ? receive_contact_coefficient = template.base_coefficients[RECEIVE_CONTACT] : receive_contact_coefficient = receive_contact_coefficient
-    isnothing(intrahost_fitness_coefficient) ? intrahost_fitness_coefficient = template.base_coefficients[INTRAHOST_FITNESS] : intrahost_fitness_coefficient = intrahost_fitness_coefficient
 
     isnothing(pathogenFractions) ? pathogenFractions = template.pathogenFractions : pathogenFractions = pathogenFractions
     isnothing(weightedResponse) ? weightedResponse = template.weightedResponse : weightedResponse = weightedResponse
@@ -258,7 +258,7 @@ function newPopulationType(
             mutant_establishment_coefficient, clearance_coefficient, response_acquisition_coefficient,
             recombinant_establishment_coefficient, contact_coefficient, response_loss_coefficient,
             birth_coefficient, death_coefficient, transition_coefficient,
-            receive_transition_coefficient, receive_contact_coefficient, intrahost_fitness_coefficient
+            receive_transition_coefficient, receive_contact_coefficient
         ],
         pathogenFractions,
         weightedResponse,

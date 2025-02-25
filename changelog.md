@@ -1,5 +1,12 @@
 # jOpqua Changelog
 
+## 25 February 2025
+- Removed intrahost fitness coefficient from `PopulationType` since it was
+never used (PCR)
+- Changed default parameters to be all zeros for base coefficient/rates and
+all maps to one for coefficient functions; Booleans were left as the most
+common usage case (PCR)
+
 ## 24 February 2025
 - Added proportional fitness function for pathogen fractions (PCR)
 - Debugged problems with complex weight calculation (contact, transition,
