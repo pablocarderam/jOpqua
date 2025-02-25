@@ -30,7 +30,7 @@ function testRun(seed::Int64)
     )
 
     num_hosts = 10000
-    num_infected = Int(num_hosts * 0.5)
+    num_infected = Int(num_hosts * 0.05)
     num_immune = 0
     host_genome = ""
 
@@ -47,7 +47,7 @@ function testRun(seed::Int64)
         jOpqua.addResponseToHost!(res, h, pop, model)
     end
 
-    t_vec = collect(0.0:2.0:1000.0)
+    t_vec = collect(0.0:2.0:1500.0)
 
     Random.seed!(seed)
 
@@ -66,7 +66,10 @@ function testRun(seed::Int64)
         his_dat, "examples/composition_test.csv",
         num_top_sequences=7, track_specific_sequences=["AAAA", "BBBB"]
     )
-    jOpqua.plotComposition(composition_data, "examples/composition_test.png", normalized=true)
+    jOpqua.plotComposition(
+        composition_data, "examples/composition_test.png",
+        normalized=true, ylabel="Fraction",
+    )
 
     nwks = jOpqua.saveNewick(output, "examples/pathogen_newick_test.nwk")
     for nwk in nwks
