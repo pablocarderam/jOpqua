@@ -461,10 +461,8 @@ function hostContact!(model::Model, rand_n::Float64)
             )
             for p_idx in 1:length(host1.pathogens)
         ])
-        if !any(inocula .!= 0.0)
-            idx, rand_n = randChoose(
-                rand_n, host1.pathogen_fractions, 1.0, regenerate_rand=true
-            )
+        if all(inocula .== 0.0) # had originally written !any(inocula .!= 0.0), don't know if that's actually faster
+            idx, rand_n = randChoose(rand_n, host1.pathogen_fractions, 1.0)
             inocula[idx] += 1
         end
 
@@ -503,7 +501,7 @@ function hostContact!(model::Model, rand_n::Float64)
                     )
                 end
                 for _ in 1:num_rec
-                    p_idx_2 = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand_n)
+                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand())
 
                     if p_idx != p_idx_2 && (
                         host1.pathogens[p_idx].type ==
@@ -519,7 +517,7 @@ function hostContact!(model::Model, rand_n::Float64)
                     end
                 end
                 for _ in 1:num_mut_rec
-                    p_idx_2 = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand_n)
+                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand())
 
                     if p_idx != p_idx_2
                         recombinant = recombinantPathogens!(
@@ -686,35 +684,6 @@ function birth!(model::Model, rand_n::Float64)
         end
     end
 end
-
-# function birth!(model::Model, rand_n::Float64)
-#     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
-
-#     jOpqua.newHost!(model.populations[pop_idx].sequence, model.populations[pop_idx], model)
-
-#     for response in model.populations[pop_idx].hosts[host_idx].responses
-#         if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
-#             addResponseToHost!(
-#                 response, length(model.populations[pop_idx].hosts),
-#                 model.populations[pop_idx], model
-#             )
-#         end
-#     end
-
-#     for pathogen_idx in 1:length(model.populations[pop_idx].hosts[host_idx].pathogens)
-#         if (model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
-#             rand() < model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.vertical_transmission *
-#                      model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].type.verticalTransmission(
-#                          model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx].sequence
-#                      ) *
-#                      model.populations[pop_idx].hosts[host_idx].pathogen_fractions[pathogen_idx])
-#             attemptInfection!(
-#                 model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
-#                 length(model.populations[pop_idx].hosts), pop_idx, model
-#             )
-#         end
-#     end
-# end
 
 function death!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(DEATH, model, rand_n)

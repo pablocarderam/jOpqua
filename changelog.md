@@ -9,6 +9,8 @@ common usage case (PCR)
 - Reorganized examples into folders (PCR)
 - Separated initializer functions for Type structs into a new file, `setup.jl`
 - Renamed `parameters.jl` to `default.jl` (PCR)
+- Fixed bug renormalizing the same random number with recombination events
+during transmission (PCR)
 
 ## 24 February 2025
 - Added proportional fitness function for pathogen fractions (PCR)

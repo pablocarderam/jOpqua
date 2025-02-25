@@ -14,7 +14,7 @@ using BenchmarkTools
 using ProfileView
 
 # Model setup
-function run(seed::Int64)
+function run(seed::Int64, t_vec::Vector{Float64})
     # Parameters
     start_genome = "AAAA"
     optimal_genome = "BBBB"
@@ -51,8 +51,6 @@ function run(seed::Int64)
         jOpqua.addPathogenToHost!(pat, h, pop, model)
     end
 
-    t_vec = collect(0.0:2.0:1500.0)
-
     # Simulate
     Random.seed!(seed)
     model, output = jOpqua.simulate!(
@@ -79,4 +77,5 @@ function run(seed::Int64)
     end
 end
 
-run(0)
+run(1, collect(0.0:2.0:4.0)) # compile
+@time run(0, collect(0.0:2.0:1500.0))
