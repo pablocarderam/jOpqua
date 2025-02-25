@@ -12,7 +12,8 @@ include("extensions/immunity/immunity.jl")
 include("extensions/intrahost/intrahost.jl")
 
 # Input
-include("parameters/parameters.jl")
+include("parameters/default.jl")
+include("parameters/setup.jl")
 
 # Simulation
 include("simulation/initializers.jl")

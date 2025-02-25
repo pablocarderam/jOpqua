@@ -6,6 +6,9 @@ never used (PCR)
 - Changed default parameters to be all zeros for base coefficient/rates and
 all maps to one for coefficient functions; Booleans were left as the most
 common usage case (PCR)
+- Reorganized examples into folders (PCR)
+- Separated initializer functions for Type structs into a new file, `setup.jl`
+- Renamed `parameters.jl` to `default.jl` (PCR)
 
 ## 24 February 2025
 - Added proportional fitness function for pathogen fractions (PCR)
