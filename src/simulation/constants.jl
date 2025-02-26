@@ -81,3 +81,6 @@ const COMPARTMENT_LABELS = [
     "Uninfected Naive", "Uninfected Immune", "Infected Naive",
     "Infected Immune", "Dead"
 ]
+
+# Simulation constants
+const ERROR_TOLERANCE = 1.0e-12

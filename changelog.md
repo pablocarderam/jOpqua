@@ -1,13 +1,19 @@
 # jOpqua Changelog
 
 ## 26 February 2025
+- Fixed bug where changes in contact receive weights were not correctly
+propagating into contact rates (missing base population coefficient
+multiplication) (PCR)
+- Fixed floating point error that leads to very small but nonzero contact rate
+(when it should be zero) (PCR)
+
 TODO:
-- Debug nonzero contact rate problem when no susceptibles left
 - debug no clearance from response problem
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
 - Debug `addResponseToHost` not changing tracking variable
+- Add option for Newick to show real time rather than Hamming distance
 
 ## 25 February 2025
 - Removed intrahost fitness coefficient from `PopulationType` since it was

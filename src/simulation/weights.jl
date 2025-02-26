@@ -255,6 +255,9 @@ end
 # Intra-Model (Event) level:
 function updatePopulationContactWeightReceiveMatrix!(pop_idx_1::Int64, pop_idx_2::Int64, change::Float64, model::Model)
     model.population_contact_weights_receive[pop_idx_2, pop_idx_1] += change
+    if approxeq(model.population_contact_weights_receive_sums[pop_idx_1]+change, 0.0, t=ERROR_TOLERANCE)
+        change -= model.population_contact_weights_receive_sums[pop_idx_1]
+    end
     model.population_contact_weights_receive_sums[pop_idx_1] += change
     propagateWeightChanges!(
         model.populations[pop_idx_1].parameters.base_coefficients[CONTACT] *
@@ -279,6 +282,9 @@ end
 
 function propagateWeightChanges!(change::Float64, evt::Int64, model::Model)
     model.event_rates[evt] = max(model.event_rates[evt] + change, 0.0)
+    # if approxeq(model.event_rates[evt], 0.0, t=ERROR_TOLERANCE)
+    #     model.event_rates[evt] = 0.0
+    # end
     model.event_rates_sum = sum(model.event_rates)
     # model.event_rates[evt] += change
     # model.event_rates_sum += change
@@ -332,9 +338,12 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
             # If you don't want this to happen, modify each population's
             # receive contact coefficient accordingly.
             model.population_contact_weights_receive[model.population_dict[population.id], p] += change_p
+            if approxeq(model.population_contact_weights_receive_sums[p]+change_p, 0.0, t=ERROR_TOLERANCE)
+                change_p -= model.population_contact_weights_receive_sums[p]
+            end
             model.population_contact_weights_receive_sums[p] += change_p
             propagateWeightChanges!(
-                change_p * model.populations[p].contact_sum,
+                change_p * model.populations[p].parameters.base_coefficients[CONTACT] * model.populations[p].contact_sum,
                 model.populations[p], CONTACT, model
             )
         end
@@ -349,7 +358,7 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
             model.population_transition_weights_receive[model.population_dict[population.id], p] += change_p
             model.population_transition_weights_receive_sums[p] += change_p
             propagateWeightChanges!(
-                change_p * model.populations[p].transition_sum,
+                change_p * model.populations[p].parameters.base_coefficients[TRANSITION] * model.populations[p].transition_sum,
                 model.populations[p], TRANSITION, model
             )
         end

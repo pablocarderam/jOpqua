@@ -451,10 +451,6 @@ function hostContact!(model::Model, rand_n::Float64)
     host_idx_1, pop_idx_1, rand_n = chooseHost(CONTACT, model, rand_n)
     pop_idx_2, rand_n = choosePopulationReceiveContact(pop_idx_1, model, rand_n)
     host_idx_2, rand_n = chooseHost(pop_idx_2, RECEIVE_CONTACT, model, rand_n)
-    if isnan(host_idx_2)
-        println("nan")
-        println((model.event_rates, model.populations[1].compartment_vars,model.population_weights_receive))
-    end
 
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]

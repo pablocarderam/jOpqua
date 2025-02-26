@@ -98,7 +98,7 @@ function simulate!(
                 end
             end
             his_tracker += 1
-            println((model.event_rates, model.populations[1].compartment_vars,model.population_weights_receive))
+            # println((model.event_rates, model.populations[1].compartment_vars, model.population_weights_receive, sum(model.populations[1].host_weights[CONTACT,:]), sum(model.populations[1].host_weights_with_coefficient[CONTACT,:]), model.population_contact_weights_receive_sums, model.populations[1].contact_sum, 1.05*model.population_contact_weights_receive_sums*model.populations[1].contact_sum))
         end
     end
 
