@@ -1,5 +1,14 @@
 # jOpqua Changelog
 
+## 26 February 2025
+TODO:
+- Debug nonzero contact rate problem when no susceptibles left
+- debug no clearance from response problem
+- Add response acquisition upon clearance as preferred alternative to response
+acquisition during infection (as in mutations upon infection vs. mutation
+establishment)
+- Debug `addResponseToHost` not changing tracking variable
+
 ## 25 February 2025
 - Removed intrahost fitness coefficient from `PopulationType` since it was
 never used (PCR)

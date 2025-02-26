@@ -24,18 +24,25 @@ function run(seed::Int64, t_vec::Vector{Float64})
         num_loci=4,
         possible_alleles="AB",
         mean_effective_inoculum=1.0,
-        mean_mutations_per_replication=0.001,
+        # mean_mutations_per_replication=0.001,
         contactCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
         receiveContactCoefficient=s::String -> 0.0,
     )
 
+    res_type = jOpqua.newResponseType(
+        "res_type",
+        clearanceSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String)->imp_g==pat_g ? 1000.0 : 1.0,
+        responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String)->imp_g==pat_g ? 0.0 : 1.0,
+    )
+
     pop_type = jOpqua.newPopulationType(
         "pop_type",
-        clearance_coefficient=1.0,
+        # clearance_coefficient=1.0,
         contact_coefficient=1.05,
         # response_acquisition_coefficient=1.0,
         receive_contact_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
+        response_types=Dict{String,jOpqua.ResponseType}([(res_type.id => res_type)]),
     )
 
     num_hosts = 10000

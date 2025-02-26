@@ -98,6 +98,7 @@ function simulate!(
                 end
             end
             his_tracker += 1
+            println((model.event_rates, model.populations[1].compartment_vars,model.population_weights_receive))
         end
     end
 
