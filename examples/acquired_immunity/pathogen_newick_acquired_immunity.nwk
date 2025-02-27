@@ -1,1 +1,1 @@
-pop|pat_type|AAAA:0.0;
+((pop|pat_type|BBAA:1,pop|pat_type|ABBA:1)pop|pat_type|ABAA:1,pop|pat_type|BAAA:1,pop|pat_type|AABA:1,(pop|pat_type|AABB:1,pop|pat_type|ABAB:1)pop|pat_type|AAAB:1)pop|pat_type|AAAA:0.0;

@@ -69,7 +69,7 @@ function saveComposition(
     genomic_positions::Vector{Int64}=Vector{Int64}(undef,0), track_specific_sequences::Vector{String}=Vector{String}(undef,0),
     top_host_sequence_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
 
-    dat = deepcopy(data)
+    dat = coalesce.(data, "")
     if length(populations) > 0
         dat = dat[in.(dat["Population"], Ref(Set(populations))), :]
     end

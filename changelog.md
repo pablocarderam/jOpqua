@@ -1,5 +1,9 @@
 # jOpqua Changelog
 
+KNOWN ISSUES:
+- Individuals with immunity against a strain are not protected from coinfections
+with that strain?
+
 TODO:
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
@@ -20,6 +24,8 @@ TODO: Not debugged:
 - Added parents to `Host`
 - Added `birth_time` to `Host`, `Response`, and `Pathogen`
 - Added option for Newick to show real time rather than Hamming distance
+- Added `approxZero`, fixed bug in floating point error correction
+- Fixed missing data error in `saveComposition`
 
 ## 26 February 2025
 - Fixed bug where changes in contact receive weights were not correctly

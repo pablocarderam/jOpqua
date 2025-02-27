@@ -29,3 +29,7 @@ end
 function approxeq(a::Float64, b::Float64; t::Float64=1e-9)
     return abs(a-b) < t
 end
+
+function approxZero(a::Float64; t::Float64=1e-9)
+    return a < t
+end

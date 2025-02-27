@@ -24,7 +24,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         num_loci=4,
         possible_alleles="AB",
         mean_effective_inoculum=1.0,
-        # mean_mutations_per_replication=0.001,
+        mean_mutations_per_replication=0.001,
         contactCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
         receiveContactCoefficient=s::String -> 0.0,
     )
@@ -33,15 +33,15 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "res_type",
         infectionCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
         clearanceSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 1.0e3 : 1.0,
-        responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
+        # responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
 
     pop_type = jOpqua.newPopulationType(
         "pop_type",
         clearance_coefficient=1.0e-3,
         contact_coefficient=1.05,
-        response_acquisition_coefficient=1.0,
-        response_loss_coefficient=0.1,
+        response_acquisition_coefficient=0.5,
+        response_loss_coefficient=0.0,
         receive_contact_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type.id => res_type)]),
@@ -50,7 +50,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
             existing_responses::Dict{Tuple{String,String,String,String},jOpqua.Response},
             response_types::Dict{String,jOpqua.ResponseType},
             birth_time::Float64
-        )->jOpqua.deNovoResponse(
+        ) -> jOpqua.deNovoResponse(
             pathogen, host, existing_responses, response_types, birth_time;
             response_type_id="res_type"
         ),
@@ -87,7 +87,19 @@ function run(seed::Int64, t_vec::Vector{Float64})
     )
     jOpqua.plotComposition(
         composition_data, "examples/acquired_immunity/composition_acquired_immunity.png",
-        normalized=true, ylabel="Fraction",
+        # normalized=true, ylabel="Fraction",
+        normalized=false, ylabel="Number",
+    )
+
+    composition_data = jOpqua.saveComposition(
+        his_dat, "examples/acquired_immunity/composition_acquired_immunity_responses.csv",
+        num_top_sequences=7, track_specific_sequences=["AAAA", "BBBB"],
+        type_of_composition="Response_imprinted_sequence"
+    )
+    jOpqua.plotComposition(
+        composition_data, "examples/acquired_immunity/composition_acquired_immunity_responses.png",
+        # normalized=true, ylabel="Fraction",
+        normalized=false, ylabel="Number",
     )
 
     nwks = jOpqua.saveNewick(output, "examples/acquired_immunity/pathogen_newick_acquired_immunity.nwk")

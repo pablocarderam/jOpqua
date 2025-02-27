@@ -307,7 +307,7 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, populati
     for i in 1:num_hosts
         push!(population.hosts, Host(
             length(population.hosts) + 1,
-            MVector{2,Union{Host,Nothing}}([nothing,nothing]),
+            MVector{2,Union{Host,Nothing}}([nothing, nothing]),
             model.time,
             host_sequence,
             population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
