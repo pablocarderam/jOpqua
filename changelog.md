@@ -1,5 +1,20 @@
 # jOpqua Changelog
 
+TODO:
+- Add response acquisition upon clearance as preferred alternative to response
+acquisition during infection (as in mutations upon infection vs. mutation
+establishment)
+- Add option for Newick to show real time rather than Hamming distance
+
+TODO: Not debugged:
+- Mutant establishment
+- Recombinant establishment
+- Recombination upon contact
+- Inter-population contact
+- Birth
+- Death
+- Transition
+
 ## 26 February 2025
 - Fixed bug where changes in contact receive weights were not correctly
 propagating into contact rates (missing base population coefficient
@@ -16,21 +31,6 @@ functions (PCR)
 - Set error tolerance constant to 1e-9 (PCR)
 - Added error tolerance checking at model rate level (PCR)
 - Moved `generateGamete` and `generateZygote` functions up in file (PCR)
-
-TODO:
-- Add response acquisition upon clearance as preferred alternative to response
-acquisition during infection (as in mutations upon infection vs. mutation
-establishment)
-- Add option for Newick to show real time rather than Hamming distance
-
-TODO: Not debugged:
-- Mutant establishment
-- Recombinant establishment
-- Recombination upon contact
-- Inter-population contact
-- Birth
-- Death
-- Transition
 
 ## 25 February 2025
 - Removed intrahost fitness coefficient from `PopulationType` since it was
