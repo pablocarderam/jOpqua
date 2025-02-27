@@ -5,6 +5,7 @@ TODO:
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
 - Add option for Newick to show real time rather than Hamming distance
+- Incorporate Flexle into all host sampling
 
 TODO: Not debugged:
 - Mutant establishment
