@@ -71,7 +71,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         normalized=true, ylabel="Fraction",
     )
 
-    nwks = jOpqua.saveNewick(output, "examples/pathogen_evolution/pathogen_newick_pathogen_evolution.nwk")
+    nwks = jOpqua.saveNewick(output, "examples/pathogen_evolution/pathogen_newick_pathogen_evolution.nwk", branch_length="Time", info_separator=" ")
     for nwk in nwks
         jOpqua.plotPhylogeny(nwk, "examples/pathogen_evolution/pathogen_newick_pathogen_evolution.png")
     end

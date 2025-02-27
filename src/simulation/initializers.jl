@@ -4,9 +4,10 @@ using StaticArrays
 
 function newPathogen!(
     sequence::String, population::Population, type::PathogenType;
-    parents::MVector{2,Union{Pathogen,Nothing}}=MVector{2,Union{Pathogen,Nothing}}([nothing, nothing]))
+    parents::MVector{2,Union{Pathogen,Nothing}}=MVector{2,Union{Pathogen,Nothing}}([nothing, nothing]),
+    birth_time::Float64=0.0)
     population.pathogens[sequence] = Pathogen(
-        parents, sequence, pathogenSequenceCoefficients(sequence, type),
+        parents, birth_time, sequence, pathogenSequenceCoefficients(sequence, type),
         type.mean_effective_inoculum * type.inoculumCoefficient(sequence) * population.parameters.inoculum_coefficient,
         type.mean_mutations_per_replication * type.mutationCoefficient(sequence) * population.parameters.mutation_coefficient,
         type.mean_recombination_crossovers * type.recombinationCoefficient(sequence) * population.parameters.recombination_coefficient,
@@ -19,12 +20,13 @@ end
 function newResponse!(
     imprinted_pathogen::Union{Pathogen,Nothing}, matured_pathogen::Union{Pathogen,Nothing}, host_sequence::String,
     existing_responses::Dict{Tuple{String,String,String,String},Response}, type::ResponseType;
-    parents::MVector{2,Union{Response,Nothing}}=MVector{2,Union{Response,Nothing}}([nothing, nothing]))
+    parents::MVector{2,Union{Response,Nothing}}=MVector{2,Union{Response,Nothing}}([nothing, nothing]),
+    birth_time::Float64=0.0)
     isnothing(imprinted_pathogen) ? imprinted_seq = "" : imprinted_seq = imprinted_pathogen.sequence
     isnothing(matured_pathogen) ? matured_seq = "" : matured_seq = matured_pathogen.sequence
 
     existing_responses[(host_sequence, imprinted_seq, matured_seq, type.id)] = Response(
-        parents, host_sequence, imprinted_pathogen, matured_pathogen,
+        parents, birth_time, host_sequence, imprinted_pathogen, matured_pathogen,
         responseStaticCoefficients(host_sequence, imprinted_seq, matured_seq, type),
         type
     )
@@ -32,10 +34,14 @@ function newResponse!(
     return existing_responses[(host_sequence, imprinted_seq, matured_seq, type.id)]
 end
 
-function newHost!(sequence::String, population::Population, model::Model)
+function newHost!(sequence::String, population::Population, model::Model;
+    parents::MVector{2,Union{Host,Nothing}}=MVector{2,Union{Host,Nothing}}([nothing, nothing]),
+    birth_time::Float64=0.0)
     addHostToPopulation!(
         Host(
             length(population.hosts) + 1,
+            parents,
+            birth_time,
             sequence,
             population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
                 sequence
@@ -114,6 +120,7 @@ function newModel()
         Vector{Float64}(undef, 0),
         Vector{Float64}(undef, 0),
         zeros(SVector{NUM_EVENTS,Float64}),
-        0.0
+        0.0,
+        0.0,
     )
 end

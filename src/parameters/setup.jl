@@ -204,7 +204,7 @@ function newPopulationType(
     # returns probability that a contact results in successful infection given the Responses in Host
 
     developResponses::Union{Nothing,Function}=nothing,
-    # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes as arguments, returns Response entities to be added
+    # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes, and birth time as arguments, returns Response entities to be added
     # (this handles how many and which responses to choose when adding a response to a host)
 
     response_types::Union{Nothing,Dict{String,ResponseType}}=nothing,

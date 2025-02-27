@@ -28,7 +28,7 @@ function mutantSequence!(
     return join(chromosomes, CHROMOSOME_SEPARATOR)
 end
 
-function mutantPathogen!(pathogen::Pathogen, population::Population)
+function mutantPathogen!(pathogen::Pathogen, population::Population, birth_time::Float64)
     seq = mutantSequence!(
         pathogen.sequence, pathogen.type.num_loci, pathogen.type.possible_alleles,
         pathogen.mean_mutations_per_replication
@@ -38,7 +38,9 @@ function mutantPathogen!(pathogen::Pathogen, population::Population)
         return population.pathogens[seq]
     else
         return newPathogen!(
-            seq, population, pathogen.type, parents=MVector{2,Union{Pathogen,Nothing}}([pathogen, nothing]),
+            seq, population, pathogen.type,
+            parents=MVector{2,Union{Pathogen,Nothing}}([pathogen, nothing]),
+            birth_time=birth_time
         )
     end
 end
@@ -75,7 +77,7 @@ function recombinantSequences(
     return children
 end
 
-function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population)
+function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population, birth_time::Float64)
     children = recombinantSequences(
         pathogen_1.sequence, pathogen_2.sequence, pathogen_1.type.num_loci,
         pathogen_1.mean_recombination_crossovers, pathogen_2.mean_recombination_crossovers
@@ -86,6 +88,7 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
     #         newPathogen!(
     #             seq, population, pathogen_1.type,
     #             parents=MVector{2, Union{Pathogen, Nothing}}([pathogen_1, pathogen_2]),
+    #             birth_time = birth_time
     #         )
     #     end
     # end
@@ -96,6 +99,7 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
         newPathogen!(
             children[1], population, pathogen_1.type,
             parents=MVector{2,Union{Pathogen,Nothing}}([pathogen_1, pathogen_2]),
+            birth_time=birth_time
         )
     end
 
@@ -303,6 +307,8 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, populati
     for i in 1:num_hosts
         push!(population.hosts, Host(
             length(population.hosts) + 1,
+            MVector{2,Union{Host,Nothing}}([nothing,nothing]),
+            model.time,
             host_sequence,
             population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
                 host_sequence
@@ -428,7 +434,7 @@ function establishMutant!(model::Model, rand_n::Float64)
 
     mut = mutantPathogen!(
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
-        model.populations[pop_idx]
+        model.populations[pop_idx], model.time
     )
 
     attemptInfection!(mut, host_idx, pop_idx, model)
@@ -451,6 +457,7 @@ function acquireResponse!(model::Model, rand_n::Float64)
         model.populations[pop_idx].hosts[host_idx],
         model.populations[pop_idx].responses,
         model.populations[pop_idx].parameters.response_types,
+        model.time
     )
 
     for response in responses
@@ -471,7 +478,8 @@ function establishRecombinant!(model::Model, rand_n::Float64)
         recombinant = recombinantPathogens!(
             model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1],
             model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2],
-            model.populations[pop_idx]
+            model.populations[pop_idx],
+            model.time
         )
 
         attemptInfection!(recombinant, host_idx, pop_idx, model)
@@ -528,7 +536,8 @@ function hostContact!(model::Model, rand_n::Float64)
                     attemptInfection!(
                         mutantPathogen!(
                             host1.pathogens[p_idx],
-                            model.populations[pop_idx_1]
+                            model.populations[pop_idx_1],
+                            model.time
                         ), host_idx_2, pop_idx_2, model
                     )
                 end
@@ -543,7 +552,8 @@ function hostContact!(model::Model, rand_n::Float64)
                             recombinantPathogens!(
                                 host1.pathogens[p_idx],
                                 host1.pathogens[p_idx_2],
-                                model.populations[pop_idx_1]
+                                model.populations[pop_idx_1],
+                                model.time
                             ), host_idx_2, pop_idx_2, model
                         )
                     end
@@ -555,18 +565,20 @@ function hostContact!(model::Model, rand_n::Float64)
                         recombinant = recombinantPathogens!(
                             host1.pathogens[p_idx],
                             host1.pathogens[p_idx_2],
-                            model.populations[pop_idx_1]
+                            model.populations[pop_idx_1],
+                            model.time
                         )
 
                         attemptInfection!(
-                            mutantPathogen!(recombinant, model.populations[pop_idx_1]),
+                            mutantPathogen!(recombinant, model.populations[pop_idx_1], model.time),
                             host_idx_2, pop_idx_2, model
                         )
                     else
                         attemptInfection!(
                             mutantPathogen!(
                                 host1.pathogens[p_idx],
-                                model.populations[pop_idx_1]
+                                model.populations[pop_idx_1],
+                                model.time
                             ),
                             host_idx_2, pop_idx_2, model
                         )
@@ -655,7 +667,7 @@ function birth!(model::Model, rand_n::Float64)
             end
         end
 
-        jOpqua.newHost!(child_sequence, model.populations[pop_idx], model)
+        jOpqua.newHost!(child_sequence, model.populations[pop_idx], model, parents=parents, birth_time=model.time)
 
         for parent in parents
             if !isnothing(parent)

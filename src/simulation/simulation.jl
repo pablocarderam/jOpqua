@@ -37,25 +37,24 @@ function simulate!(
     end
 
     # Gillespie
-    time = 0.0
     dt = 0.0
     rand_n = 0.0
     evt_idx = 0
     evt_count = 0
-    while time < time_vector[end]
+    while model.time < time_vector[end]
         if (model.event_rates_sum > 0.0)
             dt = randexp() / model.event_rates_sum
             if (intervention_tracker < length(interventions) &&
-                time + dt >= interventions[intervention_tracker].time)
+                model.time + dt >= interventions[intervention_tracker].time)
                 # if there are any interventions left and if it is time to make one,
-                time = interventions[intervention_tracker].time
+                model.time = interventions[intervention_tracker].time
                 interventions[intervention_tracker].intervention(model)
                 intervention_tracker += 1
             else
-                time += dt
+                model.time += dt
 
-                if time > time_vector[end]
-                    time = time_vector[end]
+                if model.time > time_vector[end]
+                    model.time = time_vector[end]
                 end
 
                 rand_n = rand()
@@ -63,7 +62,7 @@ function simulate!(
                     rand_n, model.event_rates,
                     model.event_rates_sum, regenerate_rand=true
                 )
-                # println((time, model.event_rates, evt_idx))
+                # println((model.time, model.event_rates, evt_idx))
                 EVENT_FUNCTIONS[evt_idx](model, rand_n)
 
                 # alternative sampling method:
@@ -74,16 +73,16 @@ function simulate!(
             end
         else
             if (intervention_tracker < length(interventions) &&
-                time >= interventions[intervention_tracker].time)
+                model.time >= interventions[intervention_tracker].time)
                 # if there are any interventions left
-                time = interventions[intervention_tracker].time
+                model.time = interventions[intervention_tracker].time
                 interventions[intervention_tracker].intervention(model)
                 intervention_tracker += 1
             else
-                time = time_vector[end]
+                model.time = time_vector[end]
             end
         end
-        while his_tracker <= length(time_vector) && time >= time_vector[his_tracker]
+        while his_tracker <= length(time_vector) && model.time >= time_vector[his_tracker]
             for p in model.populations
                 compartment_vars[p.id][:, his_tracker] = p.compartment_vars
                 if haskey(host_samples_idxs, p.id)

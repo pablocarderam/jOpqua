@@ -4,7 +4,6 @@ TODO:
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
-- Add option for Newick to show real time rather than Hamming distance
 - Incorporate Flexle into all host sampling
 
 TODO: Not debugged:
@@ -15,6 +14,12 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 27 February 2025
+- Added `model.time`
+- Added parents to `Host`
+- Added `birth_time` to `Host`, `Response`, and `Pathogen`
+- Added option for Newick to show real time rather than Hamming distance
 
 ## 26 February 2025
 - Fixed bug where changes in contact receive weights were not correctly

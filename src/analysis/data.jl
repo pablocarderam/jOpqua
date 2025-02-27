@@ -191,7 +191,9 @@ function addToPhylogenyDicts!(
     # end
 end
 
-function saveNewick(model::Model, file_name::String; type::String="Pathogens", info_separator::String="|")
+function saveNewick(
+    model::Model, file_name::String; type::String="Pathogens",
+    info_separator::String="|", branch_length::String="Distance")
     nodes_dict = Dict()
     node_info = Dict()
     for pop in model.populations
@@ -220,7 +222,12 @@ function saveNewick(model::Model, file_name::String; type::String="Pathogens", i
                     child_contents = trees[node_info[child]]
                     delete!(trees, node_info[child])
                 end
-                node_str = node_str * child_contents * node_info[child] * ":" * string(hamming(node.sequence, child.sequence)) * ","
+                if branch_length == "Distance"
+                    branch_length_number = hamming(node.sequence, child.sequence)
+                elseif branch_length == "Time"
+                    branch_length_number = child.birth_time - node.birth_time
+                end
+                node_str = node_str * child_contents * node_info[child] * ":" * string(branch_length_number) * ","
             end
             node_str = "(" * node_str[1:end-1] * ")"
         end
@@ -257,6 +264,6 @@ function saveNewick(model::Model, file_name::String; type::String="Pathogens", i
     return out
 end
 
-function saveNewick(output::Output, file_name::String; type::String="Pathogens", info_separator::String="|")
-    return saveNewick(output.model, file_name, type=type, info_separator=info_separator)
+function saveNewick(output::Output, file_name::String; type::String="Pathogens", info_separator::String="|", branch_length::String="Distance")
+    return saveNewick(output.model, file_name, type=type, info_separator=info_separator, branch_length=branch_length)
 end

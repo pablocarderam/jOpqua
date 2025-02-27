@@ -44,6 +44,7 @@ end
 
 struct Pathogen
     parents::MVector{2,Union{Pathogen,Nothing}} # parent pathogen objects, if any
+    birth_time::Float64
     # This is only useful for response lineage tracing, but not the simulation?
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
@@ -55,6 +56,7 @@ end
 
 struct Response
     parents::MVector{2,Union{Response,Nothing}} # parent response objects, if any
+    birth_time::Float64
     # This is only useful for response lineage tracing, but not the simulation?
     host_sequence::String
     imprinted_pathogen::Union{Pathogen,Nothing} # This will track the Pathogen imprinted in the naive response
@@ -72,6 +74,9 @@ end
 
 mutable struct Host
     id::Int64
+
+    parents::MVector{2,Union{Host,Nothing}} # parent response objects, if any
+    birth_time::Float64
 
     sequence::String
     mean_mutations_per_replication::Float64
@@ -127,8 +132,8 @@ struct PopulationType
     # Takes Pathogen and Host entities,
     # returns probability that a contact results in successful infection given the Responses in Host
 
-    developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Dict{Tuple{String,String,String,String},Response},Dict{String,ResponseType}}}
-    # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes as arguments, returns Response entities to be added
+    developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Dict{Tuple{String,String,String,String},Response},Dict{String,ResponseType},Float64}}
+    # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes, and birth time as arguments, returns Response entities to be added
     # (this handles how many and which responses to choose when adding a response to a host)
     # The list of Responses is the Population level vector of Responses,
     # and is used to return a reference to an existing Response struct rather than
@@ -188,6 +193,8 @@ mutable struct Model
 
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64
+
+    time::Float64
 end
 
 struct Intervention

@@ -48,9 +48,10 @@ function run(seed::Int64, t_vec::Vector{Float64})
         developResponses=(
             pathogen::jOpqua.Pathogen, host::jOpqua.Host,
             existing_responses::Dict{Tuple{String,String,String,String},jOpqua.Response},
-            response_types::Dict{String,jOpqua.ResponseType}
+            response_types::Dict{String,jOpqua.ResponseType},
+            birth_time::Float64
         )->jOpqua.deNovoResponse(
-            pathogen, host, existing_responses, response_types;
+            pathogen, host, existing_responses, response_types, birth_time;
             response_type_id="res_type"
         ),
     )
