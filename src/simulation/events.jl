@@ -102,6 +102,37 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, popul
     return population.pathogens[children[1]]
 end
 
+function generateGamete(
+    sequence::String, num_loci::Int64,
+    possible_alleles::String, mean_mutations_per_replication::Float64)
+    gamete = join(
+        [
+            rand(split(homologous_chromosome_pair, HOMOLOGOUS_CHROMOSOME_SEPARATOR))
+            for homologous_chromosome_pair in split(sequence, CHROMOSOME_SEPARATOR)
+        ],
+        CHROMOSOME_SEPARATOR
+    )
+    if mean_mutations_per_replication > 0.0
+        gamete = mutantSequence!(
+            gamete, num_loci, possible_alleles,
+            mean_mutations_per_replication
+        )
+    end
+
+    return gamete
+end
+
+function generateZygote(gamete_1::String, gamete_2::String)
+    chromosomes_1 = split(gamete_1, CHROMOSOME_SEPARATOR)
+    chromosomes_2 = split(gamete_2, CHROMOSOME_SEPARATOR)
+    zygote = ""
+    for chromosome_idx in eachindex(chromosomes_1)
+        zygote = zygote * chromosomes_1[chromosome_idx] * HOMOLOGOUS_CHROMOSOME_SEPARATOR * chromosomes_2[chromosome_idx] * CHROMOSOME_SEPARATOR
+    end
+
+    return zygote[1:end-length(CHROMOSOME_SEPARATOR)]
+end
+
 function addPathogenToHost!(pathogen::Pathogen, host_idx::Int64, population::Population, model::Model)
     if length(population.hosts[host_idx].pathogens) == 0
         if length(population.hosts[host_idx].responses) == 0
@@ -413,7 +444,7 @@ function clearPathogen!(model::Model, rand_n::Float64)
 end
 
 function acquireResponse!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx = choosePathogen(CLEARANCE, model, rand_n)
+    pathogen_idx, host_idx, pop_idx = choosePathogen(RESPONSE_ACQUISITION, model, rand_n)
 
     responses = model.populations[pop_idx].parameters.developResponses(
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
@@ -547,42 +578,11 @@ function hostContact!(model::Model, rand_n::Float64)
 end
 
 function loseResponse!(model::Model, rand_n::Float64)
-    response_idx, host_idx, pop_idx = chooseResponse(CLEARANCE, model, rand_n)
+    response_idx, host_idx, pop_idx = chooseResponse(RESPONSE_LOSS, model, rand_n)
 
     removeResponseFromHost!(
         response_idx, host_idx, model.populations[pop_idx], model
     )
-end
-
-function generateGamete(
-    sequence::String, num_loci::Int64,
-    possible_alleles::String, mean_mutations_per_replication::Float64)
-    gamete = join(
-        [
-            rand(split(homologous_chromosome_pair, HOMOLOGOUS_CHROMOSOME_SEPARATOR))
-            for homologous_chromosome_pair in split(sequence, CHROMOSOME_SEPARATOR)
-        ],
-        CHROMOSOME_SEPARATOR
-    )
-    if mean_mutations_per_replication > 0.0
-        gamete = mutantSequence!(
-            gamete, num_loci, possible_alleles,
-            mean_mutations_per_replication
-        )
-    end
-
-    return gamete
-end
-
-function generateZygote(gamete_1::String, gamete_2::String)
-    chromosomes_1 = split(gamete_1, CHROMOSOME_SEPARATOR)
-    chromosomes_2 = split(gamete_2, CHROMOSOME_SEPARATOR)
-    zygote = ""
-    for chromosome_idx in eachindex(chromosomes_1)
-        zygote = zygote * chromosomes_1[chromosome_idx] * HOMOLOGOUS_CHROMOSOME_SEPARATOR * chromosomes_2[chromosome_idx] * CHROMOSOME_SEPARATOR
-    end
-
-    return zygote[1:end-length(CHROMOSOME_SEPARATOR)]
 end
 
 function birth!(model::Model, rand_n::Float64)

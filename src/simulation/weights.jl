@@ -15,8 +15,34 @@ function responseStaticCoefficients(
     ]
 end
 
+function responseStaticCoefficient(response::Response, host::Host, coefficient::Int64)
+    return response.type.static_coefficient_functions[coefficient](
+        host.sequence,
+        isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
+        isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+    )
+end
+
 function responseSpecificCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
     return response.type.specific_coefficient_functions[coefficient](
+        host.sequence,
+        isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
+        isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+        pathogen.sequence
+    )
+end
+
+function reactivityCoefficient(pathogen::Pathogen, response::Response, host::Host)
+    return response.type.reactivityCoefficient(
+        host.sequence,
+        isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
+        isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+        pathogen.sequence
+    )
+end
+
+function infectionCoefficient(pathogen::Pathogen, response::Response, host::Host)
+    return response.type.infectionCoefficient(
         host.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
@@ -42,7 +68,7 @@ function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int
         # Clearance likelihoods are not proportional to intrahost fraction,
         # instead, we assume the rate of loss compounds
         # (could be inversely proportional to fraction?)
-        host.pathogen_weights[evt, p] = host.pathogen_weights[evt, p]
+        # host.pathogen_weights[evt, p] = host.pathogen_weights[evt, p]
     elseif evt == RECOMBINANT_ESTABLISHMENT && length(host.pathogens) < 2
         # if nobody to recombine with, no recombination happens
         host.pathogen_weights[evt, p] = 0.0
@@ -82,13 +108,8 @@ function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int6
 end
 
 function responseWeights!(re::Int64, host::Host, evt::Int64)
-    host.response_weights[evt-RESPONSE_EVENTS[1]+1, re] =
+    host.response_weights[evt-RESPONSE_EVENTS[1]+1, re] = responseStaticCoefficient(host.responses[re], host, evt)
     # No Response fraction weighting here, just presence of Response is enough
-        host.responses[re].type.static_coefficient_functions[evt](
-            host.sequence,
-            isnothing(host.responses[re].imprinted_pathogen) ? "" : host.responses[re].imprinted_pathogen.sequence,
-            isnothing(host.responses[re].matured_pathogen) ? "" : host.responses[re].matured_pathogen.sequence,
-        )
 end
 
 function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int64)
@@ -133,11 +154,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
         population.host_weights[evt, h] =
             population.host_weights[evt, h] *
             sum([ # no response fraction weighting, see above
-                re.type.static_coefficient_functions[evt](
-                    population.hosts[h].sequence,
-                    isnothing(re.imprinted_pathogen) ? "" : re.imprinted_pathogen.sequence,
-                    isnothing(re.matured_pathogen) ? "" : re.matured_pathogen.sequence,
-                )
+                responseStaticCoefficient(re, population.hosts[h], evt)
                 for re in population.hosts[h].responses
             ])
     end
@@ -175,11 +192,7 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
         population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] =
             population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
             sum([ # no response fraction weighting, see above
-                re.type.static_coefficient_functions[evt](
-                    population.hosts[h].sequence,
-                    isnothing(re.imprinted_pathogen) ? "" : re.imprinted_pathogen.sequence,
-                    isnothing(re.matured_pathogen) ? "" : re.matured_pathogen.sequence,
-                )
+                responseStaticCoefficient(re, population.hosts[h], evt)
                 for re in population.hosts[h].responses
             ])
     end
@@ -282,9 +295,9 @@ end
 
 function propagateWeightChanges!(change::Float64, evt::Int64, model::Model)
     model.event_rates[evt] = max(model.event_rates[evt] + change, 0.0)
-    # if approxeq(model.event_rates[evt], 0.0, t=ERROR_TOLERANCE)
-    #     model.event_rates[evt] = 0.0
-    # end
+    if approxeq(model.event_rates[evt], 0.0, t=ERROR_TOLERANCE)
+        model.event_rates[evt] = 0.0
+    end
     model.event_rates_sum = sum(model.event_rates)
     # model.event_rates[evt] += change
     # model.event_rates_sum += change

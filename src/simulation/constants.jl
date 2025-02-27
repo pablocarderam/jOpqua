@@ -83,4 +83,4 @@ const COMPARTMENT_LABELS = [
 ]
 
 # Simulation constants
-const ERROR_TOLERANCE = 1.0e-12
+const ERROR_TOLERANCE = 1.0e-9

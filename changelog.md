@@ -6,6 +6,16 @@ propagating into contact rates (missing base population coefficient
 multiplication) (PCR)
 - Fixed floating point error that leads to very small but nonzero contact rate
 (when it should be zero) (PCR)
+- Fixed response acquisition bug (wrong constant) (PCR)
+- Fixed response loss bug (wrong constant) (PCR)
+- Fixed bugs in winner takes all immunity functions, which weren't taking the
+`Response` with highest reactivity (PCR)
+- Added `reactivityCoefficient`, `infectionCoefficient`, and
+`responseStaticCoefficient` functions to streamline immunity and weight
+functions (PCR)
+- Set error tolerance constant to 1e-9 (PCR)
+- Added error tolerance checking at model rate level (PCR)
+- Moved `generateGamete` and `generateZygote` functions up in file (PCR)
 
 TODO:
 - debug no clearance from response problem

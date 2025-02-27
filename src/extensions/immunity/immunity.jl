@@ -3,24 +3,11 @@ function weightedResponseArithmeticMean(pathogen::Pathogen, host::Host, evt::Int
     if length(host.responses) > 0
         reac_sum = 0.0
         numerator_sum = 0.0
+        reac = 0.0
         for response in host.responses
-            reac_sum += response.type.reactivityCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
-            numerator_sum += response.type.reactivityCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            ) * response.type.specific_coefficient_functions[evt](
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
+            reac = reactivityCoefficient(pathogen, response, host)
+            reac_sum += reac
+            numerator_sum += reac * responseSpecificCoefficient(pathogen, response, host, evt)
         end
 
         return numerator_sum / reac_sum
@@ -34,24 +21,11 @@ function infectionProbabilityArithmeticMean(pathogen::Pathogen, host::Host)
     if length(host.responses) > 0
         reac_sum = 0.0
         numerator_sum = 0.0
+        reac = 0.0
         for response in host.responses
-            reac_sum += response.type.reactivityCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
-            numerator_sum += response.type.reactivityCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            ) * response.type.infectionCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
+            reac = reactivityCoefficient(pathogen, response, host)
+            reac_sum += reac
+            numerator_sum += reac * infectionCoefficient(pathogen, response, host)
         end
 
         return numerator_sum / reac_sum
@@ -63,20 +37,11 @@ end
 function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int64)
     if length(host.responses) > 0
         dominant_reaction = 1.0
+        dominant_reactivity = 0.0
         for response in host.responses
-            reaction = response.type.reactivityCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            ) * response.type.specific_coefficient_functions[evt](
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
-            if reaction < dominant_reaction
-                dominant_reaction = reaction
+            reactivity = reactivityCoefficient(pathogen, response, host)
+            if reactivity > dominant_reactivity
+                dominant_reaction = reactivity * responseSpecificCoefficient(pathogen, response, host, evt)
             end
         end
 
@@ -89,20 +54,11 @@ end
 function infectionProbabilityWinnerTakesAll(pathogen::Pathogen, host::Host)
     if length(host.responses) > 0
         dominant_reaction = 1.0
+        dominant_reactivity = 0.0
         for response in host.responses
-            reaction = response.type.reactivityCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            ) * response.type.infectionCoefficient(
-                host.sequence,
-                isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-                isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-                pathogen.sequence
-            )
-            if reaction < dominant_reaction
-                dominant_reaction = reaction
+            reactivity = reactivityCoefficient(pathogen, response, host)
+            if reactivity > dominant_reactivity
+                dominant_reaction = reactivity * infectionCoefficient(pathogen, response, host)
             end
         end
 

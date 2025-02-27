@@ -31,18 +31,28 @@ function run(seed::Int64, t_vec::Vector{Float64})
 
     res_type = jOpqua.newResponseType(
         "res_type",
-        clearanceSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String)->imp_g==pat_g ? 1000.0 : 1.0,
-        responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String)->imp_g==pat_g ? 0.0 : 1.0,
+        infectionCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
+        clearanceSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 1.0e3 : 1.0,
+        responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
 
     pop_type = jOpqua.newPopulationType(
         "pop_type",
-        # clearance_coefficient=1.0,
+        clearance_coefficient=1.0e-3,
         contact_coefficient=1.05,
-        # response_acquisition_coefficient=1.0,
+        response_acquisition_coefficient=1.0,
+        response_loss_coefficient=0.1,
         receive_contact_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type.id => res_type)]),
+        developResponses=(
+            pathogen::jOpqua.Pathogen, host::jOpqua.Host,
+            existing_responses::Dict{Tuple{String,String,String,String},jOpqua.Response},
+            response_types::Dict{String,jOpqua.ResponseType}
+        )->jOpqua.deNovoResponse(
+            pathogen, host, existing_responses, response_types;
+            response_type_id="res_type"
+        ),
     )
 
     num_hosts = 10000
@@ -86,4 +96,4 @@ function run(seed::Int64, t_vec::Vector{Float64})
 end
 
 run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:2.0:1500.0))
+@time run(0, collect(0.0:0.20:150.0))
