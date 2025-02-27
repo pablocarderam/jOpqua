@@ -18,11 +18,9 @@ functions (PCR)
 - Moved `generateGamete` and `generateZygote` functions up in file (PCR)
 
 TODO:
-- debug no clearance from response problem
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
-- Debug `addResponseToHost` not changing tracking variable
 - Add option for Newick to show real time rather than Hamming distance
 
 ## 25 February 2025
