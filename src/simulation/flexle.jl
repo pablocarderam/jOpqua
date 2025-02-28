@@ -1,4 +1,8 @@
 using Printf
+using Plots
+using StatsPlots
+using Random
+using BenchmarkTools
 
 # Flexible binary level rejection sampling
 
@@ -57,7 +61,7 @@ function levelIndex(w::Float64, u::Int64)
     return iszero(w) ? 0 : u - Int64(floor(log2(w)))
 end
 
-function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
+function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})  # TODO: rewrite to avoid iterating
     for i in eachindex(levels)
         (levels[i].bounds == bounds) && (return i)
     end
@@ -112,10 +116,10 @@ function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler
     end
     level.sum -= w
     sampler.sum -= w
-    if isempty(level.indices)
+    if !levelisPopulated(level)
         level.max = 0.0
     elseif w == level.max
-        level.max = maximum([sampler.weights[j] for j in level.indices]) # potential slowdown: maximum updated by searching the whole vector if max is removed
+        level.max = maximum([sampler.weights[j] for j in level.indices]) # potential slowdown: maximum updated by searching the whole vector if max is removed, TODO: do this in single iteration over indices
     end
 end
 
@@ -177,15 +181,16 @@ function cdfSample(sampler::FlexleSampler)
         chosen_level = level
         (cum_sum > norm_rand_n) && break
     end
-    return chosen_level
+    return chosen_level, (norm_rand_n - cum_sum + chosen_level.sum) / chosen_level.sum
 end
 
-function rejectionSample(level::FlexLevel, weights::Vector{Float64})
+function rejectionSample(rand_n::Float64, level::FlexLevel, weights::Vector{Float64})
     while true
-        r = rand() * length(level.indices)
+        r = rand_n * length(level.indices)
         i = floor(r)
         idx = level.indices[Int64(i) + 1]   # +1 to offset for 1-indexing
-        if weights[idx] > (r - i) * level.max
+        rand_n = r - i
+        if weights[idx] > (rand_n * level.max)
             return idx
         end
     end
@@ -361,7 +366,8 @@ end
 Take a single random sample from `sampler`, returning the index of the element sampled.
 """
 function flexleSample(sampler::FlexleSampler)
-    return rejectionSample(cdfSample(sampler), sampler.weights)
+    level, rand_n = cdfSample(sampler)
+    return rejectionSample(rand_n, level, sampler.weights)
 end
 
 """
@@ -679,4 +685,176 @@ function testUserFunctions()
     removeFromFlexleSampler!(s2, 101)     # empty bottom level
     removeFromFlexleSampler!(s2, 86)      # zero
     verifyFlexleSampler(s2)
+end
+
+
+
+"""
+
+        --- EXAMPLES AND GRAPHS ---
+
+"""
+
+function plotCDF(weights::Vector{Float64}, filepath::String, d::Int64; name::String="cdf", xlabel="Element", n::Union{Float64, Nothing}=nothing)
+    s = 0.0
+    m = length(weights)
+    indices = zeros(Int64, m+1)
+    cum_sums = zeros(Float64, m+1)
+    for i in eachindex(weights)
+        indices[i+1] = i
+        s += weights[i]
+        cum_sums[i+1] = s
+    end
+
+    
+    p = plot(indices, cum_sums, title="CDF sampling", xlabel=xlabel, ylabel="Cumulative sum", linetype=:steppost, legend=false, size=(d, d), linewidth=2)
+    if !isnothing(n)
+        k = findfirst(x -> x >= n, cum_sums) - 1
+        plot!(p, indices, [n for _ in indices], linewidth=3)
+        plot!(p, [k, k], [0, n], linewidth=3)
+    end
+    png(p, filepath * name)
+
+    return p
+end
+
+function plotRejection(weights::Vector{Float64}, filepath::String, d::Int64)
+    m = maximum(weights)
+    W = hcat(m .- weights, weights)
+    p = groupedbar(W, bar_width=1, bar_position=:stack, title="Rejection sampling", xlabel="Element", ylabel="Weight", legend=false, size=(d, d))
+    png(p, filepath * "rej")
+    return p
+end
+
+function makeFlexleExampleGraphs(; seed::Int64=3, filepath="examples/flexlegraphs/")
+    d = 800
+    d34 = 3*div(d, 4)
+    Random.seed!(seed)
+    w = 5 * rand(15)
+    n = rand() * sum(w)
+    plotCDF(w, filepath, d34, n=n)
+    plotRejection(w, filepath, d34)
+    s = FlexleSampler(w)
+    printFlexleSampler(s)
+    f = []
+    f_lsize = maximum(length(l.indices) for l in s.levels)
+    for i in eachindex(s.levels)
+        l = s.levels[i] 
+        p = [s.weights[j] for j in l.indices]
+        push!(f, hcat(maximum(p) .- p, p))
+        bound = string(l.bounds)
+        groupedbar(f[end], bar_width=1, bar_position=:stack, legend=false, xticks=(1:1:f_lsize, l.indices), xlims=(0, f_lsize+1), ylabel=bound, size=(d/2, d/4))
+        png(filepath * "f" * string(i))
+    end
+
+    sums = [l.sum for l in s.levels]
+    sums_r = reverse(sums)
+    plotCDF(sums, filepath, d34, name="f_cdf", xlabel="Level")
+    plotCDF(sums_r, filepath, d34, name="f_cdf_r", xlabel="Level")
+end
+
+function testSampleRuntime!(w::Vector{Vector{Float64}}, w_sums::Vector{Float64}, sampler::FlexleSampler, r1::Int64, r2::Int64)
+    r1 = 1:r1
+    r2 = 1:r2
+    
+    println("CDF sampling:")    
+    #randChoose(rand(), weights, w_tot)
+    # @benchmark timeRandChoose($r1, $r2, $w, $w_tot)
+    display(@benchmark timeRandChoose($r1, $r2, $w, $w_sums))
+    # display(@benchmark randChoose(0.5, $weights, $w_tot, regenerate_rand=false))
+
+    println("Flexle sampling:")
+    # # flexleSample(sampler)
+    # @benchmark timeFlexleSample($r1, $r2, $sampler)
+    display(@benchmark timeFlexleSample($r1, $r2, $sampler))
+    # display(@benchmark(flexleSample($sampler)))
+end
+
+function timeRandChoose(r1::UnitRange{Int64}, r2::UnitRange{Int64}, weights::Vector{Vector{Float64}}, w_sums::Vector{Float64})
+    for i in r1
+        rand_n = rand()
+        for j in r2
+            k = i*(j-1) + j
+            y, rand_n = randChoose(rand_n, weights[k], w_sums[k], regenerate_rand=true)
+        end
+    end
+end
+
+function timeFlexleSample(r1::UnitRange{Int64}, r2::UnitRange{Int64}, sampler::FlexleSampler)
+    for i in r1
+        for j in r2
+            y = flexleSample(sampler)
+        end
+    end
+end
+
+function testRuntime01!(; h::Int64=10000)
+    w01::Vector{Float64} = zeros(h)
+    for i in eachindex(w01)
+        if rand() > 0.5
+            w01[i] = 1
+        end
+    end
+
+    r1, r2 = 200, 5
+    w = Vector{Vector{Float64}}()
+    w_sums = Vector{Float64}()
+    for j in 1:(r1*r2)
+        push!(w, zeros(h))
+        for i in 1:h
+            if rand() > 0.5
+                w[j][i] = 1
+            end
+        end
+        push!(w_sums, sum(w[j]))
+    end
+
+
+    testSampleRuntime!(w, w_sums, FlexleSampler(w01), r1, r2)
+end
+
+function testRuntimeUniform!(; h::Int64=10000)
+    wu::Vector{Float64} = rand(h)
+
+    r1, r2 = 200, 5
+    w = Vector{Vector{Float64}}()
+    w_sums = Vector{Float64}()
+    for j in 1:(r1*r2)
+        push!(w, rand(h))
+        push!(w_sums, sum(w[j]))
+    end
+
+    testSampleRuntime!(w, w_sums, FlexleSampler(wu), r1, r2)
+end
+
+function testStandardUpdateHost!(weights::Vector{Float64}, updates::Tuple{Vector{Int64}, Vector{Float64}}, sum::Float64)
+    i = updates[1]
+    v = updates[2]
+    for idx in eachindex(i)
+        sum -= weights[i[idx]]
+        weights[i[idx]] = v[idx]
+        sum += v[idx]
+    end
+    return sum
+end
+
+function testFlexleUpdateHost!(sampler::FlexleSampler, updates::Tuple{Vector{Int64}, Vector{Float64}})
+    i = updates[1]
+    v = updates[2]
+    for idx in eachindex(i)
+        updateFlexleSamplerWeight!(sampler, i[idx], v[idx])
+    end
+end
+
+function testUpdateHost(; h::Int64=10000, n::Int64=1000)
+    w = rand(h)
+    s = FlexleSampler(w)
+    c = sum(w)
+    updates = (rand(1:h, n), rand(n))
+
+    println("CDF update host:")    
+    display(@benchmark testStandardUpdateHost!($w, $updates, $c))
+
+    println("Flexle update host:")
+    display(@benchmark testFlexleUpdateHost!($s, $updates))
 end

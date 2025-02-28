@@ -20,6 +20,7 @@ TODO: Not debugged:
 ## 28 February 2025
 - Added missing `vertical_transmission_coefficient` to `PopulationType`, changed
 vertical transmission names and parameter structure to conform with other parameters
+- Code for generating data demonstrating `flexle.jl` functionality (CLM)
 
 ## 27 February 2025
 - Added `model.time`
