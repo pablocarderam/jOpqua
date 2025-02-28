@@ -21,6 +21,8 @@ const DEFAULT_RESPONSE_TYPE = ResponseType(
     0.0,
     (hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
     (hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
+    (hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
+    (hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
     SA[ # order defined in COEFFICIENTS
         (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
         (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,

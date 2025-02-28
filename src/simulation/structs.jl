@@ -20,6 +20,7 @@ struct PathogenType
     recombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
     verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
+    # acquireResponseUponClearanceCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
     coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
     # Each element takes seq argument, returns Float64
@@ -28,6 +29,10 @@ end
 struct ResponseType
     id::String
     inherit_response::Float64
+    inoculumCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}

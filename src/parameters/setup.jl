@@ -75,6 +75,10 @@ function newResponseType(
     id::String;
     template::ResponseType=DEFAULT_RESPONSE_TYPE,
     inherit_response::Union{Nothing,Float64}=nothing,
+    inoculumCoefficient::Union{Nothing,Function}=nothing,
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    verticalTransmissionCoefficient::Union{Nothing,Function}=nothing,
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     infectionCoefficient::Union{Nothing,Function}=nothing,
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     reactivityCoefficient::Union{Nothing,Function}=nothing,
@@ -110,6 +114,8 @@ function newResponseType(
 )
 
     isnothing(inherit_response) ? inherit_response = template.inherit_response : inherit_response = inherit_response
+    isnothing(inoculumCoefficient) ? inoculumCoefficient = template.inoculumCoefficient : inoculumCoefficient = inoculumCoefficient
+    isnothing(verticalTransmissionCoefficient) ? verticalTransmissionCoefficient = template.verticalTransmissionCoefficient : verticalTransmissionCoefficient = verticalTransmissionCoefficient
     isnothing(infectionCoefficient) ? infectionCoefficient = template.infectionCoefficient : infectionCoefficient = infectionCoefficient
     isnothing(reactivityCoefficient) ? reactivityCoefficient = template.reactivityCoefficient : reactivityCoefficient = reactivityCoefficient
 
@@ -141,6 +147,8 @@ function newResponseType(
     return ResponseType(
         id,
         inherit_response,
+        inoculumCoefficient,
+        verticalTransmissionCoefficient,
         infectionCoefficient,
         reactivityCoefficient,
         SA[ # order defined in COEFFICIENTS

@@ -3,6 +3,10 @@
 KNOWN ISSUES:
 
 TODO:
+- Create dictionaries that contain coefficient functions that do not correspond
+to events in the coefficient matrix but are still found in `PathogenType` and
+`ResponseType`, this will reduce the number of repeated functions we need to have
+in `immunity.jl` handling each one
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
@@ -21,6 +25,12 @@ TODO: Not debugged:
 - Added missing `vertical_transmission_coefficient` to `PopulationType`, changed
 vertical transmission names and parameter structure to conform with other parameters
 - Code for generating data demonstrating `flexle.jl` functionality (CLM)
+- Added variables to control impact of responses on inoculum and vertical
+transmission, but did not implement their use in the simulation: decided to create
+a new kind of dictionary that contains coefficient functions that do not correspond
+to events in the coefficient matrix but are still found in `PathogenType` and
+`ResponseType`, this will reduce the number of repeated functions we need to have
+in `immunity.jl` handling each one
 
 ## 27 February 2025
 - Added `model.time`
