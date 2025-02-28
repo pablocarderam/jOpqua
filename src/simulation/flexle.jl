@@ -23,7 +23,7 @@ end
 
 # Initialization
 
-function newFlexLevel(i::Int64, w::Float64)
+function FlexLevel(i::Int64, w::Float64)
     return FlexLevel(logBounds(w), w, w, [i])
 end
 
@@ -62,10 +62,11 @@ function levelIndex(w::Float64, u::Int64)
 end
 
 function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})  # TODO: rewrite to avoid iterating
-    for i in eachindex(levels)
-        (levels[i].bounds == bounds) && (return i)
-    end
-    return 0
+    # for i in eachindex(levels)
+    #     (levels[i].bounds == bounds) && (return i)
+    # end
+    idx = Int64(log2(levels[1].bounds[2]) - log2(bounds[1]))    # for speed, does not check if levels is empty; MUST call on non-empty levels
+    return idx > length(levels) ? 0 : idx
 end
 
 function getLevel(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
@@ -94,19 +95,23 @@ function inSampler(bounds::Tuple{Float64,Float64}, sampler::FlexleSampler)
     return (sampler.levels[begin].bounds[1] >= bounds[1]) && (bounds[1] >= sampler.levels[end].bounds[1])     # bounds between largest and smallest levels' bounds (inclusive)
 end
 
+function levelIsPopulated(level::FlexLevel)
+    return !isempty(level.indices)
+end
+
 # Maintenance methods
 
-function addToFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler)
+function addToFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; update_sampler_sum::Bool=true)
     push!(level.indices, i)
     w = sampler.weights[i]
     level.sum += w
-    sampler.sum += w
+    (update_sampler_sum) && (sampler.sum += w)
     if w > level.max
         level.max = w
     end
 end
 
-function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler)
+function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; update_sampler_sum::Bool=true)
     w = sampler.weights[i]
     len = length(level.indices)
     idx = findfirst(x -> x == i, level.indices)
@@ -115,11 +120,11 @@ function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler
         level.indices[idx] = last
     end
     level.sum -= w
-    sampler.sum -= w
-    if !levelisPopulated(level)
+    (update_sampler_sum) && (sampler.sum -= w)
+    if !levelIsPopulated(level)
         level.max = 0.0
     elseif w == level.max
-        level.max = maximum([sampler.weights[j] for j in level.indices]) # potential slowdown: maximum updated by searching the whole vector if max is removed, TODO: do this in single iteration over indices
+        level.max = maximum(i -> sampler.weights[i], level.indices) # potential slowdown: maximum updated by searching the whole vector if max is removed
     end
 end
 
@@ -152,10 +157,6 @@ function extendLevels!(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel}
     else
         throw("levels already contains FlexLevel of specified bounds")
     end
-end
-
-function levelIsPopulated(level::FlexLevel)
-    return !isempty(level.indices)
 end
 
 function trimTrailingLevels!(sampler::FlexleSampler)
@@ -284,7 +285,7 @@ function updateFlexleSamplerWeight!(sampler::FlexleSampler, i::Int64, w::Float64
     levels = sampler.levels
     if !iszero(w_old)
         from = getLevel(w_old, levels)
-        removeFromFlexLevel!(i, from, sampler)
+        removeFromFlexLevel!(i, from, sampler, update_sampler_sum=false)
     end
 
     # update weights vector - has to be done between removal and addition
@@ -297,8 +298,9 @@ function updateFlexleSamplerWeight!(sampler::FlexleSampler, i::Int64, w::Float64
             extendLevels!(bounds, levels)
         end
         to = getLevel(bounds, levels)
-        addToFlexLevel!(i, to, sampler)
+        addToFlexLevel!(i, to, sampler, update_sampler_sum=false)
     end
+    sampler.sum += w - w_old
 
     # trim excess levels (to save time, only if removed element from a level on the end)
     if !iszero(w_old) && (from === levels[begin] || from === levels[end]) && isempty(from.indices)
@@ -608,7 +610,7 @@ function testIndexSampling(level::FlexLevel, weights::Vector{Float64}, n::Int64)
     end
 
     for _ in 1:n
-        i = rejectionSample(level, weights)
+        i = rejectionSample(rand(), level, weights)
         d[i] += 1
     end
 
@@ -852,8 +854,8 @@ function testUpdateHost(; h::Int64=10000, n::Int64=1000)
     c = sum(w)
     updates = (rand(1:h, n), rand(n))
 
-    println("CDF update host:")    
-    display(@benchmark testStandardUpdateHost!($w, $updates, $c))
+    # println("CDF update host:")    
+    # display(@benchmark testStandardUpdateHost!($w, $updates, $c))
 
     println("Flexle update host:")
     display(@benchmark testFlexleUpdateHost!($s, $updates))

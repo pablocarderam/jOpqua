@@ -1,6 +1,5 @@
 # jOpqua Changelog
 
-<<<<<<< HEAD
 KNOWN ISSUES:
 - Individuals with immunity against a strain are not protected from coinfections
 with that strain?
@@ -22,6 +21,7 @@ TODO: Not debugged:
 
 ## 28 February 2025
 - Code for generating data demonstrating `flexle.jl` functionality (CLM)
+- `FlexleSampler` performance updates incl. single `sum` update (CLM)
 
 ## 27 February 2025
 - Added `model.time`
