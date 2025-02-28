@@ -682,10 +682,7 @@ function birth!(model::Model, rand_n::Float64)
 
                 for pathogen_idx in 1:length(parent.pathogens)
                     if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
-                        rand() < parent.pathogens[pathogen_idx].type.vertical_transmission *
-                                 parent.pathogens[pathogen_idx].type.verticalTransmission(
-                                     parent.pathogens[pathogen_idx].sequence
-                                 ) *
+                        rand() < parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
                                  parent.pathogen_fractions[pathogen_idx])
                         attemptInfection!(
                             parent.pathogens[pathogen_idx],

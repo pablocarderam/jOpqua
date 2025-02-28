@@ -7,7 +7,6 @@ const DEFAULT_PATHOGEN_TYPE = PathogenType(
     0.0,
     0.0,
     0.0,
-    0.0,
     g -> 1.0, g -> 1.0, g -> 1.0, g -> 1.0,
     SA[ # order defined in COEFFICIENTS
         g::String->1.0, g::String->1.0, g::String->1.0,
@@ -42,10 +41,12 @@ const DEFAULT_RESPONSE_TYPE = ResponseType(
 
 const DEFAULT_POPULATION_TYPE = PopulationType(
     "Default",
-    true, false,
+    true,
+    false,
     1.0,
     1.0,
     1.0,
+    0.0,
     0,
     "",
     0.0,
