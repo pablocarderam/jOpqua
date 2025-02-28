@@ -15,13 +15,12 @@ struct PathogenType
     mean_mutations_per_replication::Float64
     mean_recombination_crossovers::Float64
 
-    vertical_transmission::Float64
-
     inoculumCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
     mutationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
     recombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
-    verticalTransmission::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
+    verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
+    # acquireResponseUponClearanceCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
     coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
     # Each element takes seq argument, returns Float64
@@ -30,6 +29,10 @@ end
 struct ResponseType
     id::String
     inherit_response::Float64
+    inoculumCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
+    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
@@ -51,6 +54,7 @@ struct Pathogen
     mean_effective_inoculum::Float64
     mean_mutations_per_replication::Float64
     mean_recombination_crossovers::Float64
+    vertical_transmission_coefficient::Float64
     type::PathogenType
 end
 
@@ -109,6 +113,7 @@ struct PopulationType
     inoculum_coefficient::Float64
     mutation_coefficient::Float64
     recombination_coefficient::Float64
+    vertical_transmission_coefficient::Float64
 
     host_num_loci::Int64
     host_possible_alleles::String

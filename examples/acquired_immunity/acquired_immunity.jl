@@ -24,13 +24,14 @@ function run(seed::Int64, t_vec::Vector{Float64})
         num_loci=4,
         possible_alleles="AB",
         mean_effective_inoculum=1.0,
-        mean_mutations_per_replication=0.001,
+        mean_mutations_per_replication=0.00003,
         contactCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
         receiveContactCoefficient=s::String -> 0.0,
     )
 
     res_type = jOpqua.newResponseType(
         "res_type",
+        reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 1.0 : 0.0,
         infectionCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
         clearanceSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 1.0e3 : 1.0,
         # responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
@@ -56,7 +57,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         ),
     )
 
-    num_hosts = 10000
+    num_hosts = 50000
     num_infected = Int(num_hosts * 0.05)
     host_genome = ""
 
@@ -109,4 +110,4 @@ function run(seed::Int64, t_vec::Vector{Float64})
 end
 
 run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:0.20:150.0))
+@time run(0, collect(0.0:0.20:100.0))

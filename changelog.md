@@ -1,10 +1,12 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-- Individuals with immunity against a strain are not protected from coinfections
-with that strain?
 
 TODO:
+- Create dictionaries that contain coefficient functions that do not correspond
+to events in the coefficient matrix but are still found in `PathogenType` and
+`ResponseType`, this will reduce the number of repeated functions we need to have
+in `immunity.jl` handling each one
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
@@ -20,8 +22,16 @@ TODO: Not debugged:
 - Transition
 
 ## 28 February 2025
+- Added missing `vertical_transmission_coefficient` to `PopulationType`, changed
+vertical transmission names and parameter structure to conform with other parameters
 - Code for generating data demonstrating `flexle.jl` functionality (CLM)
-- `FlexleSampler` performance updates incl. single `sum` update (CLM)
+- `FlexleSampler` weight update performance improvements incl. single `sum` update (CLM)
+- Added variables to control impact of responses on inoculum and vertical
+transmission, but did not implement their use in the simulation: decided to create
+a new kind of dictionary that contains coefficient functions that do not correspond
+to events in the coefficient matrix but are still found in `PathogenType` and
+`ResponseType`, this will reduce the number of repeated functions we need to have
+in `immunity.jl` handling each one
 
 ## 27 February 2025
 - Added `model.time`
@@ -30,6 +40,10 @@ TODO: Not debugged:
 - Added option for Newick to show real time rather than Hamming distance
 - Added `approxZero`, fixed bug in floating point error correction
 - Fixed missing data error in `saveComposition`
+
+I thought that individuals with immunity against a strain were not being protected
+from coinfections with that strain, but that was only because we weren't specifying
+an adequate `reactivityCoefficient` function.
 
 ## 26 February 2025
 - Fixed bug where changes in contact receive weights were not correctly
