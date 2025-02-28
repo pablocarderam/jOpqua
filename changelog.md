@@ -1,5 +1,8 @@
 # jOpqua Changelog
 
+## 28 February 2025
+- Code for generating data demonstrating `flexle.jl` functionality
+
 ## 24 February 2025
 - Write test function for `flexle.jl` user functions (CLM)
 - Fix `flexle.jl` bugs mostly involving improper handling of zero-weight entries,
