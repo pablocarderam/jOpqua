@@ -6,6 +6,8 @@ using BenchmarkTools
 
 # Flexible binary level rejection sampling
 
+const EXPONENT_MASK_FLOAT64::Int64 = 0x7FF0000000000000
+
 # Structs
 
 mutable struct FlexLevel
@@ -30,13 +32,17 @@ end
 
 # Utility methods
 
+import Base.&
+
+Base.:&(f::Float64, i::Int64) = reinterpret(Float64, (reinterpret(Int64, f) & i))
+
 """
     logBounds(n)
 
 Returns a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
 """
 function logBounds(n::Float64)
-    l = 2.0^(floor(log2(n)))
+    l = n & EXPONENT_MASK_FLOAT64
     return l, l*2.0
 end
 
@@ -62,12 +68,19 @@ function levelIndex(w::Float64, u::Int64)
     return iszero(w) ? 0 : u - Int64(floor(log2(w)))
 end
 
-function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})  # TODO: rewrite to avoid iterating
-    # for i in eachindex(levels)
-    #     (levels[i].bounds == bounds) && (return i)
-    # end
-    idx = Int64(log2(levels[1].bounds[2] / bounds[1]))    # for speed, does not check if levels is empty; MUST call on non-empty levels
-    return idx > length(levels) ? 0 : idx
+function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
+    for i in eachindex(levels)  # iterative approach empirically ~25% faster than calculating index mathematically using log2
+        (levels[i].bounds == bounds) && (return i)
+    end
+    return 0
+end
+
+function levelIndex(w::Float64, levels::Vector{FlexLevel})
+    for i in eachindex(levels)
+        b = levels[i].bounds
+        (b[1] <= w) && (w < b[2]) && (return i)
+    end
+    return 0
 end
 
 function getLevel(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
@@ -76,7 +89,8 @@ function getLevel(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
 end
 
 function getLevel(w::Float64, levels::Vector{FlexLevel})
-    return getLevel(logBounds(w), levels)
+    l = levelIndex(w, levels)
+    return l==0 ? nothing : levels[l]
 end
 
 function logDist(a::Float64, b::Float64)
@@ -125,7 +139,7 @@ end
 function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; update_sampler_sum::Bool=true)
     w::Float64 = sampler.weights[i]
     len = length(level.indices)
-    idx = level.index_positions[i] # findfirst(x -> x == i, level.indices)
+    idx = level.index_positions[i] 
     last = pop!(level.indices)
     delete!(level.index_positions, i)
     if idx != len   # take last index and put it in the place of the one to be removed, unless the last one is itself to be removed
@@ -883,6 +897,7 @@ function testFlexleUpdateHost!(sampler::FlexleSampler, updates::Tuple{Vector{Int
     for idx in eachindex(i)
         updateFlexleSamplerWeight!(sampler, i[idx], v[idx])
     end
+    # verifyFlexleSampler(sampler)
 end
 
 function testUpdateHost(; h::Int64=10000, n::Int64=1000, seed=0)
@@ -892,8 +907,8 @@ function testUpdateHost(; h::Int64=10000, n::Int64=1000, seed=0)
     c = sum(w)
     updates = (rand(1:h, n), rand(n))
 
-    # println("CDF update host:")    
-    # display(@benchmark testStandardUpdateHost!($w, $updates, $c))
+    println("CDF update host:")    
+    display(@benchmark testStandardUpdateHost!($w, $updates, $c))
 
     println("Flexle update host:")
     display(@benchmark testFlexleUpdateHost!($s, $updates))

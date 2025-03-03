@@ -21,6 +21,10 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 03 March 2025
+- Additional x2 weight update performance improvement via: `Float64` bit manipulation
+to calculate log bounds; and iterative approach to `levelIndex` (CLM)
+
 ## 28 February 2025
 - Added missing `vertical_transmission_coefficient` to `PopulationType`, changed
 vertical transmission names and parameter structure to conform with other parameters
