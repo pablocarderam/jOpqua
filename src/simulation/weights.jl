@@ -253,7 +253,7 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
         if (
             prev != population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] &&
             population.parameters.base_coefficients[weight] != 0.0 &&
-            weight < NUM_COEFFICIENTS
+            weight < INTRAHOST_FITNESS
         )
 
             propagateWeightReceiveChanges!(
@@ -385,7 +385,7 @@ function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, popula
         population.parameters.base_coefficients[evt]
     )
 
-    if evt < NUM_COEFFICIENTS
+    if evt < INTRAHOST_FITNESS
         propagateWeightReceiveChanges!(population.parameters.base_coefficients[evt] * change, population, evt, model)
     end
 end

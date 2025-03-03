@@ -10,10 +10,10 @@ function newPathogenType(
     mean_effective_inoculum::Union{Nothing,Float64}=nothing,
     mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
     mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
-    inoculumCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+    inoculumCoefficient_::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
     mutationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
     recombinationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
-    verticalTransmissionCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+    verticalTransmissionCoefficient_::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
 
     # Each element takes seq argument, returns Float64
     mutantEstablishmentCoefficient::Union{Nothing,Function}=nothing,
@@ -28,6 +28,15 @@ function newPathogenType(
     receiveTransitionCoefficient::Union{Nothing,Function}=nothing,
     receiveContactCoefficient::Union{Nothing,Function}=nothing,
     intrahostFitnessCoefficient::Union{Nothing,Function}=nothing,
+    mutationsUponInfectionCoefficient::Union{Nothing,Function}=nothing,
+    recombinationsUponInfectionCoefficient::Union{Nothing,Function}=nothing,
+    inoculumCoefficient::Union{Nothing,Function}=nothing,
+    transmissionEfficiencyCoefficient::Union{Nothing,Function}=nothing,
+    verticalTransmissionCoefficient::Union{Nothing,Function}=nothing,
+    responseAcquisitionUponClearanceCoefficient::Union{Nothing,Function}=nothing,
+    responseInheritanceCoefficient::Union{Nothing,Function}=nothing,
+    hostMutationsUponBirthCoefficient::Union{Nothing,Function}=nothing,
+    hostRecombinationsUponBirthCoefficient::Union{Nothing,Function}=nothing,
 )
 
     isnothing(num_loci) ? num_loci = template.num_loci : num_loci = num_loci
@@ -52,6 +61,15 @@ function newPathogenType(
     isnothing(receiveTransitionCoefficient) ? receiveTransitionCoefficient = template.coefficient_functions[RECEIVE_TRANSITION] : receiveTransitionCoefficient = receiveTransitionCoefficient
     isnothing(receiveContactCoefficient) ? receiveContactCoefficient = template.coefficient_functions[RECEIVE_CONTACT] : receiveContactCoefficient = receiveContactCoefficient
     isnothing(intrahostFitnessCoefficient) ? intrahostFitnessCoefficient = template.coefficient_functions[INTRAHOST_FITNESS] : intrahostFitnessCoefficient = intrahostFitnessCoefficient
+    isnothing(mutationsUponInfectionCoefficient) ? mutationsUponInfectionCoefficient = template.coefficient_functions[MUTATIONS_UPON_INFECTION] : mutationsUponInfectionCoefficient = mutationsUponInfectionCoefficient
+    isnothing(recombinationsUponInfectionCoefficient) ? recombinationsUponInfectionCoefficient = template.coefficient_functions[RECOMBINATIONS_UPON_INFECTION] : recombinationsUponInfectionCoefficient = recombinationsUponInfectionCoefficient
+    isnothing(inoculumCoefficient) ? inoculumCoefficient = template.coefficient_functions[INOCULUM] : inoculumCoefficient = inoculumCoefficient
+    isnothing(transmissionEfficiencyCoefficient) ? transmissionEfficiencyCoefficient = template.coefficient_functions[TRANSMISSION_EFFICIENCY] : transmissionEfficiencyCoefficient = transmissionEfficiencyCoefficient
+    isnothing(verticalTransmissionCoefficient) ? verticalTransmissionCoefficient = template.coefficient_functions[VERTICAL_TRANSMISSION] : verticalTransmissionCoefficient = verticalTransmissionCoefficient
+    isnothing(responseAcquisitionUponClearanceCoefficient) ? responseAcquisitionUponClearanceCoefficient = template.coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceCoefficient = responseAcquisitionUponClearanceCoefficient
+    isnothing(responseInheritanceCoefficient) ? responseInheritanceCoefficient = template.coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceCoefficient = responseInheritanceCoefficient
+    isnothing(hostMutationsUponBirthCoefficient) ? hostMutationsUponBirthCoefficient = template.coefficient_functions[HOST_MUTATIONS_UPON_BIRTH] : hostMutationsUponBirthCoefficient = hostMutationsUponBirthCoefficient
+    isnothing(hostRecombinationsUponBirthCoefficient) ? hostRecombinationsUponBirthCoefficient = template.coefficient_functions[HOST_RECOMBINATIONS_UPON_BIRTH] : hostRecombinationsUponBirthCoefficient = hostRecombinationsUponBirthCoefficient
 
     return PathogenType(
         id,
@@ -66,7 +84,10 @@ function newPathogenType(
             mutantEstablishmentCoefficient, clearanceCoefficient, responseAcquisitionCoefficient,
             recombinantEstablishmentCoefficient, contactCoefficient, responseLossCoefficient,
             birthCoefficient, deathCoefficient, transitionCoefficient,
-            receiveTransitionCoefficient, receiveContactCoefficient, intrahostFitnessCoefficient
+            receiveTransitionCoefficient, receiveContactCoefficient, intrahostFitnessCoefficient,
+            mutationsUponInfectionCoefficient, recombinationsUponInfectionCoefficient, inoculumCoefficient,
+            transmissionEfficiencyCoefficient, verticalTransmissionCoefficient, responseAcquisitionUponClearanceCoefficient,
+            responseInheritanceCoefficient, hostMutationsUponBirthCoefficient, hostRecombinationsUponBirthCoefficient,
         ],
     )
 end
@@ -97,6 +118,15 @@ function newResponseType(
     receiveTransitionStaticCoefficient::Union{Nothing,Function}=nothing,
     receiveContactStaticCoefficient::Union{Nothing,Function}=nothing,
     intrahostFitnessStaticCoefficient::Union{Nothing,Function}=nothing,
+    mutationsUponInfectionStaticCoefficient::Union{Nothing,Function}=nothing,
+    recombinationsUponInfectionStaticCoefficient::Union{Nothing,Function}=nothing,
+    inoculumStaticCoefficient::Union{Nothing,Function}=nothing,
+    transmissionEfficiencyStaticCoefficient::Union{Nothing,Function}=nothing,
+    verticalTransmissionStaticCoefficient::Union{Nothing,Function}=nothing,
+    responseAcquisitionUponClearanceStaticCoefficient::Union{Nothing,Function}=nothing,
+    responseInheritanceStaticCoefficient::Union{Nothing,Function}=nothing,
+    hostMutationsUponBirthStaticCoefficient::Union{Nothing,Function}=nothing,
+    hostRecombinationsUponBirthStaticCoefficient::Union{Nothing,Function}=nothing,
 
     # Each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     mutantEstablishmentSpecificCoefficient::Union{Nothing,Function}=nothing,
@@ -111,6 +141,15 @@ function newResponseType(
     receiveTransitionSpecificCoefficient::Union{Nothing,Function}=nothing,
     receiveContactSpecificCoefficient::Union{Nothing,Function}=nothing,
     intrahostFitnessSpecificCoefficient::Union{Nothing,Function}=nothing,
+    mutationsUponInfectionSpecificCoefficient::Union{Nothing,Function}=nothing,
+    recombinationsUponInfectionSpecificCoefficient::Union{Nothing,Function}=nothing,
+    inoculumSpecificCoefficient::Union{Nothing,Function}=nothing,
+    transmissionEfficiencySpecificCoefficient::Union{Nothing,Function}=nothing,
+    verticalTransmissionSpecificCoefficient::Union{Nothing,Function}=nothing,
+    responseAcquisitionUponClearanceSpecificCoefficient::Union{Nothing,Function}=nothing,
+    responseInheritanceSpecificCoefficient::Union{Nothing,Function}=nothing,
+    hostMutationsUponBirthSpecificCoefficient::Union{Nothing,Function}=nothing,
+    hostRecombinationsUponBirthSpecificCoefficient::Union{Nothing,Function}=nothing,
 )
 
     isnothing(inherit_response) ? inherit_response = template.inherit_response : inherit_response = inherit_response
@@ -131,6 +170,16 @@ function newResponseType(
     isnothing(receiveTransitionStaticCoefficient) ? receiveTransitionStaticCoefficient = template.static_coefficient_functions[RECEIVE_TRANSITION] : receiveTransitionStaticCoefficient = receiveTransitionStaticCoefficient
     isnothing(receiveContactStaticCoefficient) ? receiveContactStaticCoefficient = template.static_coefficient_functions[RECEIVE_CONTACT] : receiveContactStaticCoefficient = receiveContactStaticCoefficient
     isnothing(intrahostFitnessStaticCoefficient) ? intrahostFitnessStaticCoefficient = template.static_coefficient_functions[INTRAHOST_FITNESS] : intrahostFitnessStaticCoefficient = intrahostFitnessStaticCoefficient
+    isnothing(mutationsUponInfectionStaticCoefficient) ? mutationsUponInfectionStaticCoefficient = template.static_coefficient_functions[MUTATIONS_UPON_INFECTION] : mutationsUponInfectionStaticCoefficient = mutationsUponInfectionStaticCoefficient
+    isnothing(recombinationsUponInfectionStaticCoefficient) ? recombinationsUponInfectionStaticCoefficient = template.static_coefficient_functions[RECOMBINATIONS_UPON_INFECTION] : recombinationsUponInfectionStaticCoefficient = recombinationsUponInfectionStaticCoefficient
+    isnothing(inoculumStaticCoefficient) ? inoculumStaticCoefficient = template.static_coefficient_functions[INOCULUM] : inoculumStaticCoefficient = inoculumStaticCoefficient
+    isnothing(transmissionEfficiencyStaticCoefficient) ? transmissionEfficiencyStaticCoefficient = template.static_coefficient_functions[TRANSMISSION_EFFICIENCY] : transmissionEfficiencyStaticCoefficient = transmissionEfficiencyStaticCoefficient
+    isnothing(verticalTransmissionStaticCoefficient) ? verticalTransmissionStaticCoefficient = template.static_coefficient_functions[VERTICAL_TRANSMISSION] : verticalTransmissionStaticCoefficient = verticalTransmissionStaticCoefficient
+    isnothing(responseAcquisitionUponClearanceStaticCoefficient) ? responseAcquisitionUponClearanceStaticCoefficient = template.static_coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceStaticCoefficient = responseAcquisitionUponClearanceStaticCoefficient
+    isnothing(responseInheritanceStaticCoefficient) ? responseInheritanceStaticCoefficient = template.static_coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceStaticCoefficient = responseInheritanceStaticCoefficient
+    isnothing(hostMutationsUponBirthStaticCoefficient) ? hostMutationsUponBirthStaticCoefficient = template.static_coefficient_functions[HOST_MUTATIONS_UPON_BIRTH] : hostMutationsUponBirthStaticCoefficient = hostMutationsUponBirthStaticCoefficient
+    isnothing(hostRecombinationsUponBirthStaticCoefficient) ? hostRecombinationsUponBirthStaticCoefficient = template.static_coefficient_functions[HOST_RECOMBINATIONS_UPON_BIRTH] : hostRecombinationsUponBirthStaticCoefficient = hostRecombinationsUponBirthStaticCoefficient
+
     isnothing(mutantEstablishmentSpecificCoefficient) ? mutantEstablishmentSpecificCoefficient = template.specific_coefficient_functions[MUTANT_ESTABLISHMENT] : mutantEstablishmentSpecificCoefficient = mutantEstablishmentSpecificCoefficient
     isnothing(clearanceSpecificCoefficient) ? clearanceSpecificCoefficient = template.specific_coefficient_functions[CLEARANCE] : clearanceSpecificCoefficient = clearanceSpecificCoefficient
     isnothing(responseAcquisitionSpecificCoefficient) ? responseAcquisitionSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionSpecificCoefficient = responseAcquisitionSpecificCoefficient
@@ -143,6 +192,15 @@ function newResponseType(
     isnothing(receiveTransitionSpecificCoefficient) ? receiveTransitionSpecificCoefficient = template.specific_coefficient_functions[RECEIVE_TRANSITION] : receiveTransitionSpecificCoefficient = receiveTransitionSpecificCoefficient
     isnothing(receiveContactSpecificCoefficient) ? receiveContactSpecificCoefficient = template.specific_coefficient_functions[RECEIVE_CONTACT] : receiveContactSpecificCoefficient = receiveContactSpecificCoefficient
     isnothing(intrahostFitnessSpecificCoefficient) ? intrahostFitnessSpecificCoefficient = template.specific_coefficient_functions[INTRAHOST_FITNESS] : intrahostFitnessSpecificCoefficient = intrahostFitnessSpecificCoefficient
+    isnothing(mutationsUponInfectionSpecificCoefficient) ? mutationsUponInfectionSpecificCoefficient = template.specific_coefficient_functions[MUTATIONS_UPON_INFECTION] : mutationsUponInfectionSpecificCoefficient = mutationsUponInfectionSpecificCoefficient
+    isnothing(recombinationsUponInfectionSpecificCoefficient) ? recombinationsUponInfectionSpecificCoefficient = template.specific_coefficient_functions[RECOMBINATIONS_UPON_INFECTION] : recombinationsUponInfectionSpecificCoefficient = recombinationsUponInfectionSpecificCoefficient
+    isnothing(inoculumSpecificCoefficient) ? inoculumSpecificCoefficient = template.specific_coefficient_functions[INOCULUM] : inoculumSpecificCoefficient = inoculumSpecificCoefficient
+    isnothing(transmissionEfficiencySpecificCoefficient) ? transmissionEfficiencySpecificCoefficient = template.specific_coefficient_functions[TRANSMISSION_EFFICIENCY] : transmissionEfficiencySpecificCoefficient = transmissionEfficiencySpecificCoefficient
+    isnothing(verticalTransmissionSpecificCoefficient) ? verticalTransmissionSpecificCoefficient = template.specific_coefficient_functions[VERTICAL_TRANSMISSION] : verticalTransmissionSpecificCoefficient = verticalTransmissionSpecificCoefficient
+    isnothing(responseAcquisitionUponClearanceSpecificCoefficient) ? responseAcquisitionUponClearanceSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceSpecificCoefficient = responseAcquisitionUponClearanceSpecificCoefficient
+    isnothing(responseInheritanceSpecificCoefficient) ? responseInheritanceSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceSpecificCoefficient = responseInheritanceSpecificCoefficient
+    isnothing(hostMutationsUponBirthSpecificCoefficient) ? hostMutationsUponBirthSpecificCoefficient = template.specific_coefficient_functions[HOST_MUTATIONS_UPON_BIRTH] : hostMutationsUponBirthSpecificCoefficient = hostMutationsUponBirthSpecificCoefficient
+    isnothing(hostRecombinationsUponBirthSpecificCoefficient) ? hostRecombinationsUponBirthSpecificCoefficient = template.specific_coefficient_functions[HOST_RECOMBINATIONS_UPON_BIRTH] : hostRecombinationsUponBirthSpecificCoefficient = hostRecombinationsUponBirthSpecificCoefficient
 
     return ResponseType(
         id,
@@ -155,13 +213,19 @@ function newResponseType(
             mutantEstablishmentStaticCoefficient, clearanceStaticCoefficient, responseAcquisitionStaticCoefficient,
             recombinantEstablishmentStaticCoefficient, contactStaticCoefficient, responseLossStaticCoefficient,
             birthStaticCoefficient, deathStaticCoefficient, transitionStaticCoefficient,
-            receiveTransitionStaticCoefficient, receiveContactStaticCoefficient, intrahostFitnessStaticCoefficient
+            receiveTransitionStaticCoefficient, receiveContactStaticCoefficient, intrahostFitnessStaticCoefficient,
+            mutationsUponInfectionStaticCoefficient, recombinationsUponInfectionStaticCoefficient, inoculumStaticCoefficient,
+            transmissionEfficiencyStaticCoefficient, verticalTransmissionStaticCoefficient, responseAcquisitionUponClearanceStaticCoefficient,
+            responseInheritanceStaticCoefficient, hostMutationsUponBirthStaticCoefficient, hostRecombinationsUponBirthStaticCoefficient,
         ],
         SA[ # order defined in COEFFICIENTS
             mutantEstablishmentSpecificCoefficient, clearanceSpecificCoefficient, responseAcquisitionSpecificCoefficient,
             recombinantEstablishmentSpecificCoefficient, contactSpecificCoefficient, responseLossSpecificCoefficient,
             birthSpecificCoefficient, deathSpecificCoefficient, transitionSpecificCoefficient,
-            receiveTransitionSpecificCoefficient, receiveContactSpecificCoefficient, intrahostFitnessSpecificCoefficient
+            receiveTransitionSpecificCoefficient, receiveContactSpecificCoefficient, intrahostFitnessSpecificCoefficient,
+            mutationsUponInfectionSpecificCoefficient, recombinationsUponInfectionSpecificCoefficient, inoculumSpecificCoefficient,
+            transmissionEfficiencySpecificCoefficient, verticalTransmissionSpecificCoefficient, responseAcquisitionUponClearanceSpecificCoefficient,
+            responseInheritanceSpecificCoefficient, hostMutationsUponBirthSpecificCoefficient, hostRecombinationsUponBirthSpecificCoefficient,
         ],
     )
 end
@@ -171,10 +235,10 @@ function newPopulationType(
     template::PopulationType=DEFAULT_POPULATION_TYPE,
     constant_contact_density::Union{Nothing,Bool}=nothing,
     constant_transition_density::Union{Nothing,Bool}=nothing,
-    inoculum_coefficient::Union{Nothing,Float64}=nothing,
+    inoculum_coefficient_::Union{Nothing,Float64}=nothing,
     mutation_coefficient::Union{Nothing,Float64}=nothing,
     recombination_coefficient::Union{Nothing,Float64}=nothing,
-    vertical_transmission_coefficient::Union{Nothing,Float64}=nothing,
+    vertical_transmission_coefficient_::Union{Nothing,Float64}=nothing,
     host_num_loci::Union{Nothing,Int64}=nothing,
     host_possible_alleles::Union{Nothing,String}=nothing,
     host_mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
@@ -194,6 +258,16 @@ function newPopulationType(
     birth_coefficient::Union{Nothing,Float64}=nothing,
     death_coefficient::Union{Nothing,Float64}=nothing,
     transition_coefficient::Union{Nothing,Float64}=nothing,
+    intrahost_fitness_coefficient::Union{Nothing,Float64}=nothing,
+    mutations_upon_infection_coefficient::Union{Nothing,Float64}=nothing,
+    recombinations_upon_infection_coefficient::Union{Nothing,Float64}=nothing,
+    inoculum_coefficient::Union{Nothing,Float64}=nothing,
+    transmission_efficiency_coefficient::Union{Nothing,Float64}=nothing,
+    vertical_transmission_coefficient::Union{Nothing,Float64}=nothing,
+    response_acquisition_upon_clearance_coefficient::Union{Nothing,Float64}=nothing,
+    response_inheritance_coefficient::Union{Nothing,Float64}=nothing,
+    host_mutations_upon_birth_coefficient::Union{Nothing,Float64}=nothing,
+    host_recombinations_upon_birth_coefficient::Union{Nothing,Float64}=nothing,
 
     # Receive coefficients
     receive_transition_coefficient::Union{Nothing,Float64}=nothing,
@@ -245,6 +319,16 @@ function newPopulationType(
     isnothing(transition_coefficient) ? transition_coefficient = template.base_coefficients[TRANSITION] : transition_coefficient = transition_coefficient
     isnothing(receive_transition_coefficient) ? receive_transition_coefficient = template.base_coefficients[RECEIVE_TRANSITION] : receive_transition_coefficient = receive_transition_coefficient
     isnothing(receive_contact_coefficient) ? receive_contact_coefficient = template.base_coefficients[RECEIVE_CONTACT] : receive_contact_coefficient = receive_contact_coefficient
+    isnothing(intrahost_fitness_coefficient) ? intrahost_fitness_coefficient = template.base_coefficients[INTRAHOST_FITNESS] : intrahost_fitness_coefficient = intrahost_fitness_coefficient
+    isnothing(mutations_upon_infection_coefficient) ? mutations_upon_infection_coefficient = template.base_coefficients[MUTATIONS_UPON_INFECTION] : mutations_upon_infection_coefficient = mutations_upon_infection_coefficient
+    isnothing(recombinations_upon_infection_coefficient) ? recombinations_upon_infection_coefficient = template.base_coefficients[RECOMBINATIONS_UPON_INFECTION] : recombinations_upon_infection_coefficient = recombinations_upon_infection_coefficient
+    isnothing(inoculum_coefficient) ? inoculum_coefficient = template.base_coefficients[INOCULUM] : inoculum_coefficient = inoculum_coefficient
+    isnothing(transmission_efficiency_coefficient) ? transmission_efficiency_coefficient = template.base_coefficients[TRANSMISSION_EFFICIENCY] : transmission_efficiency_coefficient = transmission_efficiency_coefficient
+    isnothing(vertical_transmission_coefficient) ? vertical_transmission_coefficient = template.base_coefficients[VERTICAL_TRANSMISSION] : vertical_transmission_coefficient = vertical_transmission_coefficient
+    isnothing(response_acquisition_upon_clearance_coefficient) ? response_acquisition_upon_clearance_coefficient = template.base_coefficients[RESPONSE_ACQUISITION_UPON_CLEARANCE] : response_acquisition_upon_clearance_coefficient = response_acquisition_upon_clearance_coefficient
+    isnothing(response_inheritance_coefficient) ? response_inheritance_coefficient = template.base_coefficients[RESPONSE_INHERITANCE] : response_inheritance_coefficient = response_inheritance_coefficient
+    isnothing(host_mutations_upon_birth_coefficient) ? host_mutations_upon_birth_coefficient = template.base_coefficients[HOST_MUTATIONS_UPON_BIRTH] : host_mutations_upon_birth_coefficient = host_mutations_upon_birth_coefficient
+    isnothing(host_recombinations_upon_birth_coefficient) ? host_recombinations_upon_birth_coefficient = template.base_coefficients[HOST_RECOMBINATIONS_UPON_BIRTH] : host_recombinations_upon_birth_coefficient = host_recombinations_upon_birth_coefficient
 
     isnothing(pathogenFractions) ? pathogenFractions = template.pathogenFractions : pathogenFractions = pathogenFractions
     isnothing(weightedResponse) ? weightedResponse = template.weightedResponse : weightedResponse = weightedResponse
@@ -273,7 +357,10 @@ function newPopulationType(
             mutant_establishment_coefficient, clearance_coefficient, response_acquisition_coefficient,
             recombinant_establishment_coefficient, contact_coefficient, response_loss_coefficient,
             birth_coefficient, death_coefficient, transition_coefficient,
-            receive_transition_coefficient, receive_contact_coefficient
+            receive_transition_coefficient, receive_contact_coefficient, intrahost_fitness_coefficient,
+            mutations_upon_infection_coefficient, recombinations_upon_infection_coefficient, inoculum_coefficient,
+            transmission_efficiency_coefficient, vertical_transmission_coefficient, response_acquisition_upon_clearance_coefficient,
+            response_inheritance_coefficient, host_mutations_upon_birth_coefficient, host_recombinations_upon_birth_coefficient,
         ],
         pathogenFractions,
         weightedResponse,

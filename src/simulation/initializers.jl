@@ -71,9 +71,9 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         Dict{String,Pathogen}(), Dict{Tuple{String,String,String,String},Response}(),
         Vector{Host}(undef, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
-        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
+        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
-        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
+        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS, 0),
         0.0, 0.0,
         zeros(Float64, length(model.populations)),
         zeros(Float64, length(model.populations)),
@@ -81,7 +81,7 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))
-    model.population_weights_receive = catCol(model.population_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
+    model.population_weights_receive = catCol(model.population_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS))
 
     for pop in model.populations
         push!(pop.population_contact_coefficients, 0.0)
@@ -114,8 +114,8 @@ function newModel()
         Vector{Population}(undef, 0),
         Dict{String,Int64}(),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
-        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS - 1, 0),
-        zeros(SVector{NUM_CHOICE_MODIFIERS - 1,Float64}),
+        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS, 0),
+        zeros(SVector{NUM_CHOICE_MODIFIERS,Float64}),
         Matrix{Float64}(undef, 0, 0),
         Matrix{Float64}(undef, 0, 0),
         Vector{Float64}(undef, 0),

@@ -3,10 +3,17 @@
 KNOWN ISSUES:
 
 TODO:
-- Create dictionaries that contain coefficient functions that do not correspond
-to events in the coefficient matrix but are still found in `PathogenType` and
-`ResponseType`, this will reduce the number of repeated functions we need to have
-in `immunity.jl` handling each one
+- Create `HostType` struct to house `Host`-specific parameters
+- Organize non-sampling coefficients and their functions into matrices and
+vectors
+- Rename infection probability to transmission efficiency
+- Implement non-sampling coefficient propagation
+- Rename `weightedResponse` to `weightedInteraction`
+- Incorporate static and interaction general coefficients of `Pathogen` and
+`Response` entities into sampling weight propagation from the `Pathogen` and
+`Response` level to the `Host` level
+- Incorporate static general coefficients of `Host` entities into sampling
+weight propagation from the `Host` level to the `Population` level
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
@@ -21,20 +28,137 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 2 March 2025
+- Corrected a couple references from to `NUM_COEFFICIENTS` for
+`INTRAHOST_FITNESS`
+- Added new coefficients to hierarchy matrices in preparation of overhaul to
+non-sampling variables and sub-events
+
+## 1 March 2025
+Some conceptual simulation structure advances:
+
+An integral part of jOpqua simulations are the myriad of variables that affect
+the course of the simulation based on the sequences of the `Pathogen`, `Host`
+and `Response` events involved. These variables include numerical values such
+as coefficients, weights, rates, probabilities, and probability distribution
+parameters, as well as the sequence-evaluating functions that define those
+parameters. These values and their respective functions can be classified into
+two categories:
+
+1. Those that affect event rates and determine sampling weights of entities
+participating in those events ("sampling variables")
+2. Those that determine the probabilities of "conditional sub-events" that may
+be triggered when a main simulation event happens ("non-sampling variables")
+
+The first category of values and functions must be fully computed at all times
+in order to accurately determine the next event to be carried out and the
+entities participating in it. This is why all entities in the hierarchy contain
+matrices in which `Pathogen`, `Response`, `Host`, and `Population` weights are
+ordered in a way such that they can be used to sample the corresponding entity.
+Changes in these values are propagated up the hierarchy according to propagation
+functions that incorporate relevant factors to be multiplied as you move up the
+hierarchy.
+
+The second category of variables do not modify the rates of events or the weights
+used to sample entities in the simulation. Therefore, there is no need to
+calculate the weights of individual entities for sampling. Furthermore, the exact
+values of the probabilities and distribution parameters involved do not require
+being fully computed and can be calculated individually on the fly as they become
+needed. This may be more efficient than storing all the computed coefficients and
+probabilities/distribution parameters, and then propagating changes to all
+affected coefficients and probabilities whenever an entity changes, as done with
+sampling variables. However, this is only true as long as the rate at which events
+involving the same entities are sampled multiple times with no change in the
+entities is very low (a reasonable assumption most of the time, I would argue).
+Additionally, it requires less memory and is more straightforward to implement.
+Thus, these coefficient functions will be stored in static vectors (could be
+dictionaries since the order doesn't matter, but static vectors should
+theoretically improve performance) and a general, full calculation function
+computes the resulting probability or distribution parameter based on all the
+involved coefficients and values. For each non-sampling probability or
+distribution parameter computed, these coefficients and values include:
+
+- Base probability or distribution parameter value set at the `PopulationType`
+level (just one factor stored in `PopulationType`)
+- Static, specific coefficients calculated based on a single sequence at the
+`Pathogen`, `Response`, and `Host` level using functions defined in
+`PathogenType`, `ResponseType`, and `HostType`, respectively, and involving
+only the specific entities (including `Host` container) involved in the event
+(one factor per entity involved, stored in the corresponding `Pathogen`,
+`Response`, or `Host`)
+- Static, general coefficients calculated based on a single sequence at the
+`Pathogen`, `Response`, and `Host` level using functions defined in
+`PathogenType`, `ResponseType`, and `HostType`, respectively (one factor,
+stored at the `Host` or `Population` levels for `Pathogen`/`Response` and
+`Host` level aggregation, respectively, aggregated from the list of
+coefficients of each entity present in the same `Host` based on
+`pathogenFraction` for pathogens or `responseAggregate`--which by default is
+the total product--for responses, or `Population` based on
+`hostAggregate`--the default of which is just `1.0`--, respectively)
+- Interaction-based, specific coefficient calculated based on four sequences
+(one for `Pathogen`, two for `Response`, and one for `Host`) using a function
+defined in `ResponseType` (one factor, computed on the fly, aggregated from
+the list of coefficients of each `Pathogen`-`Response` combination including
+either the specific `Pathogen` or `Response` involved in the non-sampling
+sub-event present within the `Host`, aggregated within a `Host` based on
+`weightedInteractionSpecific`)
+- Interaction-based, general coefficient calculated based on four sequences
+(one for `Pathogen`, two for `Response`, and one for `Host`) using a function
+defined in `ResponseType` (one factor, stored within the `Host`, aggregated
+from the list of coefficients of each `Pathogen`-`Response` combination present
+within the `Host`, aggregated within a `Host` based on
+`weightedInteractionGeneral`)
+
+So, for instance, the infection probability of a given `Pathogen` infecting a
+given `Host` in a given `Population` would be equal to the product
+
+`
+population.nonsample[TRANSMISSION_EFFICIENCY] *
+pathogen.specific_coefficient[TRANSMISSION_EFFICIENCY] *
+host.specific_coefficient[TRANSMISSION_EFFICIENCY] * # includes effects of static, general Pathogen and Response coefficients
+`
+
+In this case, the `Population` base contact rate and both `Host` general
+coefficients are a moot point, since `Pathogen` contact rates are only used to
+sample a `Pathogen` from all of those inside a `Host` in a `Population` (all of
+which )
+
+Meanwhile, the contact weight of a given `Pathogen` within a given `Host` of the
+`Population` (or any other, the `Population` is irrelevant at this level) would
+be equal to the product
+
+``
+
+The list of non-sampling coefficient functions should include (as far as I have
+thought), in alphabetical order:
+
+- `HOST_MUTATIONS_UPON_BIRTH` (modifies the mean of a Poisson random variable)
+- `HOST_RECOMBINATIONS_UPON_BIRTH` (modifies the mean of a Poisson random variable)
+- `INOCULUM` (modifies the mean of a Poisson random variable)
+- `MUTATIONS_UPON_INFECTION` (modifies the mean of a Poisson random
+variable)
+- `RECOMBINATIONS_UPON_INFECTION` (modifies the mean of a Poisson
+random variable)
+- `RESPONSE_ACQUISITION_UPON_CLEARANCE` (modifies a probability)
+- `RESPONSE_INHERITANCE` (modifies a probability)
+- `TRANSMISSION_EFFICIENCY` (modifies a probability)
+- `VERTICAL_TRANSMISSION` (modifies a probability)
+
 ## 28 February 2025
 - Added missing `vertical_transmission_coefficient` to `PopulationType`, changed
-vertical transmission names and parameter structure to conform with other parameters
- - Code for generating data demonstrating `flexle.jl` functionality (CLM)
+vertical transmission names and parameter structure to conform with other
+parameters
+- Code for generating data demonstrating `flexle.jl` functionality (CLM)
 - Added variables to control impact of responses on inoculum and vertical
-transmission, but did not implement their use in the simulation: decided to create
-a new kind of dictionary that contains coefficient functions that do not correspond
-to events in the coefficient matrix but are still found in `PathogenType` and
-`ResponseType`, this will reduce the number of repeated functions we need to have
-in `immunity.jl` handling each one
+transmission, but did not implement their use in the simulation: decided to
+create a new kind of dictionary that contains coefficient functions that do not
+correspond to events in the coefficient matrix but are still found in
+`PathogenType` and `ResponseType`, this will reduce the number of repeated
+functions we need to have in `immunity.jl` handling each one
 - `FlexleSampler` weight update x10 performance improvements via: single
-`FlexleSampler.sum` update; explicit + more specific type declarations (incl. local
-variables); new `Dict` field in `FlexLevel` storing positions of items in `indices`
-vector; and new `maxLevelWeight` function (CLM)
+`FlexleSampler.sum` update; explicit + more specific type declarations (incl.
+local variables); new `Dict` field in `FlexLevel` storing positions of items
+in `indices` vector; and new `maxLevelWeight` function (CLM)
 
 ## 27 February 2025
 - Added `model.time`
@@ -44,9 +168,9 @@ vector; and new `maxLevelWeight` function (CLM)
 - Added `approxZero`, fixed bug in floating point error correction
 - Fixed missing data error in `saveComposition`
 
-I thought that individuals with immunity against a strain were not being protected
-from coinfections with that strain, but that was only because we weren't specifying
-an adequate `reactivityCoefficient` function.
+I thought that individuals with immunity against a strain were not being
+protected from coinfections with that strain, but that was only because we
+weren't specifying an adequate `reactivityCoefficient` function.
 
 ## 26 February 2025
 - Fixed bug where changes in contact receive weights were not correctly

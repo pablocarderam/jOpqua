@@ -244,9 +244,9 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
 
     push!(population.hosts, new_host)
     population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
-    population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
+    population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS))
     population.host_weights_with_coefficient = catCol(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS))
-    population.host_weights_receive_with_coefficient = catCol(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1))
+    population.host_weights_receive_with_coefficient = catCol(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS))
 
     # TODO: make compatible with `propagateWeightsOnAddHost!`
     for p in 1:length(model.populations)
@@ -299,9 +299,9 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, populati
 
     # update matrices
     population.host_weights = hcat(population.host_weights, zeros(Float64, NUM_EVENTS, num_hosts))
-    population.host_weights_receive = hcat(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
+    population.host_weights_receive = hcat(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS, num_hosts))
     population.host_weights_with_coefficient = hcat(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS, num_hosts))
-    population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS - 1, num_hosts))
+    population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS, num_hosts))
 
     num_starting_hosts = length(population.hosts)
     for i in 1:num_hosts

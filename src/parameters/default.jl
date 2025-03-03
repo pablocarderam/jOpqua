@@ -13,6 +13,9 @@ const DEFAULT_PATHOGEN_TYPE = PathogenType(
         g::String->1.0, g::String->1.0, g::String->1.0,
         g::String->1.0, g::String->1.0, g::String->1.0,
         g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
     ],
 )
 
@@ -30,6 +33,11 @@ const DEFAULT_RESPONSE_TYPE = ResponseType(
         (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
         (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
         (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String)->1.0,
     ],
     SA[ # order defined in COEFFICIENTS
         (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
@@ -38,6 +46,11 @@ const DEFAULT_RESPONSE_TYPE = ResponseType(
         (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
         (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
         (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
+        (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
     ],
 )
 
@@ -61,7 +74,10 @@ const DEFAULT_POPULATION_TYPE = PopulationType(
         0.0, 0.0, 0.0,
         0.0, 0.0, 0.0,
         0.0, 0.0, 0.0,
-        0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0,
+        1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
     ],
     pathogenFractionsWinnerTakesAll,
     weightedResponseWinnerTakesAll,

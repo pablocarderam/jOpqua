@@ -125,7 +125,7 @@ struct PopulationType
     hostMutationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
     hostRecombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
-    base_coefficients::SVector{NUM_COEFFICIENTS - 1,Float64}
+    base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
     pathogenFractions::FunctionWrapper{Vector{Float64},Tuple{Host,FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}}}
     # Takes Host entity and Population's weightedResponse function,
@@ -183,7 +183,7 @@ mutable struct Model
     population_weights_receive::Matrix{Float64}
     # size NUM_CHOICE_MODIFIERS-1 x POPULATIONS; -1 excludes intrahost fitness
 
-    population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS - 1,Float64}
+    population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS,Float64}
     # size NUM_CHOICE_MODIFIERS-1; -1 excludes intrahost fitness
 
     population_contact_weights_receive::Matrix{Float64}
