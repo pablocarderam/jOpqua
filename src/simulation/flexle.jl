@@ -6,7 +6,9 @@ using BenchmarkTools
 
 # Flexible binary level rejection sampling
 
-const EXPONENT_MASK_FLOAT64::Int64 = 0x7FF0000000000000
+const EXPONENT_MASK_FLOAT64::Int64   = 0x7FF0000000000000
+const EXPONENT_SHIFT_FLOAT64::Int64  = 52
+const EXPONENT_OFFSET_FLOAT64::Int64 = 1023
 
 # Structs
 
@@ -36,13 +38,21 @@ import Base.&
 
 Base.:&(f::Float64, i::Int64) = reinterpret(Float64, (reinterpret(Int64, f) & i))
 
+function lowerLog2Bound(n::Float64)
+    return n & EXPONENT_MASK_FLOAT64
+end
+
+function floorLog2(n::Float64)
+    return ((reinterpret(Int64, n) & EXPONENT_MASK_FLOAT64) >> EXPONENT_SHIFT_FLOAT64) - EXPONENT_OFFSET_FLOAT64
+end
+
 """
     logBounds(n)
 
 Returns a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
 """
 function logBounds(n::Float64)
-    l = n & EXPONENT_MASK_FLOAT64
+    l = lowerLog2Bound(n)
     return l, l*2.0
 end
 
@@ -65,22 +75,16 @@ starts with a level of bounds `(32.0, 64.0)` (`64` being `2^6`) is at `levels[3]
 `levelIndex(8.0, 5)` ==> `2`
 """
 function levelIndex(w::Float64, u::Int64)
-    return iszero(w) ? 0 : u - Int64(floor(log2(w)))
-end
-
-function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
-    for i in eachindex(levels)  # iterative approach empirically ~25% faster than calculating index mathematically using log2
-        (levels[i].bounds == bounds) && (return i)
-    end
-    return 0
+    return iszero(w) ? 0 : u - floorLog2(w)
 end
 
 function levelIndex(w::Float64, levels::Vector{FlexLevel})
-    for i in eachindex(levels)
-        b = levels[i].bounds
-        (b[1] <= w) && (w < b[2]) && (return i)
-    end
-    return 0
+    idx = floorLog2(levels[1].bounds[2]) - floorLog2(w)
+    return idx > length(levels) ? 0 : idx
+end
+
+function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
+    return levelIndex(bounds[1], levels)
 end
 
 function getLevel(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
@@ -94,7 +98,7 @@ function getLevel(w::Float64, levels::Vector{FlexLevel})
 end
 
 function logDist(a::Float64, b::Float64)
-    return Int64(floor(log2(b))) - Int64(floor(log2(a)))
+    return floorLog2(b) - floorLog2(a)
 end
 
 function inSampler(i::Int64, sampler::FlexleSampler)
@@ -296,7 +300,6 @@ function FlexleSampler(weights::AbstractVector{Float64})
                 l.sum += w
                 l.index_positions[i] = length(l.indices)
                 w_sum += w
-
             end
         end
     end

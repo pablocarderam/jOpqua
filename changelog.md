@@ -23,7 +23,7 @@ TODO: Not debugged:
 
 ## 03 March 2025
 - Additional x2 weight update performance improvement via: `Float64` bit manipulation
-to calculate log bounds; and iterative approach to `levelIndex` (CLM)
+to calculate log bounds + floor log2; and iterative approach to `levelIndex` (CLM)
 
 ## 28 February 2025
 - Added missing `vertical_transmission_coefficient` to `PopulationType`, changed
