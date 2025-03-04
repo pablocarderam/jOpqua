@@ -28,10 +28,13 @@ function mutantSequence!(
     return join(chromosomes, CHROMOSOME_SEPARATOR)
 end
 
-function mutantPathogen!(pathogen::Pathogen, population::Population, birth_time::Float64)
+function mutantPathogen!(pathogen::Pathogen, host::Host, population::Population, birth_time::Float64)
     seq = mutantSequence!(
         pathogen.sequence, pathogen.type.num_loci, pathogen.type.possible_alleles,
-        pathogen.mean_mutations_per_replication
+        # pathogen.mean_mutations_per_replication
+        nonsamplingValue(
+            MUTATIONS_UPON_INFECTION, pathogen, host, population
+        )
     )
 
     if haskey(population.pathogens, seq)
@@ -77,10 +80,15 @@ function recombinantSequences(
     return children
 end
 
-function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, population::Population, birth_time::Float64)
+function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, host::Host, population::Population, birth_time::Float64)
     children = recombinantSequences(
         pathogen_1.sequence, pathogen_2.sequence, pathogen_1.type.num_loci,
-        pathogen_1.mean_recombination_crossovers, pathogen_2.mean_recombination_crossovers
+        nonsamplingValue(
+            RECOMBINATIONS_UPON_INFECTION, pathogen_1, host, population
+        ),
+        nonsamplingValue(
+            RECOMBINATIONS_UPON_INFECTION, pathogen_2, host, population
+        )
     )
 
     # for seq in children
@@ -436,7 +444,7 @@ function establishMutant!(model::Model, rand_n::Float64)
 
     mut = mutantPathogen!(
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
-        model.populations[pop_idx], model.time
+        model.populations[pop_idx].hosts[host_idx], model.populations[pop_idx], model.time
     )
 
     attemptInfection!(mut, host_idx, pop_idx, model)
@@ -480,6 +488,7 @@ function establishRecombinant!(model::Model, rand_n::Float64)
         recombinant = recombinantPathogens!(
             model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1],
             model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2],
+            model.populations[pop_idx].hosts[host_idx],
             model.populations[pop_idx],
             model.time
         )
@@ -504,8 +513,11 @@ function hostContact!(
         # inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
         inocula = Vector{Int64}([
             pois_rand(
-                host1.pathogens[p_idx].mean_effective_inoculum *
-                host1.pathogen_fractions[p_idx]
+                # host1.pathogens[p_idx].mean_effective_inoculum *
+                nonsamplingValue(
+                    INOCULUM, host1.pathogens[p_idx], host1,
+                    model.populations[pop_idx_1]
+                ) * host1.pathogen_fractions[p_idx]
             )
             for p_idx in 1:length(host1.pathogens)
         ])
@@ -518,11 +530,11 @@ function hostContact!(
             if inocula[p_idx] > 0
                 mut_prob = min(
                     1.0, 1.0 - exp(
-                        # nonsamplingValue(
-                        #     MUTATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
-                        #     model.populations[pop_idx_1]
-                        # )
-                        -host1.pathogens[p_idx].mean_mutations_per_replication
+                        -nonsamplingValue(
+                            MUTATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
+                            model.populations[pop_idx_1]
+                        )
+                        # -host1.pathogens[p_idx].mean_mutations_per_replication
                     )
                 )
                 # probability from Poisson PMF with k=0
@@ -530,11 +542,11 @@ function hostContact!(
                 if length(host1.pathogens) > 1
                     rec_prob = min(
                         1.0, 1.0 - exp(
-                            # nonsamplingValue(
-                            #     RECOMBINATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
-                            #     model.populations[pop_idx_1]
-                            # )
-                            -host1.pathogens[p_idx].mean_recombination_crossovers
+                            -nonsamplingValue(
+                                RECOMBINATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
+                                model.populations[pop_idx_1]
+                            )
+                            # -host1.pathogens[p_idx].mean_recombination_crossovers
                         )
                     )
                     # probability from Poisson PMF with k=0
@@ -552,6 +564,7 @@ function hostContact!(
                     attemptInfection!(
                         mutantPathogen!(
                             host1.pathogens[p_idx],
+                            host1,
                             model.populations[pop_idx_1],
                             model.time
                         ), host_idx_2, pop_idx_2, model
@@ -568,6 +581,7 @@ function hostContact!(
                             recombinantPathogens!(
                                 host1.pathogens[p_idx],
                                 host1.pathogens[p_idx_2],
+                                host1,
                                 model.populations[pop_idx_1],
                                 model.time
                             ), host_idx_2, pop_idx_2, model
@@ -581,12 +595,16 @@ function hostContact!(
                         recombinant = recombinantPathogens!(
                             host1.pathogens[p_idx],
                             host1.pathogens[p_idx_2],
+                            host1,
                             model.populations[pop_idx_1],
                             model.time
                         )
 
                         attemptInfection!(
-                            mutantPathogen!(recombinant, model.populations[pop_idx_1], model.time),
+                            mutantPathogen!(
+                                recombinant, model.populations[pop_idx].hosts[host_idx_1],
+                                model.populations[pop_idx_1], model.time
+                            ),
                             host_idx_2, pop_idx_2, model
                         )
                     else

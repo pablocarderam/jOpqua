@@ -7,12 +7,12 @@ function newPathogenType(
     template::PathogenType=DEFAULT_PATHOGEN_TYPE,
     num_loci::Union{Nothing,Int64}=nothing,
     possible_alleles::Union{Nothing,String}=nothing,
-    mean_effective_inoculum::Union{Nothing,Float64}=nothing,
-    mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
-    mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
-    inoculumCoefficient_::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
-    mutationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
-    recombinationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+    # mean_effective_inoculum::Union{Nothing,Float64}=nothing,
+    # mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
+    # mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
+    # inoculumCoefficient_::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+    # mutationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+    # recombinationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
     verticalTransmissionCoefficient_::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
 
     # Each element takes seq argument, returns Float64
@@ -41,12 +41,12 @@ function newPathogenType(
 
     isnothing(num_loci) ? num_loci = template.num_loci : num_loci = num_loci
     isnothing(possible_alleles) ? possible_alleles = template.possible_alleles : possible_alleles = possible_alleles
-    isnothing(mean_effective_inoculum) ? mean_effective_inoculum = template.mean_effective_inoculum : mean_effective_inoculum = mean_effective_inoculum
-    isnothing(mean_mutations_per_replication) ? mean_mutations_per_replication = template.mean_mutations_per_replication : mean_mutations_per_replication = mean_mutations_per_replication
-    isnothing(mean_recombination_crossovers) ? mean_recombination_crossovers = template.mean_recombination_crossovers : mean_recombination_crossovers = mean_recombination_crossovers
-    isnothing(inoculumCoefficient) ? inoculumCoefficient = template.inoculumCoefficient : inoculumCoefficient = inoculumCoefficient
-    isnothing(mutationCoefficient) ? mutationCoefficient = template.mutationCoefficient : mutationCoefficient = mutationCoefficient
-    isnothing(recombinationCoefficient) ? recombinationCoefficient = template.recombinationCoefficient : recombinationCoefficient = recombinationCoefficient
+    # isnothing(mean_effective_inoculum) ? mean_effective_inoculum = template.mean_effective_inoculum : mean_effective_inoculum = mean_effective_inoculum
+    # isnothing(mean_mutations_per_replication) ? mean_mutations_per_replication = template.mean_mutations_per_replication : mean_mutations_per_replication = mean_mutations_per_replication
+    # isnothing(mean_recombination_crossovers) ? mean_recombination_crossovers = template.mean_recombination_crossovers : mean_recombination_crossovers = mean_recombination_crossovers
+    # isnothing(inoculumCoefficient) ? inoculumCoefficient = template.inoculumCoefficient : inoculumCoefficient = inoculumCoefficient
+    # isnothing(mutationCoefficient) ? mutationCoefficient = template.mutationCoefficient : mutationCoefficient = mutationCoefficient
+    # isnothing(recombinationCoefficient) ? recombinationCoefficient = template.recombinationCoefficient : recombinationCoefficient = recombinationCoefficient
     isnothing(verticalTransmissionCoefficient) ? verticalTransmissionCoefficient = template.verticalTransmissionCoefficient : verticalTransmissionCoefficient = verticalTransmissionCoefficient
 
     isnothing(mutantEstablishmentCoefficient) ? mutantEstablishmentCoefficient = template.coefficient_functions[MUTANT_ESTABLISHMENT] : mutantEstablishmentCoefficient = mutantEstablishmentCoefficient
@@ -75,10 +75,11 @@ function newPathogenType(
         id,
         num_loci,
         possible_alleles,
-        mean_effective_inoculum,
-        mean_mutations_per_replication,
-        mean_recombination_crossovers,
-        inoculumCoefficient, mutationCoefficient, recombinationCoefficient,
+        # mean_effective_inoculum,
+        # mean_mutations_per_replication,
+        # mean_recombination_crossovers,
+        # inoculumCoefficient,
+        # mutationCoefficient, recombinationCoefficient,
         verticalTransmissionCoefficient,
         SA[ # order defined in COEFFICIENTS
             mutantEstablishmentCoefficient, clearanceCoefficient, responseAcquisitionCoefficient,
@@ -96,7 +97,7 @@ function newResponseType(
     id::String;
     template::ResponseType=DEFAULT_RESPONSE_TYPE,
     inherit_response::Union{Nothing,Float64}=nothing,
-    inoculumCoefficient::Union{Nothing,Function}=nothing,
+    # inoculumCoefficient::Union{Nothing,Function}=nothing,
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     verticalTransmissionCoefficient::Union{Nothing,Function}=nothing,
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
@@ -153,7 +154,7 @@ function newResponseType(
 )
 
     isnothing(inherit_response) ? inherit_response = template.inherit_response : inherit_response = inherit_response
-    isnothing(inoculumCoefficient) ? inoculumCoefficient = template.inoculumCoefficient : inoculumCoefficient = inoculumCoefficient
+    # isnothing(inoculumCoefficient) ? inoculumCoefficient = template.inoculumCoefficient : inoculumCoefficient = inoculumCoefficient
     isnothing(verticalTransmissionCoefficient) ? verticalTransmissionCoefficient = template.verticalTransmissionCoefficient : verticalTransmissionCoefficient = verticalTransmissionCoefficient
     isnothing(infectionCoefficient) ? infectionCoefficient = template.infectionCoefficient : infectionCoefficient = infectionCoefficient
     isnothing(reactivityCoefficient) ? reactivityCoefficient = template.reactivityCoefficient : reactivityCoefficient = reactivityCoefficient
@@ -205,7 +206,7 @@ function newResponseType(
     return ResponseType(
         id,
         inherit_response,
-        inoculumCoefficient,
+        # inoculumCoefficient,
         verticalTransmissionCoefficient,
         infectionCoefficient,
         reactivityCoefficient,
@@ -306,9 +307,9 @@ function newPopulationType(
     template::PopulationType=DEFAULT_POPULATION_TYPE,
     constant_contact_density::Union{Nothing,Bool}=nothing,
     constant_transition_density::Union{Nothing,Bool}=nothing,
-    inoculum_coefficient_::Union{Nothing,Float64}=nothing,
-    mutation_coefficient::Union{Nothing,Float64}=nothing,
-    recombination_coefficient::Union{Nothing,Float64}=nothing,
+    # inoculum_coefficient_::Union{Nothing,Float64}=nothing,
+    # mutation_coefficient::Union{Nothing,Float64}=nothing,
+    # recombination_coefficient::Union{Nothing,Float64}=nothing,
     vertical_transmission_coefficient_::Union{Nothing,Float64}=nothing,
     host_num_loci::Union{Nothing,Int64}=nothing,
     host_possible_alleles::Union{Nothing,String}=nothing,
@@ -364,9 +365,9 @@ function newPopulationType(
 
     isnothing(constant_contact_density) ? constant_contact_density = template.constant_contact_density : constant_contact_density = constant_contact_density
     isnothing(constant_transition_density) ? constant_transition_density = template.constant_transition_density : constant_transition_density = constant_transition_density
-    isnothing(inoculum_coefficient) ? inoculum_coefficient = template.inoculum_coefficient : inoculum_coefficient = inoculum_coefficient
-    isnothing(mutation_coefficient) ? mutation_coefficient = template.mutation_coefficient : mutation_coefficient = mutation_coefficient
-    isnothing(recombination_coefficient) ? recombination_coefficient = template.recombination_coefficient : recombination_coefficient = recombination_coefficient
+    # isnothing(inoculum_coefficient) ? inoculum_coefficient = template.inoculum_coefficient : inoculum_coefficient = inoculum_coefficient
+    # isnothing(mutation_coefficient) ? mutation_coefficient = template.mutation_coefficient : mutation_coefficient = mutation_coefficient
+    # isnothing(recombination_coefficient) ? recombination_coefficient = template.recombination_coefficient : recombination_coefficient = recombination_coefficient
     isnothing(vertical_transmission_coefficient) ? vertical_transmission_coefficient = template.vertical_transmission_coefficient : vertical_transmission_coefficient = vertical_transmission_coefficient
 
     isnothing(host_num_loci) ? host_num_loci = template.host_num_loci : host_num_loci = host_num_loci
@@ -412,9 +413,9 @@ function newPopulationType(
         id,
         constant_contact_density,
         constant_transition_density,
-        inoculum_coefficient,
-        mutation_coefficient,
-        recombination_coefficient,
+        # inoculum_coefficient,
+        # mutation_coefficient,
+        # recombination_coefficient,
         vertical_transmission_coefficient,
         host_num_loci,
         host_possible_alleles,

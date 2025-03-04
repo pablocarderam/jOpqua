@@ -51,15 +51,15 @@ function infectionCoefficient(pathogen::Pathogen, response::Response, host::Host
 end
 
 function nonsamplingValue(coef::Int64, host::Host, population::Population)
-    return host.coefficients[coef] * population.base_coefficients[coef]
+    return host.coefficients[coef] * population.parameters.base_coefficients[coef]
 end
 
 function nonsamplingValue(coef::Int64, pathogen::Pathogen, host::Host, population::Population)
-    return pathogen.coefficients[coef] * host.coefficients[coef] * population.base_coefficients[coef]
+    return pathogen.coefficients[coef] * host.coefficients[coef] * population.parameters.base_coefficients[coef]
 end
 
 function nonsamplingValue(coef::Int64, response::Response, host::Host, population::Population)
-    return response.coefficients[coef] * host.coefficients[coef] * population.base_coefficients[coef]
+    return response.coefficients[coef] * host.coefficients[coef] * population.parameters.base_coefficients[coef]
 end
 
 function pathogenSequenceCoefficients(sequence::String, type::PathogenType)

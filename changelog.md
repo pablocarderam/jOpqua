@@ -33,6 +33,8 @@ TODO: Not debugged:
 - Added nonsampling coefficient vector to `Host` and some machinery to update it
 - Create `HostType` struct to house `Host`-specific parameters
 - Changed `birth!` to carry out a contact event if vertical transmission happens
+- Transfer mutations upon infection, recombinations upon infection, and inoculum
+to nonsampling variable/coefficient/function vectors
 
 ## 2 March 2025
 - Corrected a couple references from to `NUM_COEFFICIENTS` for

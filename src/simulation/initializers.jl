@@ -8,9 +8,9 @@ function newPathogen!(
     birth_time::Float64=0.0)
     population.pathogens[sequence] = Pathogen(
         parents, birth_time, sequence, pathogenSequenceCoefficients(sequence, type),
-        type.mean_effective_inoculum * type.inoculumCoefficient(sequence) * population.parameters.inoculum_coefficient,
-        type.mean_mutations_per_replication * type.mutationCoefficient(sequence) * population.parameters.mutation_coefficient,
-        type.mean_recombination_crossovers * type.recombinationCoefficient(sequence) * population.parameters.recombination_coefficient,
+        # type.mean_effective_inoculum * type.inoculumCoefficient(sequence) * population.parameters.inoculum_coefficient,
+        # type.mean_mutations_per_replication * type.mutationCoefficient(sequence) * population.parameters.mutation_coefficient,
+        # type.mean_recombination_crossovers * type.recombinationCoefficient(sequence) * population.parameters.recombination_coefficient,
         type.verticalTransmissionCoefficient(sequence) * population.parameters.vertical_transmission_coefficient,
         type
     )
