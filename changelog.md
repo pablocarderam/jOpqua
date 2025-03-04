@@ -3,6 +3,8 @@
 KNOWN ISSUES:
 
 TODO:
+- Make `Host` sequence functions that affect event coefficients, I think those
+are missing?
 - Create `HostType` struct to house `Host`-specific parameters
 - Organize non-sampling coefficients and their functions into matrices and
 vectors
@@ -27,6 +29,9 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 3 March 2025
+- Added nonsampling coefficient vector to `Host` and some machinery to update it
 
 ## 2 March 2025
 - Corrected a couple references from to `NUM_COEFFICIENTS` for

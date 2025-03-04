@@ -202,6 +202,10 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
     )
 end
 
+function hostWeightsNonsampling!(h::Int64, population::Population, evt::Int64)
+    population.hosts[h].nonsampling_coefficients[evt-NON_SAMPLING_COEFFICIENTS[1]+1] = population.hosts[h].nonsampling_coefficients[evt-NON_SAMPLING_COEFFICIENTS[1]+1]
+end
+
 function hostWeights!(host_idx::Int64, population::Population, model::Model)
     population.hosts[host_idx].pathogen_fractions = population.parameters.pathogenFractions(
         population.hosts[host_idx], population.parameters.weightedResponse
@@ -262,6 +266,9 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
                 population, weight, model
             )
         end
+    end
+    for coef in NON_SAMPLING_COEFFICIENTS
+        hostWeightsNonsampling!(host_idx, population, coef)
     end
 end
 

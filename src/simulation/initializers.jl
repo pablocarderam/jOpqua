@@ -54,6 +54,9 @@ function newHost!(sequence::String, population::Population, model::Model;
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
+            MVector{NUM_NON_SAMPLING_COEFFICIENTS,Float64}(
+                START_COEFFICIENTS[NON_SAMPLING_COEFFICIENTS[begin]:NON_SAMPLING_COEFFICIENTS[end]]
+            ),
         ),
         population, model
     )

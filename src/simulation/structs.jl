@@ -94,6 +94,8 @@ mutable struct Host
     pathogen_weights::Matrix{Float64} # size NUM_PATHOGEN_EVENTS x MAX_PATHOGENS
     response_weights::Matrix{Float64} # size NUM_RESPONSE_EVENTS x MAX_RESPONSES
 
+    nonsampling_coefficients::MVector{NUM_NON_SAMPLING_COEFFICIENTS,Float64} # size NUM_NON_SAMPLING_COEFFICIENTS
+
     # We could handle receiving rates at this level, but the only one relevant
     # to entities within hosts is recombination, and that uses the same rates
     # already calculated above since it's symmetrical. We therefore don't define
