@@ -16,7 +16,7 @@ function weightedResponseArithmeticMean(pathogen::Pathogen, host::Host, evt::Int
     end
 end
 
-function infectionProbabilityArithmeticMean(pathogen::Pathogen, host::Host)
+function transmissionEfficiencyArithmeticMean(pathogen::Pathogen, host::Host)
     # reactivity-weighted arithmetic mean of infection coefficients
     if length(host.responses) > 0
         reac_sum = 0.0
@@ -25,7 +25,9 @@ function infectionProbabilityArithmeticMean(pathogen::Pathogen, host::Host)
         for response in host.responses
             reac = reactivityCoefficient(pathogen, response, host)
             reac_sum += reac
-            numerator_sum += reac * infectionCoefficient(pathogen, response, host)
+            numerator_sum += reac * responseSpecificCoefficient(
+                pathogen, response, host, TRANSMISSION_EFFICIENCY
+            )
         end
 
         return numerator_sum / reac_sum
@@ -51,14 +53,16 @@ function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int
     end
 end
 
-function infectionProbabilityWinnerTakesAll(pathogen::Pathogen, host::Host)
+function transmissionEfficiencyWinnerTakesAll(pathogen::Pathogen, host::Host)
     if length(host.responses) > 0
         dominant_reaction = 1.0
         dominant_reactivity = 0.0
         for response in host.responses
             reactivity = reactivityCoefficient(pathogen, response, host)
             if reactivity > dominant_reactivity
-                dominant_reaction = reactivity * infectionCoefficient(pathogen, response, host)
+                dominant_reaction = reactivity * responseSpecificCoefficient(
+                    pathogen, response, host, TRANSMISSION_EFFICIENCY
+                )
             end
         end
 

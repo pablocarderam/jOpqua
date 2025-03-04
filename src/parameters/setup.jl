@@ -101,8 +101,8 @@ function newResponseType(
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     verticalTransmissionCoefficient::Union{Nothing,Function}=nothing,
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    infectionCoefficient::Union{Nothing,Function}=nothing,
-    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    # infectionCoefficient::Union{Nothing,Function}=nothing,
+    # # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     reactivityCoefficient::Union{Nothing,Function}=nothing,
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
 
@@ -156,7 +156,7 @@ function newResponseType(
     isnothing(inherit_response) ? inherit_response = template.inherit_response : inherit_response = inherit_response
     # isnothing(inoculumCoefficient) ? inoculumCoefficient = template.inoculumCoefficient : inoculumCoefficient = inoculumCoefficient
     isnothing(verticalTransmissionCoefficient) ? verticalTransmissionCoefficient = template.verticalTransmissionCoefficient : verticalTransmissionCoefficient = verticalTransmissionCoefficient
-    isnothing(infectionCoefficient) ? infectionCoefficient = template.infectionCoefficient : infectionCoefficient = infectionCoefficient
+    # isnothing(infectionCoefficient) ? infectionCoefficient = template.infectionCoefficient : infectionCoefficient = infectionCoefficient
     isnothing(reactivityCoefficient) ? reactivityCoefficient = template.reactivityCoefficient : reactivityCoefficient = reactivityCoefficient
 
     isnothing(mutantEstablishmentStaticCoefficient) ? mutantEstablishmentStaticCoefficient = template.static_coefficient_functions[MUTANT_ESTABLISHMENT] : mutantEstablishmentStaticCoefficient = mutantEstablishmentStaticCoefficient
@@ -208,7 +208,7 @@ function newResponseType(
         inherit_response,
         # inoculumCoefficient,
         verticalTransmissionCoefficient,
-        infectionCoefficient,
+        # infectionCoefficient,
         reactivityCoefficient,
         SA[ # order defined in COEFFICIENTS
             mutantEstablishmentStaticCoefficient, clearanceStaticCoefficient, responseAcquisitionStaticCoefficient,
@@ -311,8 +311,6 @@ function newPopulationType(
     # mutation_coefficient::Union{Nothing,Float64}=nothing,
     # recombination_coefficient::Union{Nothing,Float64}=nothing,
     vertical_transmission_coefficient_::Union{Nothing,Float64}=nothing,
-    host_num_loci::Union{Nothing,Int64}=nothing,
-    host_possible_alleles::Union{Nothing,String}=nothing,
     host_mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
     host_sexual_reproduction::Union{Nothing,Bool}=nothing,
     host_mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
@@ -352,7 +350,7 @@ function newPopulationType(
     weightedResponse::Union{Nothing,Function}=nothing,
     # Takes Pathogen entity, Host entity, and event number;
     # returns aggregated response coefficient against that Pathogen for that event
-    infectionProbability::Union{Nothing,Function}=nothing,
+    transmissionEfficiency::Union{Nothing,Function}=nothing,
     # Takes Pathogen and Host entities,
     # returns probability that a contact results in successful infection given the Responses in Host
 
@@ -370,8 +368,6 @@ function newPopulationType(
     # isnothing(recombination_coefficient) ? recombination_coefficient = template.recombination_coefficient : recombination_coefficient = recombination_coefficient
     isnothing(vertical_transmission_coefficient) ? vertical_transmission_coefficient = template.vertical_transmission_coefficient : vertical_transmission_coefficient = vertical_transmission_coefficient
 
-    isnothing(host_num_loci) ? host_num_loci = template.host_num_loci : host_num_loci = host_num_loci
-    isnothing(host_possible_alleles) ? host_possible_alleles = template.host_possible_alleles : host_possible_alleles = host_possible_alleles
     isnothing(host_mean_mutations_per_replication) ? host_mean_mutations_per_replication = template.host_mean_mutations_per_replication : host_mean_mutations_per_replication = host_mean_mutations_per_replication
     isnothing(host_sexual_reproduction) ? host_sexual_reproduction = template.host_sexual_reproduction : host_sexual_reproduction = host_sexual_reproduction
     isnothing(host_mean_recombination_crossovers) ? host_mean_recombination_crossovers = template.host_mean_recombination_crossovers : host_mean_recombination_crossovers = host_mean_recombination_crossovers
@@ -404,7 +400,7 @@ function newPopulationType(
 
     isnothing(pathogenFractions) ? pathogenFractions = template.pathogenFractions : pathogenFractions = pathogenFractions
     isnothing(weightedResponse) ? weightedResponse = template.weightedResponse : weightedResponse = weightedResponse
-    isnothing(infectionProbability) ? infectionProbability = template.infectionProbability : infectionProbability = infectionProbability
+    isnothing(transmissionEfficiency) ? transmissionEfficiency = template.transmissionEfficiency : transmissionEfficiency = transmissionEfficiency
     isnothing(developResponses) ? developResponses = template.developResponses : developResponses = developResponses
 
     isnothing(response_types) ? response_types = template.response_types : response_types = response_types
@@ -417,8 +413,6 @@ function newPopulationType(
         # mutation_coefficient,
         # recombination_coefficient,
         vertical_transmission_coefficient,
-        host_num_loci,
-        host_possible_alleles,
         host_mean_mutations_per_replication,
         host_sexual_reproduction,
         host_mean_recombination_crossovers,
@@ -436,7 +430,7 @@ function newPopulationType(
         ],
         pathogenFractions,
         weightedResponse,
-        infectionProbability,
+        transmissionEfficiency,
         developResponses,
         response_types,
     )

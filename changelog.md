@@ -29,6 +29,11 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 4 March 2025
+- Renamed `infectionProbability` to `transmissionEfficiency`
+- Transfer transmission efficiency to nonsampling variable/coefficient/function
+vectors
+
 ## 3 March 2025
 - Added nonsampling coefficient vector to `Host` and some machinery to update it
 - Create `HostType` struct to house `Host`-specific parameters

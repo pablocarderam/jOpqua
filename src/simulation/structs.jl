@@ -33,8 +33,8 @@ struct ResponseType
     # # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
-    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    # infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
+    # # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     static_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
@@ -128,8 +128,8 @@ struct PopulationType
     # recombination_coefficient::Float64
     vertical_transmission_coefficient::Float64
 
-    host_num_loci::Int64
-    host_possible_alleles::String
+    # host_num_loci::Int64
+    # host_possible_alleles::String
     host_mean_mutations_per_replication::Float64
     host_sexual_reproduction::Bool
     host_mean_recombination_crossovers::Float64
@@ -146,7 +146,7 @@ struct PopulationType
     weightedResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
     # Takes Pathogen entity, Host entity, and event number;
     # returns aggregated response coefficient against that Pathogen for that event
-    infectionProbability::FunctionWrapper{Float64,Tuple{Pathogen,Host}}
+    transmissionEfficiency::FunctionWrapper{Float64,Tuple{Pathogen,Host}}
     # Takes Pathogen and Host entities,
     # returns probability that a contact results in successful infection given the Responses in Host
 

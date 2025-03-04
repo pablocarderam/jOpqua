@@ -41,14 +41,14 @@ function reactivityCoefficient(pathogen::Pathogen, response::Response, host::Hos
     )
 end
 
-function infectionCoefficient(pathogen::Pathogen, response::Response, host::Host)
-    return response.type.infectionCoefficient(
-        host.sequence,
-        isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
-        isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-        pathogen.sequence
-    )
-end
+# function infectionCoefficient(pathogen::Pathogen, response::Response, host::Host)
+#     return response.type.infectionCoefficient(
+#         host.sequence,
+#         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
+#         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+#         pathogen.sequence
+#     )
+# end
 
 function nonsamplingValue(coef::Int64, host::Host, population::Population)
     return host.coefficients[coef] * population.parameters.base_coefficients[coef]

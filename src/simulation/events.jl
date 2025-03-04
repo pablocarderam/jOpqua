@@ -223,8 +223,11 @@ function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, 
     if !(
         pathogen in
         model.populations[pop_idx].hosts[host_idx].pathogens
-    ) &&
-       rand() < model.populations[pop_idx].parameters.infectionProbability(
+    ) && rand() < nonsamplingValue(
+        TRANSMISSION_EFFICIENCY, pathogen,
+        model.populations[pop_idx].hosts[host_idx],
+        model.populations[pop_idx]
+    ) * model.populations[pop_idx].parameters.transmissionEfficiency(
         pathogen,
         model.populations[pop_idx].hosts[host_idx]
     )
