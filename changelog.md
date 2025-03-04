@@ -32,6 +32,7 @@ TODO: Not debugged:
 ## 3 March 2025
 - Added nonsampling coefficient vector to `Host` and some machinery to update it
 - Create `HostType` struct to house `Host`-specific parameters
+- Changed `birth!` to carry out a contact event if vertical transmission happens
 
 ## 2 March 2025
 - Corrected a couple references from to `NUM_COEFFICIENTS` for

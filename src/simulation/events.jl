@@ -493,6 +493,12 @@ function hostContact!(model::Model, rand_n::Float64)
     pop_idx_2, rand_n = choosePopulationReceiveContact(pop_idx_1, model, rand_n)
     host_idx_2, rand_n = chooseHost(pop_idx_2, RECEIVE_CONTACT, model, rand_n)
 
+    hostContact!(host_idx_1, pop_idx_1, host_idx_2, pop_idx_2, model, rand_n)
+end
+
+function hostContact!(
+        host_idx_1::Int64, pop_idx_1::Int64, host_idx_2::Int64, pop_idx_2::Int64,
+        model::Model, rand_n::Float64)
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]
         # inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
@@ -512,6 +518,10 @@ function hostContact!(model::Model, rand_n::Float64)
             if inocula[p_idx] > 0
                 mut_prob = min(
                     1.0, 1.0 - exp(
+                        # nonsamplingValue(
+                        #     MUTATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
+                        #     model.populations[pop_idx_1]
+                        # )
                         -host1.pathogens[p_idx].mean_mutations_per_replication
                     )
                 )
@@ -520,6 +530,10 @@ function hostContact!(model::Model, rand_n::Float64)
                 if length(host1.pathogens) > 1
                     rec_prob = min(
                         1.0, 1.0 - exp(
+                            # nonsamplingValue(
+                            #     RECOMBINATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
+                            #     model.populations[pop_idx_1]
+                            # )
                             -host1.pathogens[p_idx].mean_recombination_crossovers
                         )
                     )
@@ -682,18 +696,16 @@ function birth!(model::Model, rand_n::Float64)
                     end
                 end
 
-                for pathogen_idx in 1:length(parent.pathogens)
-                    if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
-                        rand() < parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
-                                 parent.pathogens[pathogen_idx].type.verticalTransmissionCoefficient(
-                                     parent.pathogens[pathogen_idx].sequence
-                                 ) *
-                                 parent.pathogen_fractions[pathogen_idx])
-                        attemptInfection!(
-                            parent.pathogens[pathogen_idx],
-                            length(model.populations[pop_idx].hosts), pop_idx, model
-                        )
-                    end
+                if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
+                    rand() < parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
+                             parent.pathogens[pathogen_idx].type.verticalTransmissionCoefficient(
+                                 parent.pathogens[pathogen_idx].sequence
+                             ) *
+                             parent.pathogen_fractions[pathogen_idx])
+                    hostContact!(
+                        parent, pop_idx, length(model.populations[pop_idx].hosts),
+                        pop_idx, model, rand_n
+                    )
                 end
             end
         end
