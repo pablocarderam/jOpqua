@@ -294,7 +294,7 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     end
 end
 
-function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, population::Population, model::Model)
+function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::HostType, population::Population, model::Model)
     population.compartment_vars[UNINFECTED_NAIVE] += num_hosts
 
     # update matrices
@@ -320,9 +320,8 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, populati
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
-            MVector{NUM_NON_SAMPLING_COEFFICIENTS,Float64}(
-                START_COEFFICIENTS[NON_SAMPLING_COEFFICIENTS[begin]:NON_SAMPLING_COEFFICIENTS[end]]
-            ),
+            hostSequenceCoefficients(host_sequence, type),
+            type,
         ))
 
         propagateWeightsOnAddHost!(num_starting_hosts + i, population, model)

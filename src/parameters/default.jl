@@ -54,6 +54,21 @@ const DEFAULT_RESPONSE_TYPE = ResponseType(
     ],
 )
 
+const DEFAULT_HOST_TYPE = HostType(
+    "Default",
+    0,
+    "", #"ARNDCEQGHILKMFPSTWYV*",
+    SA[ # order defined in COEFFICIENTS
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+        g::String->1.0, g::String->1.0, g::String->1.0,
+    ],
+)
+
 const DEFAULT_POPULATION_TYPE = PopulationType(
     "Default",
     true,

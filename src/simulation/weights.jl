@@ -50,11 +50,30 @@ function infectionCoefficient(pathogen::Pathogen, response::Response, host::Host
     )
 end
 
+function nonsamplingValue(coef::Int64, host::Host, population::Population, model::Model)
+    return host.coefficients[coef] * population.base_coefficients[coef]
+end
+
+function nonsamplingValue(coef::Int64, pathogen::Pathogen, host::Host, population::Population, model::Model)
+    return pathogen.coefficients[coef] * host.coefficients[coef] * population.base_coefficients[coef]
+end
+
+function nonsamplingValue(coef::Int64, response::Response, host::Host, population::Population, model::Model)
+    return response.coefficients[coef] * host.coefficients[coef] * population.base_coefficients[coef]
+end
+
 function pathogenSequenceCoefficients(sequence::String, type::PathogenType)
     return [
         type.coefficient_functions[evt_id](sequence)
         for evt_id in 1:NUM_COEFFICIENTS
     ]
+end
+
+function hostSequenceCoefficients(sequence::String, type::HostType)
+    return MVector{NUM_COEFFICIENTS,Float64}([
+        type.coefficient_functions[evt_id](sequence)
+        for evt_id in 1:NUM_COEFFICIENTS
+    ])
 end
 
 # Intrahost-level weights
@@ -203,7 +222,7 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
 end
 
 function hostWeightsNonsampling!(h::Int64, population::Population, evt::Int64)
-    population.hosts[h].nonsampling_coefficients[evt-NON_SAMPLING_COEFFICIENTS[1]+1] = population.hosts[h].nonsampling_coefficients[evt-NON_SAMPLING_COEFFICIENTS[1]+1]
+    population.hosts[h].coefficients[evt] = population.hosts[h].coefficients[evt]
 end
 
 function hostWeights!(host_idx::Int64, population::Population, model::Model)

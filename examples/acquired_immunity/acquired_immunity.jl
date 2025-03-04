@@ -37,6 +37,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         # responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
 
+    hos_type = jOpqua.newHostType("hos_type")
+
     pop_type = jOpqua.newPopulationType(
         "pop_type",
         clearance_coefficient=1.0e-3,
@@ -64,7 +66,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
     # Setup
     model = jOpqua.newModel()
     pop = jOpqua.newPopulation!("pop", pop_type, model)
-    jOpqua.addHostsToPopulation!(num_hosts, host_genome, pop, model)
+    jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop, model)
     pat = jOpqua.newPathogen!(start_genome, pop, pat_type)
 
     for h in 1:num_infected

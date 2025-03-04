@@ -43,6 +43,16 @@ struct ResponseType
     # each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
+struct HostType
+    id::String
+
+    num_loci::Int64
+    possible_alleles::String
+
+    coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
+    # Each element takes seq argument, returns Float64
+end
+
 # Model entities:
 
 struct Pathogen
@@ -94,13 +104,14 @@ mutable struct Host
     pathogen_weights::Matrix{Float64} # size NUM_PATHOGEN_EVENTS x MAX_PATHOGENS
     response_weights::Matrix{Float64} # size NUM_RESPONSE_EVENTS x MAX_RESPONSES
 
-    nonsampling_coefficients::MVector{NUM_NON_SAMPLING_COEFFICIENTS,Float64} # size NUM_NON_SAMPLING_COEFFICIENTS
-
     # We could handle receiving rates at this level, but the only one relevant
     # to entities within hosts is recombination, and that uses the same rates
     # already calculated above since it's symmetrical. We therefore don't define
     # any additional matrices here and we handle all receiving rates for hosts
     # and larger at the Population level.
+
+    coefficients::MVector{NUM_COEFFICIENTS,Float64} # size NUM_COEFFICIENTS
+    type::HostType
 end
 
 # Higher-level (Populations, Model)

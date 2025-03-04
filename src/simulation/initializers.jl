@@ -35,7 +35,7 @@ function newResponse!(
     return existing_responses[(host_sequence, imprinted_seq, matured_seq, type.id)]
 end
 
-function newHost!(sequence::String, population::Population, model::Model;
+function newHost!(sequence::String, type::HostType, population::Population, model::Model;
     parents::MVector{2,Union{Host,Nothing}}=MVector{2,Union{Host,Nothing}}([nothing, nothing]),
     birth_time::Float64=0.0)
     addHostToPopulation!(
@@ -54,9 +54,8 @@ function newHost!(sequence::String, population::Population, model::Model;
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
-            MVector{NUM_NON_SAMPLING_COEFFICIENTS,Float64}(
-                START_COEFFICIENTS[NON_SAMPLING_COEFFICIENTS[begin]:NON_SAMPLING_COEFFICIENTS[end]]
-            ),
+            hostSequenceCoefficients(sequence, type),
+            type,
         ),
         population, model
     )
