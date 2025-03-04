@@ -21,6 +21,10 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 04 March 2025
+- Fix `Flexle` bug where `index_positions` was not updated on element removal; current
+fix disastrously slow, needs speedup (CLM)
+
 ## 03 March 2025
 - Additional x2 weight update performance improvement via: `Float64` bit manipulation
 to calculate log bounds + floor log2; and iterative approach to `levelIndex` (CLM)

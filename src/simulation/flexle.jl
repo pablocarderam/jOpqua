@@ -203,6 +203,15 @@ function recalculateFlexleStats!(sampler::FlexleSampler)
     sampler.sum = sum(sampler.weights)
 end
 
+function reconstructIndexPositions!(sampler::FlexleSampler)
+    for level in sampler.levels
+        level.index_positions = Dict{Int64, Int64}()
+        for i in eachindex(level.indices)
+            level.index_positions[level.indices[i]] = i
+        end
+    end
+end
+
 # Sampling methods
 
 function cdfSample(sampler::FlexleSampler)
@@ -389,6 +398,7 @@ function removeFromFlexleSampler!(sampler::FlexleSampler, i::Int64)
             end
         end
     end
+    reconstructIndexPositions!(sampler)
     if !iszero(w) && (from === sampler.levels[begin] || from === sampler.levels[end]) && isempty(from.indices)
         trimTrailingLevels!(sampler)
     end
@@ -883,7 +893,7 @@ function testRuntimeUniform!(; h::Int64=10000)
     testSampleRuntime!(w, w_sums, FlexleSampler(wu), r1, r2)
 end
 
-function testStandardUpdateHost!(weights::Vector{Float64}, updates::Tuple{Vector{Int64}, Vector{Float64}}, sum::Float64)
+function testStandardUpdateWeight!(weights::Vector{Float64}, updates::Tuple{Vector{Int64}, Vector{Float64}}, sum::Float64)
     i = updates[1]
     v = updates[2]
     for idx in eachindex(i)
@@ -894,7 +904,7 @@ function testStandardUpdateHost!(weights::Vector{Float64}, updates::Tuple{Vector
     return sum
 end
 
-function testFlexleUpdateHost!(sampler::FlexleSampler, updates::Tuple{Vector{Int64}, Vector{Float64}})
+function testFlexleUpdateWeight!(sampler::FlexleSampler, updates::Tuple{Vector{Int64}, Vector{Float64}})
     i = updates[1]
     v = updates[2]
     for idx in eachindex(i)
@@ -903,16 +913,79 @@ function testFlexleUpdateHost!(sampler::FlexleSampler, updates::Tuple{Vector{Int
     # verifyFlexleSampler(sampler)
 end
 
-function testUpdateHost(; h::Int64=10000, n::Int64=1000, seed=0)
+function testUpdateWeight(; h::Int64=10000, n::Int64=1000, seed=0)
     Random.seed!(seed)
     w = rand(h)
     s = FlexleSampler(w)
     c = sum(w)
     updates = (rand(1:h, n), rand(n))
 
-    println("CDF update host:")    
-    display(@benchmark testStandardUpdateHost!($w, $updates, $c))
+    println("CDF update weight:")    
+    display(@benchmark testStandardUpdateWeight!($w, $updates, $c))
 
-    println("Flexle update host:")
-    display(@benchmark testFlexleUpdateHost!($s, $updates))
+    println("Flexle update weight:")
+    display(@benchmark testFlexleUpdateWeight!($s, $updates))
+end
+
+function testStandardAddWeight!(weights::Vector{Float64}, new_weights::Vector{Float64}, sum::Float64)
+    for i in eachindex(new_weights)
+        push!(weights, new_weights[i])
+        sum += new_weights[i]
+    end
+    return sum
+end
+
+function testFlexleAddWeight!(sampler::FlexleSampler, new_weights::Vector{Float64})
+    for i in eachindex(new_weights)
+        addToFlexleSampler!(sampler, new_weights[i])
+    end
+    # verifyFlexleSampler(sampler)
+end
+
+function testAddWeight(; h::Int64=10000, n::Int64=1000, seed=0)
+    Random.seed!(seed)
+    w = rand(h)
+    s = FlexleSampler(w)
+    c = sum(w)
+    new_weights = rand(n)
+
+    println("CDF add weight:")    
+    display(@benchmark testStandardAddWeight!($w, $new_weights, $c))
+
+    println("Flexle add weight:")
+    display(@benchmark testFlexleAddWeight!($s, $new_weights))
+end
+
+function testStandardRemoveWeight!(weights::Vector{Float64}, indices::Vector{Int64}, sum::Float64)
+    for i in eachindex(indices)
+        sum -= weights[indices[i]]
+        deleteat!(weights, indices[i])
+    end
+    return sum
+end
+
+function testFlexleRemoveWeight!(sampler::FlexleSampler, indices::Vector{Int64})
+    for i in eachindex(indices)
+        removeFromFlexleSampler!(sampler, indices[i])
+    end
+    # verifyFlexleSampler(sampler)
+end
+
+function testRemoveWeight(; h::Int64=10000, n::Int64=1000, seed=0)
+    Random.seed!(seed)
+    w1 = rand(h)
+    w2 = copy(w1)
+    s = FlexleSampler(w2)
+    c = sum(w1)
+    indices = Vector{Int64}()
+    for i in 1:n
+        push!(indices, rand(1:h-i+1))
+    end
+    display(indices)
+
+    println("CDF remove weight:")    
+    @time testStandardRemoveWeight!(w1, indices, c)
+
+    println("Flexle remove weight:")
+    @time testFlexleRemoveWeight!(s, indices)
 end
