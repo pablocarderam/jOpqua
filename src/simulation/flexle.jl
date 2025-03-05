@@ -212,6 +212,18 @@ function reconstructIndexPositions!(sampler::FlexleSampler)
     end
 end
 
+function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
+    for idx in i:length(sampler.weights)
+        w = sampler.weights[idx]
+        iszero(w) && continue
+        # if isnothing(l) # if weight is 0
+        #     # @printf "index %i has no level - %i\n" idx floorLog2(sampler.weights[idx])
+        # else
+        d = getLevel(w, sampler.levels).index_positions
+        d[idx] = pop!(d, idx+1)     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx+1] => pos) for all idx >= i
+    end 
+end
+
 # Sampling methods
 
 function cdfSample(sampler::FlexleSampler)
@@ -398,7 +410,8 @@ function removeFromFlexleSampler!(sampler::FlexleSampler, i::Int64)
             end
         end
     end
-    reconstructIndexPositions!(sampler)
+    # reconstructIndexPositions!(sampler)
+    reconstructIndexPositions!(sampler, i)
     if !iszero(w) && (from === sampler.levels[begin] || from === sampler.levels[end]) && isempty(from.indices)
         trimTrailingLevels!(sampler)
     end
@@ -745,6 +758,7 @@ function testUserFunctions()
     verifyFlexleSampler(s2)
 
     # test remove
+    printFlexleSampler(s2)
     removeFromFlexleSampler!(s2, 70)      # in middle level, does not empty level
     removeFromFlexleSampler!(s2, 101)     # in middle level, empties level
     removeFromFlexleSampler!(s2, 101)     # empty top level
@@ -981,7 +995,6 @@ function testRemoveWeight(; h::Int64=10000, n::Int64=1000, seed=0)
     for i in 1:n
         push!(indices, rand(1:h-i+1))
     end
-    display(indices)
 
     println("CDF remove weight:")    
     @time testStandardRemoveWeight!(w1, indices, c)

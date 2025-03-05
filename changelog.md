@@ -21,6 +21,10 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 05 March 2025
+- Improvement to `removeFromFlexleSampler!` runtime via non-brute force algorithm
+(~33% speedup) (CLM)
+
 ## 04 March 2025
 - Fix `Flexle` bug where `index_positions` was not updated on element removal; current
 fix disastrously slow, needs speedup (CLM)
