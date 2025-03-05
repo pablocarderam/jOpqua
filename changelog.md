@@ -3,21 +3,17 @@
 KNOWN ISSUES:
 
 TODO:
-- Make `Host` sequence functions that affect event coefficients, I think those
-are missing?
 - Organize non-sampling coefficients and their functions into matrices and
 vectors
-- Rename infection probability to transmission efficiency
-- Implement non-sampling coefficient propagation
 - Rename `weightedResponse` to `weightedInteraction`
-- Incorporate static and interaction general coefficients of `Pathogen` and
-`Response` entities into sampling weight propagation from the `Pathogen` and
-`Response` level to the `Host` level
-- Incorporate static general coefficients of `Host` entities into sampling
-weight propagation from the `Host` level to the `Population` level
+- Make `Host` sequence functions that affect event coefficients, I think those
+are missing?
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
+- Incorporate static and interaction general coefficients of `Pathogen` and
+`Response` entities into weight and coefficient propagation from the `Pathogen`
+and `Response` level to the `Host` level
 - Incorporate Flexle into all host sampling
 
 TODO: Not debugged:
@@ -31,8 +27,8 @@ TODO: Not debugged:
 
 ## 4 March 2025
 - Renamed `infectionProbability` to `transmissionEfficiency`
-- Transfer transmission efficiency to nonsampling variable/coefficient/function
-vectors
+- Transfer transmission efficiency and infection probability to nonsampling
+variable/coefficient/function vectors
 
 ## 3 March 2025
 - Added nonsampling coefficient vector to `Host` and some machinery to update it

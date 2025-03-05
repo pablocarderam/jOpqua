@@ -718,11 +718,18 @@ function birth!(model::Model, rand_n::Float64)
                 end
 
                 if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
-                    rand() < parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
-                             parent.pathogens[pathogen_idx].type.verticalTransmissionCoefficient(
-                                 parent.pathogens[pathogen_idx].sequence
-                             ) *
-                             parent.pathogen_fractions[pathogen_idx])
+                    rand() < nonsamplingValue(
+                            VERTICAL_TRANSMISSION, parent.pathogens[pathogen_idx], parent,
+                            model.populations[pop_idx]
+                        ) * parent.pathogens[pathogen_idx].type.coefficient_functions[VERTICAL_TRANSMISSION](
+                            parent.pathogens[pathogen_idx].sequence
+                        ) *
+                        parent.pathogen_fractions[pathogen_idx])
+                            # parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
+                             # parent.pathogens[pathogen_idx].type.verticalTransmissionCoefficient(
+                             #     parent.pathogens[pathogen_idx].sequence
+                             # ) *
+                             # parent.pathogen_fractions[pathogen_idx])
                     hostContact!(
                         parent, pop_idx, length(model.populations[pop_idx].hosts),
                         pop_idx, model, rand_n
