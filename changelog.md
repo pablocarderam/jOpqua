@@ -8,9 +8,6 @@ vectors
 - Rename `weightedResponse` to `weightedInteraction`
 - Make `Host` sequence functions that affect event coefficients, I think those
 are missing?
-- Add response acquisition upon clearance as preferred alternative to response
-acquisition during infection (as in mutations upon infection vs. mutation
-establishment)
 - Incorporate static and interaction general coefficients of `Pathogen` and
 `Response` entities into weight and coefficient propagation from the `Pathogen`
 and `Response` level to the `Host` level
@@ -24,6 +21,13 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 5 March 2025
+- Add response acquisition upon clearance as preferred alternative to response
+acquisition during infection (as in mutations upon infection vs. mutation
+establishment)
+- Transfer vertical transmission, response inheritance, host mutation, and host
+recombination to nonsampling variable/coefficient/function vectors
 
 ## 4 March 2025
 - Renamed `infectionProbability` to `transmissionEfficiency`

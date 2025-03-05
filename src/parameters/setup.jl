@@ -96,7 +96,7 @@ end
 function newResponseType(
     id::String;
     template::ResponseType=DEFAULT_RESPONSE_TYPE,
-    inherit_response::Union{Nothing,Float64}=nothing,
+    # inherit_response::Union{Nothing,Float64}=nothing,
     # inoculumCoefficient::Union{Nothing,Function}=nothing,
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     # verticalTransmissionCoefficient::Union{Nothing,Function}=nothing,
@@ -153,7 +153,7 @@ function newResponseType(
     hostRecombinationsUponBirthSpecificCoefficient::Union{Nothing,Function}=nothing,
 )
 
-    isnothing(inherit_response) ? inherit_response = template.inherit_response : inherit_response = inherit_response
+    # isnothing(inherit_response) ? inherit_response = template.inherit_response : inherit_response = inherit_response
     # isnothing(inoculumCoefficient) ? inoculumCoefficient = template.inoculumCoefficient : inoculumCoefficient = inoculumCoefficient
     # isnothing(verticalTransmissionCoefficient) ? verticalTransmissionCoefficient = template.verticalTransmissionCoefficient : verticalTransmissionCoefficient = verticalTransmissionCoefficient
     # isnothing(infectionCoefficient) ? infectionCoefficient = template.infectionCoefficient : infectionCoefficient = infectionCoefficient
@@ -205,7 +205,7 @@ function newResponseType(
 
     return ResponseType(
         id,
-        inherit_response,
+        # inherit_response,
         # inoculumCoefficient,
         # verticalTransmissionCoefficient,
         # infectionCoefficient,
@@ -311,12 +311,12 @@ function newPopulationType(
     # mutation_coefficient::Union{Nothing,Float64}=nothing,
     # recombination_coefficient::Union{Nothing,Float64}=nothing,
     # vertical_transmission_coefficient_::Union{Nothing,Float64}=nothing,
-    host_mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
+    # host_mean_mutations_per_replication::Union{Nothing,Float64}=nothing,
     host_sexual_reproduction::Union{Nothing,Bool}=nothing,
-    host_mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
+    # host_mean_recombination_crossovers::Union{Nothing,Float64}=nothing,
     hostSexualCompatibility::Union{Nothing,Function}=nothing,
-    hostMutationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
-    hostRecombinationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+    # hostMutationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
+    # hostRecombinationCoefficient::Union{Nothing,Function}=nothing, # takes seq argument, returns Float64
 
     # Rate coefficients:
     mutant_establishment_coefficient::Union{Nothing,Float64}=nothing,
@@ -368,13 +368,13 @@ function newPopulationType(
     # isnothing(recombination_coefficient) ? recombination_coefficient = template.recombination_coefficient : recombination_coefficient = recombination_coefficient
     # isnothing(vertical_transmission_coefficient) ? vertical_transmission_coefficient = template.vertical_transmission_coefficient : vertical_transmission_coefficient = vertical_transmission_coefficient
 
-    isnothing(host_mean_mutations_per_replication) ? host_mean_mutations_per_replication = template.host_mean_mutations_per_replication : host_mean_mutations_per_replication = host_mean_mutations_per_replication
+    # isnothing(host_mean_mutations_per_replication) ? host_mean_mutations_per_replication = template.host_mean_mutations_per_replication : host_mean_mutations_per_replication = host_mean_mutations_per_replication
     isnothing(host_sexual_reproduction) ? host_sexual_reproduction = template.host_sexual_reproduction : host_sexual_reproduction = host_sexual_reproduction
-    isnothing(host_mean_recombination_crossovers) ? host_mean_recombination_crossovers = template.host_mean_recombination_crossovers : host_mean_recombination_crossovers = host_mean_recombination_crossovers
+    # isnothing(host_mean_recombination_crossovers) ? host_mean_recombination_crossovers = template.host_mean_recombination_crossovers : host_mean_recombination_crossovers = host_mean_recombination_crossovers
 
     isnothing(hostSexualCompatibility) ? hostSexualCompatibility = template.hostSexualCompatibility : hostSexualCompatibility = hostSexualCompatibility
-    isnothing(hostMutationCoefficient) ? hostMutationCoefficient = template.hostMutationCoefficient : hostMutationCoefficient = hostMutationCoefficient
-    isnothing(hostRecombinationCoefficient) ? hostRecombinationCoefficient = template.hostRecombinationCoefficient : hostRecombinationCoefficient = hostRecombinationCoefficient
+    # isnothing(hostMutationCoefficient) ? hostMutationCoefficient = template.hostMutationCoefficient : hostMutationCoefficient = hostMutationCoefficient
+    # isnothing(hostRecombinationCoefficient) ? hostRecombinationCoefficient = template.hostRecombinationCoefficient : hostRecombinationCoefficient = hostRecombinationCoefficient
 
     isnothing(mutant_establishment_coefficient) ? mutant_establishment_coefficient = template.base_coefficients[MUTANT_ESTABLISHMENT] : mutant_establishment_coefficient = mutant_establishment_coefficient
     isnothing(clearance_coefficient) ? clearance_coefficient = template.base_coefficients[CLEARANCE] : clearance_coefficient = clearance_coefficient
@@ -413,12 +413,12 @@ function newPopulationType(
         # mutation_coefficient,
         # recombination_coefficient,
         # vertical_transmission_coefficient,
-        host_mean_mutations_per_replication,
+        # host_mean_mutations_per_replication,
         host_sexual_reproduction,
-        host_mean_recombination_crossovers,
+        # host_mean_recombination_crossovers,
         hostSexualCompatibility,
-        hostMutationCoefficient, # takes seq argument, returns Float64
-        hostRecombinationCoefficient, # takes seq argument, returns Float64
+        # hostMutationCoefficient, # takes seq argument, returns Float64
+        # hostRecombinationCoefficient, # takes seq argument, returns Float64
         SA[ # order defined in COEFFICIENTS
             mutant_establishment_coefficient, clearance_coefficient, response_acquisition_coefficient,
             recombinant_establishment_coefficient, contact_coefficient, response_loss_coefficient,

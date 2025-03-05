@@ -28,7 +28,7 @@ end
 
 struct ResponseType
     id::String
-    inherit_response::Float64
+    # inherit_response::Float64
     # inoculumCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
     # # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     # verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
@@ -93,8 +93,8 @@ mutable struct Host
     birth_time::Float64
 
     sequence::String
-    mean_mutations_per_replication::Float64
-    mean_recombination_crossovers::Float64
+    # mean_mutations_per_replication::Float64
+    # mean_recombination_crossovers::Float64
 
     pathogens::Vector{Pathogen} # size MAX_PATHOGENS
     responses::Vector{Response} # size MAX_RESPONSES
@@ -130,13 +130,13 @@ struct PopulationType
 
     # host_num_loci::Int64
     # host_possible_alleles::String
-    host_mean_mutations_per_replication::Float64
+    # host_mean_mutations_per_replication::Float64
     host_sexual_reproduction::Bool
-    host_mean_recombination_crossovers::Float64
+    # host_mean_recombination_crossovers::Float64
 
     hostSexualCompatibility::FunctionWrapper{Bool,Tuple{String,String}}
-    hostMutationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
-    hostRecombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
+    # hostMutationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
+    # hostRecombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 

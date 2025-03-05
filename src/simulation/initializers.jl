@@ -44,12 +44,12 @@ function newHost!(sequence::String, type::HostType, population::Population, mode
             parents,
             birth_time,
             sequence,
-            population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
-                sequence
-            ),
-            population.parameters.host_mean_recombination_crossovers * population.parameters.hostRecombinationCoefficient(
-                sequence
-            ),
+            # population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
+            #     sequence
+            # ),
+            # population.parameters.host_mean_recombination_crossovers * population.parameters.hostRecombinationCoefficient(
+            #     sequence
+            # ),
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),

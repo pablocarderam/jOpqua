@@ -220,17 +220,14 @@ function removeResponseFromHost!(response_idx::Int64, host_idx::Int64, populatio
 end
 
 function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, model::Model)
-    if !(
-        pathogen in
-        model.populations[pop_idx].hosts[host_idx].pathogens
-    ) && rand() < nonsamplingValue(
-        TRANSMISSION_EFFICIENCY, pathogen,
-        model.populations[pop_idx].hosts[host_idx],
-        model.populations[pop_idx]
-    ) * model.populations[pop_idx].parameters.transmissionEfficiency(
-        pathogen,
-        model.populations[pop_idx].hosts[host_idx]
-    )
+    if !(pathogen in model.populations[pop_idx].hosts[host_idx].pathogens) && rand() < nonsamplingValue(
+                TRANSMISSION_EFFICIENCY, pathogen,
+                model.populations[pop_idx].hosts[host_idx],
+                model.populations[pop_idx]
+            ) * model.populations[pop_idx].parameters.transmissionEfficiency(
+                pathogen,
+                model.populations[pop_idx].hosts[host_idx]
+            )
 
         addPathogenToHost!(
             pathogen, host_idx, model.populations[pop_idx], model
@@ -321,12 +318,12 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
             MVector{2,Union{Host,Nothing}}([nothing, nothing]),
             model.time,
             host_sequence,
-            population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
-                host_sequence
-            ),
-            population.parameters.host_mean_recombination_crossovers * population.parameters.hostRecombinationCoefficient(
-                host_sequence
-            ),
+            # population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
+            #     host_sequence
+            # ),
+            # population.parameters.host_mean_recombination_crossovers * population.parameters.hostRecombinationCoefficient(
+            #     host_sequence
+            # ),
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
@@ -456,6 +453,17 @@ end
 function clearPathogen!(model::Model, rand_n::Float64)
     pathogen_idx, host_idx, pop_idx = choosePathogen(CLEARANCE, model, rand_n)
 
+    resp_acq = nonsamplingValue(
+        RESPONSE_ACQUISITION_UPON_CLEARANCE,
+        model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
+        model.populations[pop_idx].hosts[host_idx],
+        model.populations[pop_idx]
+    )
+
+    if (resp_acq > 0.0 && rand() < resp_acq)
+        acquireResponse!(pathogen_idx, host_idx, pop_idx, model, rand_n)
+    end
+
     removePathogenFromHost!(
         pathogen_idx, host_idx,
         model.populations[pop_idx], model
@@ -464,7 +472,10 @@ end
 
 function acquireResponse!(model::Model, rand_n::Float64)
     pathogen_idx, host_idx, pop_idx = choosePathogen(RESPONSE_ACQUISITION, model, rand_n)
+    acquireResponse!(pathogen_idx, host_idx, pop_idx, model, rand_n)
+end
 
+function acquireResponse!(pathogen_idx::Int64, host_idx::Int64, pop_idx::Int64, model::Model, rand_n::Float64)
     responses = model.populations[pop_idx].parameters.developResponses(
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
         model.populations[pop_idx].hosts[host_idx],
@@ -653,7 +664,12 @@ function birth!(model::Model, rand_n::Float64)
                 parent[1].sequence,
                 model.populations[pop_idx].host_num_loci,
                 model.populations[pop_idx].host_possible_alleles,
-                parents[1].host_mean_mutations_per_replication
+                nonsamplingValue(
+                    HOST_MUTATIONS_UPON_BIRTH,
+                    parents[1],
+                    model.populations[pop_idx]
+                )
+                # parents[1].host_mean_mutations_per_replication
             ), nothing
         ]
 
@@ -664,7 +680,11 @@ function birth!(model::Model, rand_n::Float64)
                     parent[1].sequence,
                     model.populations[pop_idx].host_num_loci,
                     model.populations[pop_idx].host_possible_alleles,
-                    parents[1].host_mean_mutations_per_replication
+                    nonsamplingValue(
+                        HOST_MUTATIONS_UPON_BIRTH,
+                        parents[1],
+                        model.populations[pop_idx]
+                    )
                 ),
                 model.populations[pop_idx].host_num_loci,
                 parents[1].mean_recombination_crossovers,
@@ -677,7 +697,11 @@ function birth!(model::Model, rand_n::Float64)
                         parent[2].sequence,
                         model.populations[pop_idx_2].host_num_loci,
                         model.populations[pop_idx_2].host_possible_alleles,
-                        parents[2].host_mean_mutations_per_replication
+                        nonsamplingValue(
+                            HOST_MUTATIONS_UPON_BIRTH,
+                            parents[2],
+                            model.populations[pop_idx]
+                        )
                     ),
                     model.populations[pop_idx_2].host_num_loci,
                     parents[2].mean_recombination_crossovers,
@@ -686,18 +710,31 @@ function birth!(model::Model, rand_n::Float64)
             end
             child_sequence = generateZygote(parent_gametes[1], parent_gametes[2])
         else
-            if !isnothing(parent[2]) && parents[1].host_mean_recombination_crossovers > 0.0 && parents[2].host_mean_recombination_crossovers > 0.0
+            rec_1 = nonsamplingValue(
+                HOST_RECOMBINATIONS_UPON_BIRTH,
+                parents[1],
+                model.populations[pop_idx]
+            )
+            rec_2 = nonsamplingValue(
+                HOST_RECOMBINATIONS_UPON_BIRTH,
+                parents[2],
+                model.populations[pop_idx]
+            )
+            if !isnothing(parent[2]) && rec_1 > 0.0 && rec_2 > 0.0
                 child_sequence = recombinantSequences(
                     parent_gametes[1],
                     generateGamete(
                         parent[2].sequence,
                         model.populations[pop_idx].host_num_loci,
                         model.populations[pop_idx].host_possible_alleles,
-                        parents[2].host_mean_mutations_per_replication
+                        nonsamplingValue(
+                            HOST_MUTATIONS_UPON_BIRTH,
+                            parents[2],
+                            model.populations[pop_idx]
+                        )
                     ),
                     model.populations[pop_idx].host_num_loci,
-                    parents[1].mean_recombination_crossovers,
-                    parents[2].mean_recombination_crossovers
+                    rec_1, rec_2
                 )
             else
                 child_sequence = parent_gametes[1]
@@ -709,7 +746,10 @@ function birth!(model::Model, rand_n::Float64)
         for parent in parents
             if !isnothing(parent)
                 for response in parent.responses
-                    if response.type.inherit_response > 0.0 && rand() < response.type.inherit_response
+                    resp_inh = nonsamplingValue(
+                        RESPONSE_INHERITANCE, response, parent, model.populations[pop_idx]
+                    )
+                    if resp_inh > 0.0 && rand() < resp_inh
                         addResponseToHost!(
                             response, length(model.populations[pop_idx].hosts),
                             model.populations[pop_idx], model
@@ -717,14 +757,12 @@ function birth!(model::Model, rand_n::Float64)
                     end
                 end
 
-                if (parent.pathogens[pathogen_idx].type.vertical_transmission > 0.0 &&
-                    rand() < nonsamplingValue(
-                            VERTICAL_TRANSMISSION, parent.pathogens[pathogen_idx], parent,
-                            model.populations[pop_idx]
-                        ) * parent.pathogens[pathogen_idx].type.coefficient_functions[VERTICAL_TRANSMISSION](
-                            parent.pathogens[pathogen_idx].sequence
-                        ) *
-                        parent.pathogen_fractions[pathogen_idx])
+                vert_trans = nonsamplingValue(
+                    VERTICAL_TRANSMISSION, parent.pathogens[pathogen_idx], parent,
+                    model.populations[pop_idx]
+                )
+
+                if (vert_trans > 0.0 && rand() < vert_trans * parent.pathogen_fractions[pathogen_idx])
                             # parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
                              # parent.pathogens[pathogen_idx].type.verticalTransmissionCoefficient(
                              #     parent.pathogens[pathogen_idx].sequence
