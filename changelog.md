@@ -28,11 +28,15 @@ acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
 - Transfer vertical transmission, response inheritance, host mutation, and host
 recombination to nonsampling variable/coefficient/function vectors
+- Improvement to `removeFromFlexleSampler!` runtime via non-brute force algorithm
+(~33% speedup) (CLM)
 
 ## 4 March 2025
 - Renamed `infectionProbability` to `transmissionEfficiency`
 - Transfer transmission efficiency and infection probability to nonsampling
 variable/coefficient/function vectors
+- Fix `Flexle` bug where `index_positions` was not updated on element removal; current
+fix disastrously slow, needs speedup (CLM)
 
 ## 3 March 2025
 - Added nonsampling coefficient vector to `Host` and some machinery to update it
@@ -40,6 +44,8 @@ variable/coefficient/function vectors
 - Changed `birth!` to carry out a contact event if vertical transmission happens
 - Transfer mutations upon infection, recombinations upon infection, and inoculum
 to nonsampling variable/coefficient/function vectors
+- Additional x2 weight update performance improvement via: `Float64` bit manipulation
+to calculate log bounds + floor log2; and iterative approach to `levelIndex` (CLM)
 
 ## 2 March 2025
 - Corrected a couple references from to `NUM_COEFFICIENTS` for
