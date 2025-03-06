@@ -345,9 +345,9 @@ function newPopulationType(
 
     # Other functions
     pathogenFractions::Union{Nothing,Function}=nothing,
-    # Takes Host entity and Population's weightedResponse function,
+    # Takes Host entity and Population's weightedInteraction function,
     # returns vector with fractional representation of each pathogen present
-    weightedResponse::Union{Nothing,Function}=nothing,
+    weightedInteraction::Union{Nothing,Function}=nothing,
     # Takes Pathogen entity, Host entity, and event number;
     # returns aggregated response coefficient against that Pathogen for that event
     transmissionEfficiency::Union{Nothing,Function}=nothing,
@@ -399,7 +399,7 @@ function newPopulationType(
     isnothing(host_recombinations_upon_birth_coefficient) ? host_recombinations_upon_birth_coefficient = template.base_coefficients[HOST_RECOMBINATIONS_UPON_BIRTH] : host_recombinations_upon_birth_coefficient = host_recombinations_upon_birth_coefficient
 
     isnothing(pathogenFractions) ? pathogenFractions = template.pathogenFractions : pathogenFractions = pathogenFractions
-    isnothing(weightedResponse) ? weightedResponse = template.weightedResponse : weightedResponse = weightedResponse
+    isnothing(weightedInteraction) ? weightedInteraction = template.weightedInteraction : weightedInteraction = weightedInteraction
     isnothing(transmissionEfficiency) ? transmissionEfficiency = template.transmissionEfficiency : transmissionEfficiency = transmissionEfficiency
     isnothing(developResponses) ? developResponses = template.developResponses : developResponses = developResponses
 
@@ -429,7 +429,7 @@ function newPopulationType(
             response_inheritance_coefficient, host_mutations_upon_birth_coefficient, host_recombinations_upon_birth_coefficient,
         ],
         pathogenFractions,
-        weightedResponse,
+        weightedInteraction,
         transmissionEfficiency,
         developResponses,
         response_types,

@@ -1,4 +1,4 @@
-function pathogenFractionsWinnerTakesAll(host::Host, weightedResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
+function pathogenFractionsWinnerTakesAll(host::Host, weightedInteraction::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
     # Currently, we assume pathogen population fraction (share in total fitness)
     # impacts all events equally regardless of event; this is not necessarilly the case, however.
     # We also assume only the most fit pathogen affects events.
@@ -10,7 +10,7 @@ function pathogenFractionsWinnerTakesAll(host::Host, weightedResponse::FunctionW
         if length(host.responses) > 0
             for p in 1:length(host.pathogens)
                 fracs[p] =
-                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedResponse(
+                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedInteraction(
                         host.pathogens[p], host, INTRAHOST_FITNESS
                     )
             end
@@ -27,13 +27,13 @@ function pathogenFractionsWinnerTakesAll(host::Host, weightedResponse::FunctionW
     return fracs
 end
 
-function pathogenFractionsProportionalFitness(host::Host, weightedResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
+function pathogenFractionsProportionalFitness(host::Host, weightedInteraction::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
     fracs = Vector{Float64}(undef, length(host.pathogens))
     if length(host.pathogens) > 0
         if length(host.responses) > 0
             for p in 1:length(host.pathogens)
                 fracs[p] =
-                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedResponse(
+                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedInteraction(
                         host.pathogens[p], host, INTRAHOST_FITNESS
                     )
             end

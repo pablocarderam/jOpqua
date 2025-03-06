@@ -141,9 +141,9 @@ struct PopulationType
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 
     pathogenFractions::FunctionWrapper{Vector{Float64},Tuple{Host,FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}}}
-    # Takes Host entity and Population's weightedResponse function,
+    # Takes Host entity and Population's weightedInteraction function,
     # returns vector with fractional representation of each pathogen present
-    weightedResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
+    weightedInteraction::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
     # Takes Pathogen entity, Host entity, and event number;
     # returns aggregated response coefficient against that Pathogen for that event
     transmissionEfficiency::FunctionWrapper{Float64,Tuple{Pathogen,Host}}

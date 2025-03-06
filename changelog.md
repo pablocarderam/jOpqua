@@ -3,14 +3,11 @@
 KNOWN ISSUES:
 
 TODO:
-- Organize non-sampling coefficients and their functions into matrices and
-vectors
-- Rename `weightedResponse` to `weightedInteraction`
-- Make `Host` sequence functions that affect event coefficients, I think those
-are missing?
-- Incorporate static and interaction general coefficients of `Pathogen` and
-`Response` entities into weight and coefficient propagation from the `Pathogen`
-and `Response` level to the `Host` level
+- Check if necessary to incorporate static and interaction general coefficients
+of `Pathogen` and `Response` entities into weight and coefficient propagation
+from the `Pathogen` and `Response` level to the `Host` level
+- Remove unnecessary comments, correct long description in README from last
+weekend
 - Incorporate Flexle into all host sampling
 
 TODO: Not debugged:
@@ -23,6 +20,11 @@ TODO: Not debugged:
 - Transition
 
 ## 6 March 2025
+- Rename `weightedResponse` to `weightedInteraction`
+- Fixed some bugs in `birth!`, changed host contact function to determine inoculum
+from `INOCULUM` coeefficient by default but from `VERTICAL_TRANSMISSION`
+coefficient during vertical transmission instead
+- Make `Host` sequence coefficients affect sampling event coefficient propagation
 - Futher improvements to `removeFromFlexleSampler!` dict update via streamlined
 algorithm and fast hashing keys (CLM)
 

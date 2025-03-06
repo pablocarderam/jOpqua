@@ -521,7 +521,7 @@ end
 
 function hostContact!(
         host_idx_1::Int64, pop_idx_1::Int64, host_idx_2::Int64, pop_idx_2::Int64,
-        model::Model, rand_n::Float64)
+        model::Model, rand_n::Float64; inoculum_coefficient=INOCULUM)
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]
         # inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
@@ -529,7 +529,7 @@ function hostContact!(
             pois_rand(
                 # host1.pathogens[p_idx].mean_effective_inoculum *
                 nonsamplingValue(
-                    INOCULUM, host1.pathogens[p_idx], host1,
+                    inoculum_coefficient, host1.pathogens[p_idx], host1,
                     model.populations[pop_idx_1]
                 ) * host1.pathogen_fractions[p_idx]
             )
@@ -616,7 +616,7 @@ function hostContact!(
 
                         attemptInfection!(
                             mutantPathogen!(
-                                recombinant, model.populations[pop_idx].hosts[host_idx_1],
+                                recombinant, host1,
                                 model.populations[pop_idx_1], model.time
                             ),
                             host_idx_2, pop_idx_2, model
@@ -625,6 +625,7 @@ function hostContact!(
                         attemptInfection!(
                             mutantPathogen!(
                                 host1.pathogens[p_idx],
+                                host1,
                                 model.populations[pop_idx_1],
                                 model.time
                             ),
@@ -741,7 +742,10 @@ function birth!(model::Model, rand_n::Float64)
             end
         end
 
-        jOpqua.newHost!(child_sequence, model.populations[pop_idx], model, parents=parents, birth_time=model.time)
+        jOpqua.newHost!(
+            child_sequence, parents[1].type, model.populations[pop_idx], model,
+            parents=parents, birth_time=model.time
+        )
 
         for parent in parents
             if !isnothing(parent)
@@ -758,11 +762,11 @@ function birth!(model::Model, rand_n::Float64)
                 end
 
                 vert_trans = nonsamplingValue(
-                    VERTICAL_TRANSMISSION, parent.pathogens[pathogen_idx], parent,
+                    VERTICAL_TRANSMISSION, parent,
                     model.populations[pop_idx]
                 )
 
-                if (vert_trans > 0.0 && rand() < vert_trans * parent.pathogen_fractions[pathogen_idx])
+                if (vert_trans > 0.0 && rand() < vert_trans)
                             # parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
                              # parent.pathogens[pathogen_idx].type.verticalTransmissionCoefficient(
                              #     parent.pathogens[pathogen_idx].sequence
@@ -770,7 +774,7 @@ function birth!(model::Model, rand_n::Float64)
                              # parent.pathogen_fractions[pathogen_idx])
                     hostContact!(
                         parent, pop_idx, length(model.populations[pop_idx].hosts),
-                        pop_idx, model, rand_n
+                        pop_idx, model, rand_n, inoculum_coefficient=VERTICAL_TRANSMISSION
                     )
                 end
             end
