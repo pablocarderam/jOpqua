@@ -222,6 +222,7 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
 end
 
 function hostWeightsNonsampling!(h::Int64, population::Population, evt::Int64)
+    #TODO:
     population.hosts[h].coefficients[evt] = population.hosts[h].coefficients[evt]
 end
 
@@ -240,7 +241,8 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
                 change = change * model.population_contact_weights_receive_sums[model.population_dict[population.id]]
             end
             propagateWeightChanges!(
-                population.parameters.base_coefficients[weight] * change,
+                population.parameters.base_coefficients[weight] * population.hosts[host_idx].coefficients[weight] *
+                change,
                 population, weight, model
             )
         end
@@ -250,7 +252,8 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
         hostWeightsResponse!(host_idx, population, weight)
         if prev != population.host_weights[weight, host_idx] && population.parameters.base_coefficients[weight] != 0.0
             propagateWeightChanges!(
-                population.parameters.base_coefficients[weight] * (population.host_weights[weight, host_idx] - prev),
+                population.parameters.base_coefficients[weight] * population.hosts[host_idx].coefficients[weight] *
+                (population.host_weights[weight, host_idx] - prev),
                 population, weight, model
             )
         end
@@ -265,7 +268,8 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
                 change = change * model.population_transition_weights_receive_sums[model.population_dict[population.id]]
             end
             propagateWeightChanges!(
-                population.parameters.base_coefficients[weight] * change,
+                population.parameters.base_coefficients[weight] * population.hosts[host_idx].coefficients[weight] *
+                change,
                 population, weight, model
             )
         end
@@ -280,7 +284,7 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
         )
 
             propagateWeightReceiveChanges!(
-                population.parameters.base_coefficients[weight] *
+                population.parameters.base_coefficients[weight] * population.hosts[host_idx].coefficients[weight] *
                 (population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] - prev),
                 population, weight, model
             )

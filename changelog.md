@@ -3,11 +3,11 @@
 KNOWN ISSUES:
 
 TODO:
-- Make `Host` sequence functions that affect event coefficients, I think those
-are missing?
-- Incorporate static and interaction general coefficients of `Pathogen` and
-`Response` entities into weight and coefficient propagation from the `Pathogen`
-and `Response` level to the `Host` level
+- Check if necessary to incorporate static and interaction general coefficients
+of `Pathogen` and `Response` entities into weight and coefficient propagation
+from the `Pathogen` and `Response` level to the `Host` level
+- Remove unnecessary comments, correct long description in README from last
+weekend
 - Incorporate Flexle into all host sampling
 
 TODO: Not debugged:
@@ -24,6 +24,7 @@ TODO: Not debugged:
 - Fixed some bugs in `birth!`, changed host contact function to determine inoculum
 from `INOCULUM` coeefficient by default but from `VERTICAL_TRANSMISSION`
 coefficient during vertical transmission instead
+- Make `Host` sequence coefficients affect sampling event coefficient propagation
 
 ## 5 March 2025
 - Add response acquisition upon clearance as preferred alternative to response
