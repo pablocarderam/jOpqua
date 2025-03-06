@@ -3,9 +3,6 @@
 KNOWN ISSUES:
 
 TODO:
-- Organize non-sampling coefficients and their functions into matrices and
-vectors
-- Rename `weightedResponse` to `weightedInteraction`
 - Make `Host` sequence functions that affect event coefficients, I think those
 are missing?
 - Incorporate static and interaction general coefficients of `Pathogen` and
@@ -21,6 +18,9 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 6 March 2025
+- Rename `weightedResponse` to `weightedInteraction`
 
 ## 5 March 2025
 - Add response acquisition upon clearance as preferred alternative to response

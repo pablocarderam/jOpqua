@@ -106,7 +106,7 @@ function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int
     end
     if length(host.responses) > 0
         host.pathogen_weights[evt, p] =
-            host.pathogen_weights[evt, p] * population.parameters.weightedResponse(
+            host.pathogen_weights[evt, p] * population.parameters.weightedInteraction(
                 host.pathogens[p], host, evt
             )
     end
@@ -162,7 +162,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
             population.host_weights[evt, h] =
                 population.host_weights[evt, h] * sum([
                     # we weight by pathogen fraction as above
-                    population.hosts[h].pathogen_fractions[p] * population.parameters.weightedResponse(
+                    population.hosts[h].pathogen_fractions[p] * population.parameters.weightedInteraction(
                         population.hosts[h].pathogens[p], population.hosts[h], evt
                     )
                     for p in 1:length(population.hosts[h].pathogens)
@@ -200,7 +200,7 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
                 population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] * sum([
                     # we weight by pathogen fraction as above
                     population.hosts[h].pathogen_fractions[p] *
-                    population.parameters.weightedResponse(
+                    population.parameters.weightedInteraction(
                         population.hosts[h].pathogens[p], population.hosts[h], evt
                     )
                     for p in 1:length(population.hosts[h].pathogens)
@@ -227,7 +227,7 @@ end
 
 function hostWeights!(host_idx::Int64, population::Population, model::Model)
     population.hosts[host_idx].pathogen_fractions = population.parameters.pathogenFractions(
-        population.hosts[host_idx], population.parameters.weightedResponse
+        population.hosts[host_idx], population.parameters.weightedInteraction
     )
     prev = 0.0
     for weight in PATHOGEN_EVENTS
@@ -294,7 +294,7 @@ end
 # Intra-Model (Event) level:
 function updatePopulationContactWeightReceiveMatrix!(pop_idx_1::Int64, pop_idx_2::Int64, change::Float64, model::Model)
     model.population_contact_weights_receive[pop_idx_2, pop_idx_1] += change
-    if approxZero(model.population_contact_weights_receive_sums[pop_idx_1]+change, t=ERROR_TOLERANCE)
+    if approxZero(model.population_contact_weights_receive_sums[pop_idx_1] + change, t=ERROR_TOLERANCE)
         change = -model.population_contact_weights_receive_sums[pop_idx_1]
     end
     model.population_contact_weights_receive_sums[pop_idx_1] += change
@@ -377,7 +377,7 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
             # If you don't want this to happen, modify each population's
             # receive contact coefficient accordingly.
             model.population_contact_weights_receive[model.population_dict[population.id], p] += change_p
-            if approxZero(model.population_contact_weights_receive_sums[p]+change_p, t=ERROR_TOLERANCE)
+            if approxZero(model.population_contact_weights_receive_sums[p] + change_p, t=ERROR_TOLERANCE)
                 change_p = -model.population_contact_weights_receive_sums[p]
             end
             model.population_contact_weights_receive_sums[p] += change_p

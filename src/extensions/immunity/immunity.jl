@@ -1,4 +1,4 @@
-function weightedResponseArithmeticMean(pathogen::Pathogen, host::Host, evt::Int64)
+function weightedInteractionArithmeticMean(pathogen::Pathogen, host::Host, evt::Int64)
     # reactivity-weighted arithmetic mean of specific coefficients
     if length(host.responses) > 0
         reac_sum = 0.0
@@ -36,7 +36,7 @@ function transmissionEfficiencyArithmeticMean(pathogen::Pathogen, host::Host)
     end
 end
 
-function weightedResponseWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int64)
+function weightedInteractionWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int64)
     if length(host.responses) > 0
         dominant_reaction = 1.0
         dominant_reactivity = 0.0
@@ -73,9 +73,9 @@ function transmissionEfficiencyWinnerTakesAll(pathogen::Pathogen, host::Host)
 end
 
 function deNovoResponse(
-        pathogen::Pathogen, host::Host,
-        existing_responses::Dict{Tuple{String,String,String,String},Response},
-        response_types::Dict{String,ResponseType}, birth_time::Float64; response_type_id::String="Default")
+    pathogen::Pathogen, host::Host,
+    existing_responses::Dict{Tuple{String,String,String,String},Response},
+    response_types::Dict{String,ResponseType}, birth_time::Float64; response_type_id::String="Default")
     if haskey(existing_responses, (host.sequence, pathogen.sequence, "", response_type_id))
         return [existing_responses[(host.sequence, pathogen.sequence, "", response_type_id)]]
     else
