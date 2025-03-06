@@ -213,15 +213,29 @@ function reconstructIndexPositions!(sampler::FlexleSampler)
 end
 
 function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
-    for idx in i:length(sampler.weights)
-        w = sampler.weights[idx]
-        iszero(w) && continue
-        # if isnothing(l) # if weight is 0
-        #     # @printf "index %i has no level - %i\n" idx floorLog2(sampler.weights[idx])
-        # else
-        d = getLevel(w, sampler.levels).index_positions
-        d[idx] = pop!(d, idx+1)     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx+1] => pos) for all idx >= i
-    end 
+    n = length(sampler.weights)
+    if i > n
+        return
+    end
+    
+    l_idx = getLevel(sampler.weights[i], sampler.levels)
+    for idx in i:length(sampler.weights)-1
+        l_idx_plus1 = getLevel(sampler.weights[idx+1], sampler.levels)
+        if !iszero(sampler.weights[idx])
+            if l_idx === l_idx_plus1
+                l_idx.index_positions[idx] = l_idx.index_positions[idx+1]
+            else
+                l_idx.index_positions[idx] = pop!(l_idx.index_positions, idx+1)
+            end
+        end
+        l_idx = l_idx_plus1
+    end
+
+    w = sampler.weights[n]
+    iszero(w) && return
+    d = getLevel(sampler.weights[n], sampler.levels).index_positions
+    d[n] = pop!(d, n+1)     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx] => pos) for all idx >= i
+    
 end
 
 # Sampling methods
@@ -503,7 +517,7 @@ function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
             @printf "Error %i: level (%f, %f) max incorrect (expected %f, got %f)\n" errors level.bounds[1] level.bounds[2] expected_max level.max
         end
     end
-    if !approxeq(overall_sum, sampler.sum)     # correct for probably floating point error
+    if !approxeq(overall_sum, sampler.sum)     # correct for probable floating point error
         errors += 1
         @printf "Error %i: overall sampler sum incorrect (expected %f, got %f)" errors overall_sum sampler.sum
     end
@@ -758,12 +772,12 @@ function testUserFunctions()
     verifyFlexleSampler(s2)
 
     # test remove
-    printFlexleSampler(s2)
     removeFromFlexleSampler!(s2, 70)      # in middle level, does not empty level
     removeFromFlexleSampler!(s2, 101)     # in middle level, empties level
     removeFromFlexleSampler!(s2, 101)     # empty top level
     removeFromFlexleSampler!(s2, 101)     # empty bottom level
     removeFromFlexleSampler!(s2, 86)      # zero
+    removeFromFlexleSampler!(s2, 1)       # first element
     verifyFlexleSampler(s2)
 end
 
