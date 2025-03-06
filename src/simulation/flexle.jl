@@ -10,6 +10,16 @@ const EXPONENT_MASK_FLOAT64::Int64   = 0x7FF0000000000000
 const EXPONENT_SHIFT_FLOAT64::Int64  = 52
 const EXPONENT_OFFSET_FLOAT64::Int64 = 1023
 
+
+# Fast hashing (via stevengj - https://discourse.julialang.org/t/poor-time-performance-on-dict/9656/13?u=stevengj)
+
+struct FastHashIndex 
+    val::Int64
+end
+
+Base.:(==)(x::FastHashIndex, y::FastHashIndex) = x.val == y.val
+Base.hash(x::FastHashIndex, h::UInt) = xor(UInt(x.val), h)
+
 # Structs
 
 mutable struct FlexLevel
@@ -17,7 +27,7 @@ mutable struct FlexLevel
     sum::Float64
     max::Float64
     indices::Vector{Int64}
-    index_positions::Dict{Int64, Int64}
+    index_positions::Dict{FastHashIndex, Int64}
 end
 
 mutable struct FlexleSampler
@@ -137,18 +147,19 @@ function addToFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; upd
     if w > level.max
         level.max = w
     end
-    level.index_positions[i] = length(level.indices)
+    level.index_positions[FastHashIndex(i)] = length(level.indices)
 end
 
 function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; update_sampler_sum::Bool=true)
     w::Float64 = sampler.weights[i]
     len = length(level.indices)
-    idx = level.index_positions[i] 
+    fhi = FastHashIndex(i)
+    idx = level.index_positions[fhi] 
     last = pop!(level.indices)
-    delete!(level.index_positions, i)
+    delete!(level.index_positions, fhi)
     if idx != len   # take last index and put it in the place of the one to be removed, unless the last one is itself to be removed
         level.indices[idx] = last
-        level.index_positions[last] = idx
+        level.index_positions[FastHashIndex(last)] = idx
     end
     level.sum -= w
     (update_sampler_sum) && (sampler.sum -= w)
@@ -205,9 +216,9 @@ end
 
 function reconstructIndexPositions!(sampler::FlexleSampler)
     for level in sampler.levels
-        level.index_positions = Dict{Int64, Int64}()
+        level.index_positions = Dict{FastHashIndex, Int64}()
         for i in eachindex(level.indices)
-            level.index_positions[level.indices[i]] = i
+            level.index_positions[FastHashIndex(level.indices[i])] = i
         end
     end
 end
@@ -223,9 +234,9 @@ function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
         l_idx_plus1 = getLevel(sampler.weights[idx+1], sampler.levels)
         if !iszero(sampler.weights[idx])
             if l_idx === l_idx_plus1
-                l_idx.index_positions[idx] = l_idx.index_positions[idx+1]
+                l_idx.index_positions[FastHashIndex(idx)] = l_idx.index_positions[FastHashIndex(idx+1)]
             else
-                l_idx.index_positions[idx] = pop!(l_idx.index_positions, idx+1)
+                l_idx.index_positions[FastHashIndex(idx)] = pop!(l_idx.index_positions, FastHashIndex(idx+1))
             end
         end
         l_idx = l_idx_plus1
@@ -234,7 +245,7 @@ function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
     w = sampler.weights[n]
     iszero(w) && return
     d = getLevel(sampler.weights[n], sampler.levels).index_positions
-    d[n] = pop!(d, n+1)     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx] => pos) for all idx >= i
+    d[FastHashIndex(n)] = pop!(d, FastHashIndex(n+1))     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx] => pos) for all idx >= i
     
 end
 
@@ -322,7 +333,7 @@ function FlexleSampler(weights::AbstractVector{Float64})
     if !all_zero
         for i in num_levels:-1:1
             u_bound = l_bound * 2.0
-            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}(), Dict{Int64, Int64}())
+            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}(), Dict{FastHashIndex, Int64}())
             l_bound = u_bound
         end
 
@@ -333,7 +344,7 @@ function FlexleSampler(weights::AbstractVector{Float64})
                 push!(l.indices, i)
                 (w > l.max) && (l.max = w)
                 l.sum += w
-                l.index_positions[i] = length(l.indices)
+                l.index_positions[FastHashIndex(i)] = length(l.indices)
                 w_sum += w
             end
         end
@@ -484,7 +495,7 @@ function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
         d = level.index_positions
         for pos in eachindex(level.indices)
             idx = level.indices[pos]
-            if !(haskey(d, idx) && d[idx] == pos)
+            if !(haskey(d, FastHashIndex(idx)) && d[FastHashIndex(idx)] == pos)
                 errors += 1
                 @printf "Error %i: element %i (level (%f, %f)) not recorded as position %i in index_positions\n" errors idx level.bounds[1] level.bounds[2] pos
             end
@@ -493,9 +504,9 @@ function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
     for level in sampler.levels
         d = level.index_positions
         for (idx, pos) in d
-            if (pos > length(level.indices)) || !(level.indices[pos] == idx)
+            if (pos > length(level.indices)) || !(level.indices[pos] == idx.val)
                 errors += 1
-                @printf "Error %i: element %i (level (%f, %f)) incorrectly recorded as position %i in index_positions\n" errors idx level.bounds[1] level.bounds[2] pos
+                @printf "Error %i: element %i (level (%f, %f)) incorrectly recorded as position %i in index_positions\n" errors idx.val level.bounds[1] level.bounds[2] pos
             end
         end
     end

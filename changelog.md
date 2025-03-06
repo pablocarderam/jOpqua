@@ -23,7 +23,8 @@ TODO: Not debugged:
 - Transition
 
 ## 6 March 2025
-- Futher minor improvements to `removeFromFlexleSampler!` dict update (CLM)
+- Futher improvements to `removeFromFlexleSampler!` dict update via streamlined
+algorithm and fast hashing keys (CLM)
 
 ## 5 March 2025
 - Add response acquisition upon clearance as preferred alternative to response
