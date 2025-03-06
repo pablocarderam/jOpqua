@@ -21,6 +21,9 @@ TODO: Not debugged:
 
 ## 6 March 2025
 - Rename `weightedResponse` to `weightedInteraction`
+- Fixed some bugs in `birth!`, changed host contact function to determine inoculum
+from `INOCULUM` coeefficient by default but from `VERTICAL_TRANSMISSION`
+coefficient during vertical transmission instead
 
 ## 5 March 2025
 - Add response acquisition upon clearance as preferred alternative to response
