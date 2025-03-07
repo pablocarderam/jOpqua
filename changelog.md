@@ -3,9 +3,6 @@
 KNOWN ISSUES:
 
 TODO:
-- Incorporate static and interaction general coefficients
-of `Pathogen` and `Response` entities into weight and coefficient propagation
-from the `Pathogen` and `Response` level to the `Host` level
 - Incorporate Flexle into all host sampling
 
 TODO: Not debugged:
@@ -16,6 +13,14 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 7 March 2025
+- Incorporated static and interaction hostwide coefficients of `Pathogen` and
+`Response` entities into weight and coefficient propagation from the
+`Pathogen` and `Response` level to the `Host` level
+- Removed redundant `transmissionEfficiency` functions
+- Harnessed calculated coefficients ratehr than functions in `pathogenWeights!`
+- Fixed bugs regarding multiple mutations in `mutantSequence!`
 
 ## 6 March 2025
 - Rename `weightedResponse` to `weightedInteraction`
@@ -111,7 +116,7 @@ level (just one factor stored in `PopulationType`)
 only the specific entities (including `Host` container) involved in the event
 (one factor per entity involved, stored in the corresponding `Pathogen`,
 `Response`, or `Host`)
-- Static, general coefficients calculated based on a single sequence at the
+- Static, hostwide coefficients calculated based on a single sequence at the
 `Pathogen`, `Response`, and `Host` level using functions defined in
 `PathogenType`, `ResponseType`, and `HostType`, respectively (one factor,
 stored at the `Host` or `Population` levels for `Pathogen`/`Response` and
@@ -127,7 +132,7 @@ the list of coefficients of each `Pathogen`-`Response` combination including
 either the specific `Pathogen` or `Response` involved in the non-sampling
 sub-event present within the `Host`, aggregated within a `Host` based on
 `weightedInteractionSpecific`)
-- Interaction-based, general coefficient calculated based on four sequences
+- Interaction-based, hostwide coefficient calculated based on four sequences
 (one for `Pathogen`, two for `Response`, and one for `Host`) using a function
 defined in `ResponseType` (one factor, stored within the `Host`, aggregated
 from the list of coefficients of each `Pathogen`-`Response` combination present

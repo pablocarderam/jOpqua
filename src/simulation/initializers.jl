@@ -7,11 +7,8 @@ function newPathogen!(
     parents::MVector{2,Union{Pathogen,Nothing}}=MVector{2,Union{Pathogen,Nothing}}([nothing, nothing]),
     birth_time::Float64=0.0)
     population.pathogens[sequence] = Pathogen(
-        parents, birth_time, sequence, pathogenSequenceCoefficients(sequence, type),
-        # type.mean_effective_inoculum * type.inoculumCoefficient(sequence) * population.parameters.inoculum_coefficient,
-        # type.mean_mutations_per_replication * type.mutationCoefficient(sequence) * population.parameters.mutation_coefficient,
-        # type.mean_recombination_crossovers * type.recombinationCoefficient(sequence) * population.parameters.recombination_coefficient,
-        # type.verticalTransmissionCoefficient(sequence) * population.parameters.vertical_transmission_coefficient,
+        parents, birth_time, sequence,
+        pathogenSequenceCoefficients(sequence, type), pathogenSequenceHostwideCoefficients(sequence, type),
         type
     )
 
@@ -29,6 +26,7 @@ function newResponse!(
     existing_responses[(host_sequence, imprinted_seq, matured_seq, type.id)] = Response(
         parents, birth_time, host_sequence, imprinted_pathogen, matured_pathogen,
         responseStaticCoefficients(host_sequence, imprinted_seq, matured_seq, type),
+        responseStaticHostwideCoefficients(host_sequence, imprinted_seq, matured_seq, type),
         type
     )
 
@@ -44,12 +42,6 @@ function newHost!(sequence::String, type::HostType, population::Population, mode
             parents,
             birth_time,
             sequence,
-            # population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
-            #     sequence
-            # ),
-            # population.parameters.host_mean_recombination_crossovers * population.parameters.hostRecombinationCoefficient(
-            #     sequence
-            # ),
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),

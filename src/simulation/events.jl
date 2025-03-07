@@ -13,9 +13,10 @@ function mutantSequence!(
     for (i, chromosome_pair) in enumerate(chromosomes)
         homologous_chromosomes = split(chromosome_pair, HOMOLOGOUS_CHROMOSOME_SEPARATOR)
         for (j, chromosome) in enumerate(homologous_chromosomes)
-            loci = rand(
-                1:length(chromosome), zeroTruncatedPoisson(mean_mutations_per_replication * length(chromosome) / num_loci)
-            )
+            x = zeroTruncatedPoisson(mean_mutations_per_replication * length(chromosome) / num_loci)
+            loci = sort(unique(rand(
+                1:length(chromosome), x
+            )))
             seq = ""
             for locus in loci
                 seq = seq * chromosome[length(seq)+1:locus-1] * rand(possible_alleles)
@@ -223,9 +224,10 @@ function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, 
         TRANSMISSION_EFFICIENCY, pathogen,
         model.populations[pop_idx].hosts[host_idx],
         model.populations[pop_idx]
-    ) * model.populations[pop_idx].parameters.transmissionEfficiency(
+    ) * model.populations[pop_idx].parameters.weightedInteraction(
         pathogen,
-        model.populations[pop_idx].hosts[host_idx]
+        model.populations[pop_idx].hosts[host_idx],
+        TRANSMISSION_EFFICIENCY
     )
 
         addPathogenToHost!(

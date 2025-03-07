@@ -15,6 +15,17 @@ function responseStaticCoefficients(
     ]
 end
 
+function responseStaticHostwideCoefficients(
+    host_sequence::String, imprinted_pathogen_sequence::String,
+    matured_pathogen_sequence::String, type::ResponseType)
+    return [
+        type.static_hostwide_coefficient_functions[evt_id](
+            host_sequence, imprinted_pathogen_sequence, matured_pathogen_sequence
+        )
+        for evt_id in 1:NUM_COEFFICIENTS
+    ]
+end
+
 function responseStaticCoefficient(response::Response, host::Host, coefficient::Int64)
     return response.type.static_coefficient_functions[coefficient](
         host.sequence,
@@ -25,6 +36,23 @@ end
 
 function responseSpecificCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
     return response.type.specific_coefficient_functions[coefficient](
+        host.sequence,
+        isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
+        isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+        pathogen.sequence
+    )
+end
+
+function responseStaticHostwideCoefficient(response::Response, host::Host, coefficient::Int64)
+    return response.type.static_hostwide_coefficient_functions[coefficient](
+        host.sequence,
+        isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
+        isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+    )
+end
+
+function responseSpecificHostwideCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
+    return response.type.specific_hostwide_coefficient_functions[coefficient](
         host.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
@@ -60,6 +88,13 @@ function pathogenSequenceCoefficients(sequence::String, type::PathogenType)
     ]
 end
 
+function pathogenSequenceHostwideCoefficients(sequence::String, type::PathogenType)
+    return [
+        type.hostwide_coefficient_functions[evt_id](sequence)
+        for evt_id in 1:NUM_COEFFICIENTS
+    ]
+end
+
 function hostSequenceCoefficients(sequence::String, type::HostType)
     return MVector{NUM_COEFFICIENTS,Float64}([
         type.coefficient_functions[evt_id](sequence)
@@ -70,10 +105,7 @@ end
 # Intrahost-level weights
 
 function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int64)
-    host.pathogen_weights[evt, p] =
-        host.pathogens[p].type.coefficient_functions[evt](
-            host.pathogens[p].sequence
-        )
+    host.pathogen_weights[evt, p] = host.pathogens[p].coefficients[evt]
     if evt == CLEARANCE
         # Clearance likelihoods are not proportional to intrahost fraction,
         # instead, we assume the rate of loss compounds
@@ -105,12 +137,15 @@ end
 
 function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int64)
     population.host_weights[evt, host_idx] = 0.0
+    hostwide_coefficient = 0.0
     for p in 1:length(population.hosts[host_idx].pathogens)
         pathogenWeights!(p, population.hosts[host_idx], population, evt)
         population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
         # we sum here because we have already weighted by fraction
         # (for everything except clearance, see above)
+        hostwide_coefficient += population.hosts[host_idx].pathogens[p].hostwide_coefficients[evt] * population.hosts[host_idx].pathogen_fractions[p]
     end
+    # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * hostwide_coefficient
     population.host_weights_with_coefficient[evt, host_idx] = (
         population.host_weights[evt, host_idx] *
         population.parameters.base_coefficients[evt]
@@ -124,11 +159,28 @@ end
 
 function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int64)
     population.host_weights[evt, host_idx] = 0.0
+    hostwide_coefficient = 0.0
     for re in 1:length(population.hosts[host_idx].responses)
         responseWeights!(re, population.hosts[host_idx], evt)
         population.host_weights[evt, host_idx] += population.hosts[host_idx].response_weights[evt-RESPONSE_EVENTS[1]+1, re]
         # We sum here because having more responses does imply more events, e.g. losses of response
+        hostwide_coefficient += population.hosts[host_idx].responses[re].hostwide_coefficients[evt]
+        length(population.hosts[host_idx].pathogens) > 0 ? specific_hostwide_coefficient = 0.0 : specific_hostwide_coefficient = 1.0
+        for p in 1:length(population.hosts[host_idx].pathogens)
+            specific_hostwide_coefficient += responseSpecificHostwideCoefficient(
+                population.hosts[host_idx].pathogens[p],
+                population.hosts[host_idx].responses[re],
+                population.hosts[host_idx],
+                evt
+            ) * reactivityCoefficient(
+                population.hosts[host_idx].pathogens[p],
+                population.hosts[host_idx].responses[re],
+                population.hosts[host_idx],
+            )
+        end
+        # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * specific_hostwide_coefficient
     end
+    # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * hostwide_coefficient
     population.host_weights_with_coefficient[evt, host_idx] = (
         population.host_weights[evt, host_idx] *
         population.parameters.base_coefficients[evt]
@@ -146,7 +198,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
                 population.hosts[h].pathogen_fractions[p] *
                 population.hosts[h].pathogens[p].type.coefficient_functions[evt](
                     population.hosts[h].pathogens[p].sequence
-                )
+                ) # no need to account for hostwide coefficients, these are already hostwide
                 for p in 1:length(population.hosts[h].pathogens)
             ])
         if length(population.hosts[h].responses) > 0
@@ -155,7 +207,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
                     # we weight by pathogen fraction as above
                     population.hosts[h].pathogen_fractions[p] * population.parameters.weightedInteraction(
                         population.hosts[h].pathogens[p], population.hosts[h], evt
-                    )
+                    ) # no need to account for hostwide coefficients, these are already hostwide
                     for p in 1:length(population.hosts[h].pathogens)
                 ])
         end
@@ -166,7 +218,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
             sum([ # no response fraction weighting, see above
                 responseStaticCoefficient(re, population.hosts[h], evt)
                 for re in population.hosts[h].responses
-            ])
+            ]) # no need to account for hostwide coefficients, these are already hostwide
     end
     population.host_weights_with_coefficient[evt, h] = (
         population.host_weights[evt, h] *
@@ -184,6 +236,8 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
                 population.hosts[h].pathogens[p].type.coefficient_functions[evt](
                     population.hosts[h].pathogens[p].sequence
                 )
+                # no need to account for hostwide coefficients, these are already hostwide
+                # (except fitness, but that one only matters within host anyway)
                 for p in 1:length(population.hosts[h].pathogens)
             ])
         if length(population.hosts[h].responses) > 0
@@ -194,6 +248,8 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
                     population.parameters.weightedInteraction(
                         population.hosts[h].pathogens[p], population.hosts[h], evt
                     )
+                    # no need to account for hostwide coefficients, these are already hostwide
+                    # (except fitness, but that one only matters within host anyway)
                     for p in 1:length(population.hosts[h].pathogens)
                 ])
         end
@@ -204,6 +260,8 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
             sum([ # no response fraction weighting, see above
                 responseStaticCoefficient(re, population.hosts[h], evt)
                 for re in population.hosts[h].responses
+                # no need to account for hostwide coefficients, these are already hostwide
+                # (except fitness, but that one only matters within host anyway)
             ])
     end
     population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, h] = (
@@ -212,9 +270,50 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
     )
 end
 
-function hostWeightsNonsampling!(h::Int64, population::Population, evt::Int64)
-    #TODO:
-    population.hosts[h].coefficients[evt] = population.hosts[h].coefficients[evt]
+function hostWeightsNonsampling!(host_idx::Int64, population::Population, evt::Int64)
+    length(population.hosts[host_idx].pathogens) > 0 ? hostwide_coefficient_pathogens = 0.0 : hostwide_coefficient_pathogens = 1.0
+    for p in 1:length(population.hosts[host_idx].pathogens)
+        hostwide_coefficient_pathogens += (
+            population.hosts[host_idx].pathogens[p].hostwide_coefficients[evt] *
+            population.hosts[host_idx].pathogen_fractions[p]
+        )
+    end
+    hostwide_coefficient_responses = 1.0
+    if length(population.hosts[host_idx].responses) > 0
+        hostwide_coefficient_responses = 0.0
+        for re in 1:length(population.hosts[host_idx].responses)
+            hostwide_coefficient_responses += population.hosts[host_idx].responses[re].hostwide_coefficients[evt]
+            specific_hostwide_coefficient = 1.0
+            if length(population.hosts[host_idx].pathogens) > 0
+                specific_hostwide_coefficient = 0.0
+                reactivity_sum = 0.0
+                for p in 1:length(population.hosts[host_idx].pathogens)
+                    reac = reactivityCoefficient(
+                        population.hosts[host_idx].pathogens[p],
+                        population.hosts[host_idx].responses[re],
+                        population.hosts[host_idx],
+                    )
+                    reactivity_sum += reac
+                    specific_hostwide_coefficient += responseSpecificHostwideCoefficient(
+                        population.hosts[host_idx].pathogens[p],
+                        population.hosts[host_idx].responses[re],
+                        population.hosts[host_idx],
+                        evt
+                    ) * reac
+                end
+                if reactivity_sum > 0.0
+                    population.hosts[host_idx].coefficients[evt] = (
+                        population.hosts[host_idx].coefficients[evt] * specific_hostwide_coefficient / reactivity_sum
+                    )
+                end
+            end
+        end
+        hostwide_coefficient_responses = hostwide_coefficient_responses / length(population.hosts[host_idx].responses)
+    end
+    population.hosts[host_idx].coefficients[evt] = (
+        population.hosts[host_idx].coefficients[evt] *
+        hostwide_coefficient_pathogens * hostwide_coefficient_responses
+    )
 end
 
 function hostWeights!(host_idx::Int64, population::Population, model::Model)

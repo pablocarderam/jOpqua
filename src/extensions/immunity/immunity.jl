@@ -1,4 +1,6 @@
-function weightedInteractionArithmeticMean(pathogen::Pathogen, host::Host, evt::Int64)
+function weightedInteractionArithmeticMean(
+        pathogen::Pathogen, host::Host, evt::Int64;
+        coefficient=responseSpecificCoefficient)
     # reactivity-weighted arithmetic mean of specific coefficients
     if length(host.responses) > 0
         reac_sum = 0.0
@@ -7,7 +9,7 @@ function weightedInteractionArithmeticMean(pathogen::Pathogen, host::Host, evt::
         for response in host.responses
             reac = reactivityCoefficient(pathogen, response, host)
             reac_sum += reac
-            numerator_sum += reac * responseSpecificCoefficient(pathogen, response, host, evt)
+            numerator_sum += reac * coefficient(pathogen, response, host, evt)
         end
 
         return numerator_sum / reac_sum
@@ -16,34 +18,36 @@ function weightedInteractionArithmeticMean(pathogen::Pathogen, host::Host, evt::
     end
 end
 
-function transmissionEfficiencyArithmeticMean(pathogen::Pathogen, host::Host)
-    # reactivity-weighted arithmetic mean of infection coefficients
-    if length(host.responses) > 0
-        reac_sum = 0.0
-        numerator_sum = 0.0
-        reac = 0.0
-        for response in host.responses
-            reac = reactivityCoefficient(pathogen, response, host)
-            reac_sum += reac
-            numerator_sum += reac * responseSpecificCoefficient(
-                pathogen, response, host, TRANSMISSION_EFFICIENCY
-            )
-        end
+# function transmissionEfficiencyArithmeticMean(pathogen::Pathogen, host::Host)
+#     # reactivity-weighted arithmetic mean of infection coefficients
+#     if length(host.responses) > 0
+#         reac_sum = 0.0
+#         numerator_sum = 0.0
+#         reac = 0.0
+#         for response in host.responses
+#             reac = reactivityCoefficient(pathogen, response, host)
+#             reac_sum += reac
+#             numerator_sum += reac * responseSpecificCoefficient(
+#                 pathogen, response, host, TRANSMISSION_EFFICIENCY
+#             )
+#         end
 
-        return numerator_sum / reac_sum
-    else
-        return 1.0
-    end
-end
+#         return numerator_sum / reac_sum
+#     else
+#         return 1.0
+#     end
+# end
 
-function weightedInteractionWinnerTakesAll(pathogen::Pathogen, host::Host, evt::Int64)
+function weightedInteractionWinnerTakesAll(
+        pathogen::Pathogen, host::Host, evt::Int64;
+        coefficient=responseSpecificCoefficient)
     if length(host.responses) > 0
         dominant_reaction = 1.0
         dominant_reactivity = 0.0
         for response in host.responses
             reactivity = reactivityCoefficient(pathogen, response, host)
             if reactivity > dominant_reactivity
-                dominant_reaction = reactivity * responseSpecificCoefficient(pathogen, response, host, evt)
+                dominant_reaction = reactivity * coefficient(pathogen, response, host, evt)
             end
         end
 
@@ -53,24 +57,24 @@ function weightedInteractionWinnerTakesAll(pathogen::Pathogen, host::Host, evt::
     end
 end
 
-function transmissionEfficiencyWinnerTakesAll(pathogen::Pathogen, host::Host)
-    if length(host.responses) > 0
-        dominant_reaction = 1.0
-        dominant_reactivity = 0.0
-        for response in host.responses
-            reactivity = reactivityCoefficient(pathogen, response, host)
-            if reactivity > dominant_reactivity
-                dominant_reaction = reactivity * responseSpecificCoefficient(
-                    pathogen, response, host, TRANSMISSION_EFFICIENCY
-                )
-            end
-        end
+# function transmissionEfficiencyWinnerTakesAll(pathogen::Pathogen, host::Host)
+#     if length(host.responses) > 0
+#         dominant_reaction = 1.0
+#         dominant_reactivity = 0.0
+#         for response in host.responses
+#             reactivity = reactivityCoefficient(pathogen, response, host)
+#             if reactivity > dominant_reactivity
+#                 dominant_reaction = reactivity * responseSpecificCoefficient(
+#                     pathogen, response, host, TRANSMISSION_EFFICIENCY
+#                 )
+#             end
+#         end
 
-        return dominant_reaction
-    else
-        return 1.0
-    end
-end
+#         return dominant_reaction
+#     else
+#         return 1.0
+#     end
+# end
 
 function deNovoResponse(
     pathogen::Pathogen, host::Host,

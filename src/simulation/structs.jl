@@ -12,6 +12,7 @@ struct PathogenType
     possible_alleles::String
 
     coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
+    hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
     # Each element takes seq argument, returns Float64
 end
 
@@ -23,6 +24,10 @@ struct ResponseType
     static_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
     # each takes host, imprinted, matured sequences and returns Float64 coefficient
     specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
+    # each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    static_hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
+    # each takes host, imprinted, matured sequences and returns Float64 coefficient
+    specific_hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
     # each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
 end
 
@@ -44,6 +49,7 @@ struct Pathogen
     # This is only useful for response lineage tracing, but not the simulation?
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
+    hostwide_coefficients::SVector{NUM_COEFFICIENTS,Float64}
     type::PathogenType
 end
 
@@ -55,6 +61,7 @@ struct Response
     imprinted_pathogen::Union{Pathogen,Nothing} # This will track the Pathogen imprinted in the naive response
     matured_pathogen::Union{Pathogen,Nothing}
     coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
+    hostwide_coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     type::ResponseType
 end
 
@@ -111,9 +118,6 @@ struct PopulationType
     weightedInteraction::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
     # Takes Pathogen entity, Host entity, and event number;
     # returns aggregated response coefficient against that Pathogen for that event
-    transmissionEfficiency::FunctionWrapper{Float64,Tuple{Pathogen,Host}}
-    # Takes Pathogen and Host entities,
-    # returns probability that a contact results in successful infection given the Responses in Host
 
     developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Dict{Tuple{String,String,String,String},Response},Dict{String,ResponseType},Float64}}
     # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes, and birth time as arguments, returns Response entities to be added
