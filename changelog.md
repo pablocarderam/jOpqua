@@ -3,11 +3,9 @@
 KNOWN ISSUES:
 
 TODO:
-- Check if necessary to incorporate static and interaction general coefficients
+- Incorporate static and interaction general coefficients
 of `Pathogen` and `Response` entities into weight and coefficient propagation
 from the `Pathogen` and `Response` level to the `Host` level
-- Remove unnecessary comments, correct long description in README from last
-weekend
 - Incorporate Flexle into all host sampling
 
 TODO: Not debugged:
@@ -36,6 +34,8 @@ establishment)
 recombination to nonsampling variable/coefficient/function vectors
 - Improvement to `removeFromFlexleSampler!` runtime via non-brute force algorithm
 (~33% speedup) (CLM)
+- Remove unnecessary comments, correct long description in README from last
+weekend
 
 ## 4 March 2025
 - Renamed `infectionProbability` to `transmissionEfficiency`
@@ -133,26 +133,6 @@ defined in `ResponseType` (one factor, stored within the `Host`, aggregated
 from the list of coefficients of each `Pathogen`-`Response` combination present
 within the `Host`, aggregated within a `Host` based on
 `weightedInteractionGeneral`)
-
-So, for instance, the infection probability of a given `Pathogen` infecting a
-given `Host` in a given `Population` would be equal to the product
-
-`
-population.nonsample[TRANSMISSION_EFFICIENCY] *
-pathogen.specific_coefficient[TRANSMISSION_EFFICIENCY] *
-host.specific_coefficient[TRANSMISSION_EFFICIENCY] * # includes effects of static, general Pathogen and Response coefficients
-`
-
-In this case, the `Population` base contact rate and both `Host` general
-coefficients are a moot point, since `Pathogen` contact rates are only used to
-sample a `Pathogen` from all of those inside a `Host` in a `Population` (all of
-which )
-
-Meanwhile, the contact weight of a given `Pathogen` within a given `Host` of the
-`Population` (or any other, the `Population` is irrelevant at this level) would
-be equal to the product
-
-``
 
 The list of non-sampling coefficient functions should include (as far as I have
 thought), in alphabetical order:

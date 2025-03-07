@@ -11,30 +11,13 @@ struct PathogenType
     num_loci::Int64
     possible_alleles::String
 
-    # mean_effective_inoculum::Float64
-    # mean_mutations_per_replication::Float64
-    # mean_recombination_crossovers::Float64
-
-    # inoculumCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
-    # mutationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
-    # recombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
-
-    # verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
-    # acquireResponseUponClearanceCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
-
     coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
     # Each element takes seq argument, returns Float64
 end
 
 struct ResponseType
     id::String
-    # inherit_response::Float64
-    # inoculumCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
-    # # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    # verticalTransmissionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
-    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    # infectionCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
-    # # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+
     reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     static_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
@@ -61,10 +44,6 @@ struct Pathogen
     # This is only useful for response lineage tracing, but not the simulation?
     sequence::String
     coefficients::SVector{NUM_COEFFICIENTS,Float64}
-    # mean_effective_inoculum::Float64
-    # mean_mutations_per_replication::Float64
-    # mean_recombination_crossovers::Float64
-    # vertical_transmission_coefficient::Float64
     type::PathogenType
 end
 
@@ -93,8 +72,6 @@ mutable struct Host
     birth_time::Float64
 
     sequence::String
-    # mean_mutations_per_replication::Float64
-    # mean_recombination_crossovers::Float64
 
     pathogens::Vector{Pathogen} # size MAX_PATHOGENS
     responses::Vector{Response} # size MAX_RESPONSES
@@ -122,21 +99,9 @@ struct PopulationType
 
     constant_contact_density::Bool
     constant_transition_density::Bool
-
-    # inoculum_coefficient::Float64
-    # mutation_coefficient::Float64
-    # recombination_coefficient::Float64
-    # vertical_transmission_coefficient::Float64
-
-    # host_num_loci::Int64
-    # host_possible_alleles::String
-    # host_mean_mutations_per_replication::Float64
     host_sexual_reproduction::Bool
-    # host_mean_recombination_crossovers::Float64
 
     hostSexualCompatibility::FunctionWrapper{Bool,Tuple{String,String}}
-    # hostMutationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
-    # hostRecombinationCoefficient::FunctionWrapper{Float64,Tuple{String}} # takes seq argument, returns Float64
 
     base_coefficients::SVector{NUM_COEFFICIENTS,Float64}
 

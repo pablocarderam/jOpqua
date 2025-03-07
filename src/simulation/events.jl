@@ -31,7 +31,6 @@ end
 function mutantPathogen!(pathogen::Pathogen, host::Host, population::Population, birth_time::Float64)
     seq = mutantSequence!(
         pathogen.sequence, pathogen.type.num_loci, pathogen.type.possible_alleles,
-        # pathogen.mean_mutations_per_replication
         nonsamplingValue(
             MUTATIONS_UPON_INFECTION, pathogen, host, population
         )
@@ -221,13 +220,13 @@ end
 
 function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, model::Model)
     if !(pathogen in model.populations[pop_idx].hosts[host_idx].pathogens) && rand() < nonsamplingValue(
-                TRANSMISSION_EFFICIENCY, pathogen,
-                model.populations[pop_idx].hosts[host_idx],
-                model.populations[pop_idx]
-            ) * model.populations[pop_idx].parameters.transmissionEfficiency(
-                pathogen,
-                model.populations[pop_idx].hosts[host_idx]
-            )
+        TRANSMISSION_EFFICIENCY, pathogen,
+        model.populations[pop_idx].hosts[host_idx],
+        model.populations[pop_idx]
+    ) * model.populations[pop_idx].parameters.transmissionEfficiency(
+        pathogen,
+        model.populations[pop_idx].hosts[host_idx]
+    )
 
         addPathogenToHost!(
             pathogen, host_idx, model.populations[pop_idx], model
@@ -318,12 +317,6 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
             MVector{2,Union{Host,Nothing}}([nothing, nothing]),
             model.time,
             host_sequence,
-            # population.parameters.host_mean_mutations_per_replication * population.parameters.hostMutationCoefficient(
-            #     host_sequence
-            # ),
-            # population.parameters.host_mean_recombination_crossovers * population.parameters.hostRecombinationCoefficient(
-            #     host_sequence
-            # ),
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
@@ -520,14 +513,13 @@ function hostContact!(model::Model, rand_n::Float64)
 end
 
 function hostContact!(
-        host_idx_1::Int64, pop_idx_1::Int64, host_idx_2::Int64, pop_idx_2::Int64,
-        model::Model, rand_n::Float64; inoculum_coefficient=INOCULUM)
+    host_idx_1::Int64, pop_idx_1::Int64, host_idx_2::Int64, pop_idx_2::Int64,
+    model::Model, rand_n::Float64; inoculum_coefficient=INOCULUM)
     if host_idx_1 != host_idx_2 || pop_idx_1 != pop_idx_2
         host1 = model.populations[pop_idx_1].hosts[host_idx_1]
         # inocula = MVector{length(model.populations[pop_idx_1].hosts[host_idx_1].pathogens),Int64}([
         inocula = Vector{Int64}([
             pois_rand(
-                # host1.pathogens[p_idx].mean_effective_inoculum *
                 nonsamplingValue(
                     inoculum_coefficient, host1.pathogens[p_idx], host1,
                     model.populations[pop_idx_1]
@@ -548,7 +540,6 @@ function hostContact!(
                             MUTATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
                             model.populations[pop_idx_1]
                         )
-                        # -host1.pathogens[p_idx].mean_mutations_per_replication
                     )
                 )
                 # probability from Poisson PMF with k=0
@@ -560,7 +551,6 @@ function hostContact!(
                                 RECOMBINATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
                                 model.populations[pop_idx_1]
                             )
-                            # -host1.pathogens[p_idx].mean_recombination_crossovers
                         )
                     )
                     # probability from Poisson PMF with k=0
@@ -670,7 +660,6 @@ function birth!(model::Model, rand_n::Float64)
                     parents[1],
                     model.populations[pop_idx]
                 )
-                # parents[1].host_mean_mutations_per_replication
             ), nothing
         ]
 
@@ -767,11 +756,6 @@ function birth!(model::Model, rand_n::Float64)
                 )
 
                 if (vert_trans > 0.0 && rand() < vert_trans)
-                            # parent.pathogens[pathogen_idx].vertical_transmission_coefficient *
-                             # parent.pathogens[pathogen_idx].type.verticalTransmissionCoefficient(
-                             #     parent.pathogens[pathogen_idx].sequence
-                             # ) *
-                             # parent.pathogen_fractions[pathogen_idx])
                     hostContact!(
                         parent, pop_idx, length(model.populations[pop_idx].hosts),
                         pop_idx, model, rand_n, inoculum_coefficient=VERTICAL_TRANSMISSION
