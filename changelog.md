@@ -14,6 +14,9 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 19 March 2025
+- Added (+clarified existing) docstrings for most `flexle.jl` functions (CLM)
+
 ## 7 March 2025
 - Incorporated static and interaction hostwide coefficients of `Pathogen` and
 `Response` entities into weight and coefficient propagation from the

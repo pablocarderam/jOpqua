@@ -39,7 +39,7 @@ end
 # Initialization
 
 function FlexLevel(i::Int64, w::Float64)
-    return FlexLevel(logBounds(w), w, w, [i], Dict((i, 1)))
+    return FlexLevel(logBounds(w), w, w, [i], Dict((FastHashIndex(i), 1)))
 end
 
 # Utility methods
@@ -48,10 +48,37 @@ import Base.&
 
 Base.:&(f::Float64, i::Int64) = reinterpret(Float64, (reinterpret(Int64, f) & i))
 
+
+"""
+    lowerLog2Bound(n)
+
+Get the largest power of 2 less than or equal to a non-negative `n`.
+
+# Examples
+
+`lowerLog2Bound(33.0)` ==> `32.0`
+
+`lowerLog2Bound(32.0)` ==> `32.0`
+
+`lowerLog2Bound(0.75)` ==> `0.5`
+"""
 function lowerLog2Bound(n::Float64)
     return n & EXPONENT_MASK_FLOAT64
 end
 
+"""
+    floorLog2(n)
+
+Get the `Int64` floor of the log2 of `n`.
+
+# Examples
+
+`floorLog2(33.0)` ==> `5`
+
+`floorLog2(32.0)` ==> `5`
+
+`floorLog2(0.75)` ==> `-1`
+"""
 function floorLog2(n::Float64)
     return ((reinterpret(Int64, n) & EXPONENT_MASK_FLOAT64) >> EXPONENT_SHIFT_FLOAT64) - EXPONENT_OFFSET_FLOAT64
 end
@@ -59,7 +86,7 @@ end
 """
     logBounds(n)
 
-Returns a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
+Return a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
 """
 function logBounds(n::Float64)
     l = lowerLog2Bound(n)
@@ -69,7 +96,7 @@ end
 """
     levelIndex(w, u)
 
-Given a weight `w`, returns the index of the level in some `FlexleSampler.levels` with maximum upper bound `2^u` where `w` belongs.
+Given a weight `w`, return the index of the level in some `FlexleSampler.levels` with maximum upper bound `2^u` where `w` would belong.
 
 Returns `0` if `w` is `0.0`, indicating that `w` belongs in no level.
 
@@ -88,29 +115,67 @@ function levelIndex(w::Float64, u::Int64)
     return iszero(w) ? 0 : u - floorLog2(w)
 end
 
+"""
+    levelIndex(w, levels)
+
+Get the index of the `FlexLevel` in `levels` where a weight `w` would belong.
+
+Returns `0` if no such level exists.
+"""
 function levelIndex(w::Float64, levels::Vector{FlexLevel})
     idx = floorLog2(levels[1].bounds[2]) - floorLog2(w)
     return idx > length(levels) ? 0 : idx
 end
 
+"""
+    levelIndex(bounds, levels)
+
+Get the index of the `FlexLevel` in `levels` with bounds given by `bounds`.
+
+Returns `0` if no such level exists.
+"""
 function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
     return levelIndex(bounds[1], levels)
 end
 
+"""
+    getLevel(bounds, levels)
+
+Return the `FlexLevel` in `levels` with bounds given by `bounds`.
+
+Returns `nothing` if no such level exists.
+"""
 function getLevel(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
     l = levelIndex(bounds, levels)
     return l==0 ? nothing : levels[l]
 end
 
+"""
+    getLevel(w, levels)
+
+Return the `FlexLevel` in `levels` where a weight `w` would belong.
+
+Returns `nothing` if no such level exists.
+"""
 function getLevel(w::Float64, levels::Vector{FlexLevel})
     l = levelIndex(w, levels)
     return l==0 ? nothing : levels[l]
 end
 
+"""
+    logDist(a, b)
+
+Return the floor of the log2 of `a/b`. 
+"""
 function logDist(a::Float64, b::Float64)
     return floorLog2(b) - floorLog2(a)
 end
 
+"""
+    inSampler(i, sampler)
+
+Return a `Bool` indicating whether an index `i` is present at some `FlexLevel` in `sampler`.
+"""
 function inSampler(i::Int64, sampler::FlexleSampler)
     for level in sampler.levels
         if i in level.indices
@@ -120,14 +185,29 @@ function inSampler(i::Int64, sampler::FlexleSampler)
     return false
 end
 
+"""
+    inSampler(bounds, sampler)
+
+Return a `Bool` indicating whether a `FlexLevel` with bounds `bounds` is present in `sampler`.
+"""
 function inSampler(bounds::Tuple{Float64,Float64}, sampler::FlexleSampler)
     return (sampler.levels[begin].bounds[1] >= bounds[1]) && (bounds[1] >= sampler.levels[end].bounds[1])     # bounds between largest and smallest levels' bounds (inclusive)
 end
 
+"""
+    levelIsPopulated(level)
+
+Return a `Bool` indicating whether `level` contains any elements.
+"""
 function levelIsPopulated(level::FlexLevel)
     return !isempty(level.indices)
 end
 
+"""
+    maxLevelWeight(level, sampler)
+
+Get the largest weight in `sampler` of any element in `level`.
+"""
 function maxLevelWeight(level::FlexLevel, sampler::FlexleSampler)
     m::Float64 = 0.0
     for i in level.indices
@@ -137,8 +217,29 @@ function maxLevelWeight(level::FlexLevel, sampler::FlexleSampler)
     return m
 end
 
-# Maintenance methods
+# Module-internal methods
 
+"""
+    addToFlexLevel!(i, level, sampler, update_sampler_sum=true)
+
+Place the element of index `i` in `sampler` into `level`.
+
+Also updates `level.sum` and (iff `update_sampler_sum`) `sampler.sum` to reflect the addition of the weight of element `i`
+to `level` and `sampler`, respectively.
+
+# Note on `update_sampler_sum`
+
+Keyword argument `update_sampler_sum` should only be `false` when `addToFlexLevel!` is used in conjunction with
+[`removeFromFlexLevel!`](@ref) to update the weight of an existing element `i` in `sampler`, as in the
+following call pattern: 
+```
+removeFromFlexLevel!(i, old_level, sampler, update_sampler_sum=false)
+addToLevelFlexLevel(i, new_level, sampler, update_sampler_sum=false)
+sampler.sum += new_i_weight - old_i_weight
+``` 
+This option is provided for performance purposes, as reading and writing to `sampler.sum` can be expensive. The caller MUST update
+`sampler.sum` themselves if calling with `update_sampler_sum=false`.
+"""
 function addToFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; update_sampler_sum::Bool=true)
     push!(level.indices, i)
     w::Float64 = sampler.weights[i]
@@ -150,6 +251,26 @@ function addToFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; upd
     level.index_positions[FastHashIndex(i)] = length(level.indices)
 end
 
+"""
+    removeFromFlexLevel!(i, level, sampler, update_sampler_sum=true)
+
+Remove the element of index `i` in `sampler` from `level`.
+
+Also updates `level.sum` and (iff `update_sampler_sum`) `sampler.sum` to reflect the removal of the weight of element `i`
+from `level` and `sampler`, respectively.
+
+# Note on `update_sampler_sum`
+
+Keyword argument `update_sampler_sum` should only be `false` when `removeFromFlexLevel!` is used in conjunction with
+[`addToFlexLevel!`](@ref) to update the weight of an existing element `i` in `sampler`, as in the following call pattern: 
+```
+removeFromFlexLevel!(i, old_level, sampler, update_sampler_sum=false)
+addToLevelFlexLevel(i, new_level, sampler, update_sampler_sum=false)
+sampler.sum += new_i_weight - old_i_weight
+``` 
+This option is provided for performance purposes, as reading and writing to `sampler.sum` can be expensive. The caller MUST update
+`sampler.sum` themselves if calling with `update_sampler_sum=false`.
+"""
 function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; update_sampler_sum::Bool=true)
     w::Float64 = sampler.weights[i]
     len = length(level.indices)
@@ -171,6 +292,13 @@ function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler
     end
 end
 
+"""
+    extendLevels!(bounds, levels)
+
+Extend `levels` to contain all appropriate `FlexLevel`s up to and including that specified by `bounds`.
+
+Throws an error if a level with such bounds already exists in `levels`.
+"""
 function extendLevels!(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
     if bounds[1] * 2.0 != bounds[2]
         throw("Invalid bounds - must be two adjacent powers of 2")
@@ -202,18 +330,33 @@ function extendLevels!(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel}
     end
 end
 
+"""
+    trimTrailingLevels!(sampler)
+
+Remove all empty `FlexLevel`s from the front and back of `sampler`.
+"""
 function trimTrailingLevels!(sampler::FlexleSampler)
     first = findfirst(levelIsPopulated, sampler.levels)
     last = findlast(levelIsPopulated, sampler.levels)
     sampler.levels = sampler.levels[first:last]
 end
 
+"""
+    recalculateFlexleStats!(sampler)
+
+Trim trailing empty levels from `sampler` and recalculate its `sum` from `sampler.weights`.
+"""
 function recalculateFlexleStats!(sampler::FlexleSampler)
     trimTrailingLevels!(sampler)
     # sampler.max = isempty(sampler.levels) ? 0.0 : sampler.levels[begin].max
     sampler.sum = sum(sampler.weights)
 end
 
+"""
+    reconstructIndexPositions!(sampler)
+
+Recalculate from scratch the `index_positions` dictionary of each `FlexLevel` in `sampler`.
+"""
 function reconstructIndexPositions!(sampler::FlexleSampler)
     for level in sampler.levels
         level.index_positions = Dict{FastHashIndex, Int64}()
@@ -223,6 +366,17 @@ function reconstructIndexPositions!(sampler::FlexleSampler)
     end
 end
 
+"""
+    reconstructIndexPositions!(sampler, i)
+
+Recalculate the `index_positions` dictionary of each `FlexLevel` in `sampler` following the removal of
+element `i` from `sampler.weights`.
+
+For performance reasons, takes advantage of that only elements of index at least `i` will require
+editing in their appropriate `index_positions` dictionary.
+
+Note that this method of `reconstructIndexPositions!` must be called _after_ `sampler.weights` is modified.
+"""
 function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
     n = length(sampler.weights)
     if i > n
@@ -246,11 +400,18 @@ function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
     iszero(w) && return
     d = getLevel(sampler.weights[n], sampler.levels).index_positions
     d[FastHashIndex(n)] = pop!(d, FastHashIndex(n+1))     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx] => pos) for all idx >= i
-    
 end
 
 # Sampling methods
 
+"""
+    cdfSample(sampler)
+
+Randomly select a `FlexLevel` from `sampler` using inverse transform sampling.
+
+Also returns a "free" random number in [0, 1) for use in subsequent rejection sampling
+(see [`rejectionSample`](@ref)).
+"""
 function cdfSample(sampler::FlexleSampler)
     local chosen_level::FlexLevel
     norm_rand_n = rand() * sampler.sum
@@ -263,6 +424,15 @@ function cdfSample(sampler::FlexleSampler)
     return chosen_level, (norm_rand_n - cum_sum + chosen_level.sum) / chosen_level.sum
 end
 
+"""
+    rejectionSample(rand_n, level, weights)
+
+Randomly select an index from `level` using rejection sampling given a starting `rand_n`
+and a `Vector` of `weights`.
+
+`rand_n` is generated in the course of inverse transform sampling (see [`cdfSample`](@ref))
+performed prior to rejection sampling.
+"""
 function rejectionSample(rand_n::Float64, level::FlexLevel, weights::Vector{Float64})
     while true
         r = rand_n * length(level.indices)
@@ -354,7 +524,7 @@ function FlexleSampler(weights::AbstractVector{Float64})
 end
 
 """
-    updateFlexleWeight!(sampler, i, w)
+    updateFlexleSamplerWeight!(sampler, i, w)
 
 Update the weight of element `i` in `sampler` to be `w`, returning the difference between the new and old values of `sampler.weights[i]`.
 """
@@ -394,9 +564,7 @@ end
 
 Add a new element with weight `w` to `sampler`, updating all fields accordingly.
 
-Returns the new length of `sampler.weights`.
-
-Element will be added to the end of `sampler.weights`.
+Returns the new number of weights in `sampler`, or equivalently, the index corresponding to the new element added.
 """
 function addToFlexleSampler!(sampler::FlexleSampler, w::Float64)
     push!(sampler.weights, w)
@@ -416,7 +584,7 @@ end
 
 Remove element `i` from `sampler` completely, updating all fields accordingly.
 
-Returns the new length of `sampler.weights`.
+Returns the new number of weights in `sampler`.
 
 All elements of index `>i` are updated to account for the removal of element `i`.
 """
@@ -447,6 +615,9 @@ end
     flexleSample(sampler)
 
 Take a single random sample from `sampler`, returning the index of the element sampled.
+
+Samples by inverse transform sampling (see `cdfSample`(@ref)) to select a `FlexLevel` in `sampler`, then rejection
+sampling (see `rejectionSample`(@ref)) an index from said `FlexLevel`.
 """
 function flexleSample(sampler::FlexleSampler)
     level, rand_n = cdfSample(sampler)
@@ -464,6 +635,28 @@ end
 
 # Testing
 
+"""
+    verifyFlexleSampler(sampler, name="")
+
+Performs several checks on `sampler` to ensure that it is internally consistent, returning the total number
+of inconsistencies detected.
+
+`name` allows the caller to give an optional label to `sampler` for pretty printing purposes.
+
+Checks are as follows:
+- index placement in `sampler.levels`
+    - every index of non-zero weight in `sample.weights` appears in some level
+    - every index appearing in a level is an index that:
+        - exists in `sampler.weights`, and if so,
+        - belongs in this level according to its weight
+- construction of `index_positions` at each level in `sampler.levels`
+    - each index appears in the appropriate level's `index_positions` corresponding to its position in `level.indices`
+    - no index appears in an `index_positions` corresponding to a position at which it does not exist
+- `sampler` stats
+    - each level's `sum` is (approximately) equal to the sum of the weights of the indexes it holds
+    - each level's `max` is equal to the maximum of the weights of the indexes it holds
+    - `sampler.sum` is (approximately) equal to the sum of `sampler.weights`
+"""
 function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
     @printf "Verifying FlexleSampler %s...\n" name
     errors = 0
@@ -537,6 +730,11 @@ function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
     return errors
 end
 
+"""
+    printFlexleSampler(sampler, name="")
+
+Print `sampler` with optional label `name`.
+"""
 function printFlexleSampler(sampler::FlexleSampler; name::String="")
     @printf "\nFlexleSampler %s\n" name
     show(sampler.weights)
@@ -554,6 +752,16 @@ function printFlexleSampler(sampler::FlexleSampler; name::String="")
     end
 end
 
+"""
+    testFlexleSampler()
+
+Test the basic internal maintenance of the `FlexleSampler` struct.
+
+Assesses:
+- initialization
+- updating of weights
+- extending of levels
+"""
 function testFlexleSampler()
     # --- INITIALIZATION ---
     println("\nTEST: FlexleSampler initialization from weights vectors\n")
@@ -669,10 +877,17 @@ function testFlexleSampler()
     catch e
         println("correctly identified error: ", e)
     end
-    printFlexleSampler(samplers[end])
+    # printFlexleSampler(samplers[end])
     verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing empty intermediate level)")
 end
 
+"""
+    levelSamplingExpectedValue(sampler, n=1)
+
+Produce a `Dict` mapping (bounds of) levels in `sampler` to their expected number of selections given `n` samples.
+
+For default value `n=1`, each level is simply assigned the probability of its selection.
+"""
 function levelSamplingExpectedValue(sampler::FlexleSampler; n::Int64=1)
     norm = Float64(n) / sampler.sum
     d = Dict{Tuple{Float64,Float64},Float64}()
@@ -682,6 +897,11 @@ function levelSamplingExpectedValue(sampler::FlexleSampler; n::Int64=1)
     return d
 end
 
+"""
+    testLevelSampling(sampler, n)
+
+Randomly select a level from `sampler` `n` times and return a `Dict` mapping levels to empirical number of draws.
+"""
 function testLevelSampling(sampler::FlexleSampler, n::Int64)
     d = Dict{Tuple{Float64,Float64},Int64}()
     for level in sampler.levels
@@ -696,6 +916,13 @@ function testLevelSampling(sampler::FlexleSampler, n::Int64)
     return d
 end
 
+"""
+    indexSamplingExpectedValue(level, weights, n=1)
+
+Produce a `Dict` mapping indexes in `level` to their expected number of selections (according to `weights`) given `n` samples.
+
+For default value `n=1`, each index is simply assigned the probability of its selection. 
+"""
 function indexSamplingExpectedValue(level::FlexLevel, weights::Vector{Float64}; n::Int64=1)
     norm = Float64(n) / level.sum
     d = Dict{Int64,Float64}()
@@ -705,6 +932,11 @@ function indexSamplingExpectedValue(level::FlexLevel, weights::Vector{Float64}; 
     return d
 end
 
+"""
+    testIndexSampling(level, weights, n)
+
+Randomly select an index from `level` `n` times according to `weights` and return a `Dict` mapping indexes to empirical number of draws.
+"""
 function testIndexSampling(level::FlexLevel, weights::Vector{Float64}, n::Int64)
     d = Dict{Int64,Int64}()
     for i in level.indices
@@ -719,6 +951,13 @@ function testIndexSampling(level::FlexLevel, weights::Vector{Float64}, n::Int64)
     return d
 end
 
+"""
+    flexleSamplingExpectedValue(sampler, n=1)
+
+Produce a `Dict` mapping indexes in `sampler` to their expected number of selections given `n` samples.
+
+For default value `n=1`, each index is simply assigned the probability of its selection. 
+"""
 function flexleSamplingExpectedValue(sampler::FlexleSampler; n::Int64=1)
     norm = Float64(n) / sampler.sum # (l.sum / sampler.sum) * (Float64(n) / l.sum) -- l terms cancel out
     d = Dict{Int64,Float64}()
@@ -734,6 +973,11 @@ function flexleSamplingExpectedValue(sampler::FlexleSampler; n::Int64=1)
     return d
 end
 
+"""
+    testFlexleSampling(sampler, n)
+
+Randomly select an index from `sampler` `n` times and return a `Dict` mapping indexes to empirical number of draws.
+"""
 function testFlexleSampling(sampler::FlexleSampler, n::Int64)
     d = Dict{Int64,Int64}()
     for i in eachindex(sampler.weights)
@@ -748,6 +992,17 @@ function testFlexleSampling(sampler::FlexleSampler, n::Int64)
     return d
 end
 
+"""
+    testUserFunctions()
+
+Test the internal maintenance of the `FlexleSampler` struct in response to user commands.
+
+Assesses:
+- initialization
+- updating of weights
+- addition of new weights
+- removal of existing weights
+"""
 function testUserFunctions()
     # test create
     w0 = zeros(1000)
@@ -893,7 +1148,14 @@ function timeFlexleSample(r1::UnitRange{Int64}, r2::UnitRange{Int64}, sampler::F
     end
 end
 
-function testRuntime01!(; h::Int64=10000)
+"""
+    testRuntime01(h=10000)
+
+Compare the runtime of performing 1000 samples using CDF (i.e. `randChoose`, inverse transform) versus Flexle sampling on a
+`Vector` of `h` weights, all either `0.0` or `1.0`.
+"""
+function testRuntime01(; h::Int64=10000, seed=0)
+    Random.seed!(seed)
     w01::Vector{Float64} = zeros(h)
     for i in eachindex(w01)
         if rand() > 0.5
@@ -918,7 +1180,14 @@ function testRuntime01!(; h::Int64=10000)
     testSampleRuntime!(w, w_sums, FlexleSampler(w01), r1, r2)
 end
 
-function testRuntimeUniform!(; h::Int64=10000)
+"""
+    testRuntimeUniform(h=10000)
+
+Compare the runtime of performing 1000 samples using CDF (i.e. `randChoose`, inverse transform) versus Flexle sampling on a
+`Vector` of `h` weights, all randomly selected from a uniform distribution between `0.0` and `1.0`.
+"""
+function testRuntimeUniform(; h::Int64=10000, seed=0)
+    Random.seed!(seed)
     wu::Vector{Float64} = rand(h)
 
     r1, r2 = 200, 5
@@ -952,6 +1221,12 @@ function testFlexleUpdateWeight!(sampler::FlexleSampler, updates::Tuple{Vector{I
     # verifyFlexleSampler(sampler)
 end
 
+"""
+    testUpdateWeight(h=10000, n=1000, seed=0)
+
+Compare the runtime of performing `n` random updates to a collection of `h` weights when storing said weights as
+a simple `Vector` versus a `FlexleSampler`.
+"""
 function testUpdateWeight(; h::Int64=10000, n::Int64=1000, seed=0)
     Random.seed!(seed)
     w = rand(h)
@@ -959,7 +1234,7 @@ function testUpdateWeight(; h::Int64=10000, n::Int64=1000, seed=0)
     c = sum(w)
     updates = (rand(1:h, n), rand(n))
 
-    println("CDF update weight:")    
+    println("Vector update weight:")    
     display(@benchmark testStandardUpdateWeight!($w, $updates, $c))
 
     println("Flexle update weight:")
@@ -981,6 +1256,12 @@ function testFlexleAddWeight!(sampler::FlexleSampler, new_weights::Vector{Float6
     # verifyFlexleSampler(sampler)
 end
 
+"""
+    testAddWeight(h=10000, n=1000, seed=0)
+
+Compare the runtime of adding `n` random values to a starting collection of `h` weights when storing said weights as
+a simple `Vector` versus a `FlexleSampler`.
+"""
 function testAddWeight(; h::Int64=10000, n::Int64=1000, seed=0)
     Random.seed!(seed)
     w = rand(h)
@@ -988,7 +1269,7 @@ function testAddWeight(; h::Int64=10000, n::Int64=1000, seed=0)
     c = sum(w)
     new_weights = rand(n)
 
-    println("CDF add weight:")    
+    println("Vector add weight:")    
     display(@benchmark testStandardAddWeight!($w, $new_weights, $c))
 
     println("Flexle add weight:")
@@ -1010,6 +1291,12 @@ function testFlexleRemoveWeight!(sampler::FlexleSampler, indices::Vector{Int64})
     # verifyFlexleSampler(sampler)
 end
 
+"""
+    testRemoveWeight(h=10000, n=1000, seed=0)
+
+Compare the runtime of removing `n` random elements from a collection of `h` weights when storing said weights as
+a simple `Vector` versus a `FlexleSampler`.
+"""
 function testRemoveWeight(; h::Int64=10000, n::Int64=1000, seed=0)
     Random.seed!(seed)
     w1 = rand(h)
@@ -1021,9 +1308,27 @@ function testRemoveWeight(; h::Int64=10000, n::Int64=1000, seed=0)
         push!(indices, rand(1:h-i+1))
     end
 
-    println("CDF remove weight:")    
+    println("Vector remove weight:")    
     @time testStandardRemoveWeight!(w1, indices, c)
 
     println("Flexle remove weight:")
     @time testFlexleRemoveWeight!(s, indices)
+end
+
+"""
+    flexleTestSuite()
+
+Calls a series of Flexle test function to ensure working status before deployment.
+"""
+function flexleTestSuite()
+    # functionality
+    testFlexleSampler()
+    testUserFunctions()
+
+    # runtime
+    testRuntime01()
+    testRuntimeUniform()
+    testUpdateWeight()
+    testAddWeight()
+    testRemoveWeight()
 end
