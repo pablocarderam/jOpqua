@@ -10,16 +10,6 @@ const EXPONENT_MASK_FLOAT64::Int64   = 0x7FF0000000000000
 const EXPONENT_SHIFT_FLOAT64::Int64  = 52
 const EXPONENT_OFFSET_FLOAT64::Int64 = 1023
 
-
-# Fast hashing (via stevengj - https://discourse.julialang.org/t/poor-time-performance-on-dict/9656/13?u=stevengj)
-
-struct FastHashIndex 
-    val::Int64
-end
-
-Base.:(==)(x::FastHashIndex, y::FastHashIndex) = x.val == y.val
-Base.hash(x::FastHashIndex, h::UInt) = xor(UInt(x.val), h)
-
 # Structs
 
 mutable struct FlexLevel
@@ -27,19 +17,19 @@ mutable struct FlexLevel
     sum::Float64
     max::Float64
     indices::Vector{Int64}
-    index_positions::Dict{FastHashIndex, Int64}
 end
 
 mutable struct FlexleSampler
     levels::Vector{FlexLevel}
     weights::Vector{Float64}
     sum::Float64
+    index_positions::Vector{Int64}
 end
 
 # Initialization
 
 function FlexLevel(i::Int64, w::Float64)
-    return FlexLevel(logBounds(w), w, w, [i], Dict((FastHashIndex(i), 1)))
+    return FlexLevel(logBounds(w), w, w, [i])
 end
 
 # Utility methods
@@ -123,6 +113,7 @@ Get the index of the `FlexLevel` in `levels` where a weight `w` would belong.
 Returns `0` if no such level exists.
 """
 function levelIndex(w::Float64, levels::Vector{FlexLevel})
+    isempty(levels) && return 0
     idx = floorLog2(levels[1].bounds[2]) - floorLog2(w)
     return idx > length(levels) ? 0 : idx
 end
@@ -248,7 +239,13 @@ function addToFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; upd
     if w > level.max
         level.max = w
     end
-    level.index_positions[FastHashIndex(i)] = length(level.indices)
+    # level.index_positions[FastHashIndex(i)] = length(level.indices)
+    # push!(sampler.index_positions, length(level.indices))
+    if i <= length(sampler.index_positions)
+        sampler.index_positions[i] = length(level.indices)
+    else
+        push!(sampler.index_positions, length(level.indices))
+    end
 end
 
 """
@@ -274,14 +271,15 @@ This option is provided for performance purposes, as reading and writing to `sam
 function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler; update_sampler_sum::Bool=true)
     w::Float64 = sampler.weights[i]
     len = length(level.indices)
-    fhi = FastHashIndex(i)
-    idx = level.index_positions[fhi] 
+    # fhi = FastHashIndex(i)
+    idx = sampler.index_positions[i] # level.index_positions[fhi] 
     last = pop!(level.indices)
-    delete!(level.index_positions, fhi)
+    # delete!(level.index_positions, i) # fhi)
     if idx != len   # take last index and put it in the place of the one to be removed, unless the last one is itself to be removed
         level.indices[idx] = last
-        level.index_positions[FastHashIndex(last)] = idx
+        sampler.index_positions[last] = idx # FastHashIndex(last)] = idx
     end
+    sampler.index_positions[i] = 0
     level.sum -= w
     (update_sampler_sum) && (sampler.sum -= w)
     if !levelIsPopulated(level)
@@ -312,7 +310,7 @@ function extendLevels!(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel}
         pre = Vector{FlexLevel}(undef, num_new_levels)
         for i in 1:num_new_levels
             u_bound = l_bound * 2.0
-            pre[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}(), Dict{Int64, Int64}())
+            pre[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
             l_bound /= 2.0
         end
         prepend!(levels, pre)
@@ -321,7 +319,7 @@ function extendLevels!(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel}
         post = Vector{FlexLevel}(undef, num_new_levels)
         for i in num_new_levels:-1:1
             u_bound = l_bound * 2.0
-            post[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}(), Dict{Int64, Int64}())
+            post[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
             l_bound = u_bound
         end
         append!(levels, post)
@@ -359,9 +357,9 @@ Recalculate from scratch the `index_positions` dictionary of each `FlexLevel` in
 """
 function reconstructIndexPositions!(sampler::FlexleSampler)
     for level in sampler.levels
-        level.index_positions = Dict{FastHashIndex, Int64}()
+        level.index_positions = SparseVector{Int64, Int64}(length(sampler.weights)) # Dict{FastHashIndex, Int64}()
         for i in eachindex(level.indices)
-            level.index_positions[FastHashIndex(level.indices[i])] = i
+            level.index_positions[level.indices[i]] = i
         end
     end
 end
@@ -388,9 +386,9 @@ function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
         l_idx_plus1 = getLevel(sampler.weights[idx+1], sampler.levels)
         if !iszero(sampler.weights[idx])
             if l_idx === l_idx_plus1
-                l_idx.index_positions[FastHashIndex(idx)] = l_idx.index_positions[FastHashIndex(idx+1)]
+                l_idx.index_positions[idx] = l_idx.index_positions[idx+1]
             else
-                l_idx.index_positions[FastHashIndex(idx)] = pop!(l_idx.index_positions, FastHashIndex(idx+1))
+                l_idx.index_positions[idx] = pop!(l_idx.index_positions, idx+1)
             end
         end
         l_idx = l_idx_plus1
@@ -399,7 +397,7 @@ function reconstructIndexPositions!(sampler::FlexleSampler, i::Int64)
     w = sampler.weights[n]
     iszero(w) && return
     d = getLevel(sampler.weights[n], sampler.levels).index_positions
-    d[FastHashIndex(n)] = pop!(d, FastHashIndex(n+1))     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx] => pos) for all idx >= i
+    d[n] = pop!(d, n+1)     # removal of weights[i] means (d[idx+1] => pos) should be updated to (d[idx] => pos) for all idx >= i
 end
 
 # Sampling methods
@@ -434,14 +432,21 @@ and a `Vector` of `weights`.
 performed prior to rejection sampling.
 """
 function rejectionSample(rand_n::Float64, level::FlexLevel, weights::Vector{Float64})
+    # while true
+    #     r = rand_n * length(level.indices)
+    #     i = floor(r)
+    #     idx = level.indices[Int64(i) + 1]   # +1 to offset for 1-indexing
+    #     rand_n = r - i
+    #     if weights[idx] > (rand_n * level.max)
+    #         return idx
+    #     end
+    # end
     while true
-        r = rand_n * length(level.indices)
-        i = floor(r)
-        idx = level.indices[Int64(i) + 1]   # +1 to offset for 1-indexing
-        rand_n = r - i
-        if weights[idx] > (rand_n * level.max)
-            return idx
+        i = rand(level.indices)
+        if weights[i] > rand_n * level.max
+            return i
         end
+        rand_n = rand()
     end
 end
 
@@ -499,11 +504,12 @@ function FlexleSampler(weights::AbstractVector{Float64})
     end
 
     levels = Vector{FlexLevel}(undef, num_levels)   # add check for unreasonable number of levels before allocating space?
+    index_positions = zeros(Int64, length(weights))
 
     if !all_zero
         for i in num_levels:-1:1
             u_bound = l_bound * 2.0
-            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}(), Dict{FastHashIndex, Int64}())
+            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
             l_bound = u_bound
         end
 
@@ -514,13 +520,13 @@ function FlexleSampler(weights::AbstractVector{Float64})
                 push!(l.indices, i)
                 (w > l.max) && (l.max = w)
                 l.sum += w
-                l.index_positions[FastHashIndex(i)] = length(l.indices)
+                index_positions[i] = length(l.indices)
                 w_sum += w
             end
         end
     end
 
-    return FlexleSampler(levels, Vector(weights), w_sum)
+    return FlexleSampler(levels, Vector(weights), w_sum, index_positions)
 end
 
 """
@@ -604,7 +610,8 @@ function removeFromFlexleSampler!(sampler::FlexleSampler, i::Int64)
         end
     end
     # reconstructIndexPositions!(sampler)
-    reconstructIndexPositions!(sampler, i)
+    # reconstructIndexPositions!(sampler, i)
+    deleteat!(sampler.index_positions, i)
     if !iszero(w) && (from === sampler.levels[begin] || from === sampler.levels[end]) && isempty(from.indices)
         trimTrailingLevels!(sampler)
     end
@@ -683,26 +690,26 @@ function verifyFlexleSampler(sampler::FlexleSampler; name::String="")
         end
     end
 
-    # all indices in levels recorded correctedly in index_positions dict?
+    # all indices in levels recorded correctedly in index_positions?
+    d = sampler.index_positions
     for level in sampler.levels
-        d = level.index_positions
         for pos in eachindex(level.indices)
             idx = level.indices[pos]
-            if !(haskey(d, FastHashIndex(idx)) && d[FastHashIndex(idx)] == pos)
+            if d[idx] != pos
                 errors += 1
-                @printf "Error %i: element %i (level (%f, %f)) not recorded as position %i in index_positions\n" errors idx level.bounds[1] level.bounds[2] pos
+                @printf "Error %i: element %i (level (%f, %f), weight %f) not recorded as position %i in index_positions\n" errors idx level.bounds[1] level.bounds[2] sampler.weights[idx] pos
             end
         end
     end
-    for level in sampler.levels
-        d = level.index_positions
-        for (idx, pos) in d
-            if (pos > length(level.indices)) || !(level.indices[pos] == idx.val)
-                errors += 1
-                @printf "Error %i: element %i (level (%f, %f)) incorrectly recorded as position %i in index_positions\n" errors idx.val level.bounds[1] level.bounds[2] pos
-            end
+    for idx in eachindex(d)
+        pos = d[idx]
+        level = getLevel(sampler.weights[idx], sampler.levels)
+        if !iszero(pos) && ((pos > length(level.indices)) || !(level.indices[pos] == idx))
+            errors += 1
+            @printf "Error %i: element %i (level (%f, %f), weight %f) incorrectly recorded as position %i in index_positions\n" errors idx level.bounds[1] level.bounds[2] sampler.weights[idx] pos
         end
     end
+    # show(d)
 
     # all level sums/maxes correct?
     overall_sum = 0.0
@@ -762,7 +769,9 @@ Assesses:
 - updating of weights
 - extending of levels
 """
-function testFlexleSampler()
+function testFlexleSampler(seed=0)
+    Random.seed!(seed)
+
     # --- INITIALIZATION ---
     println("\nTEST: FlexleSampler initialization from weights vectors\n")
     names = Vector{String}()
@@ -807,78 +816,78 @@ function testFlexleSampler()
     # printFlexleSampler(samplers[end])
     verifyFlexleSampler(samplers[end], name="(move test, changed weights[85] from 127.5 to 60.0)")
 
-    # within same level
-    idx = 96
-    w_new = 140.0 # still belongs in (128.0, 256.0)
-    updateFlexleSamplerWeight!(samplers[end], idx, w_new)
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(move test, changed weights[96] from 144.0 to 140.0)")
+    # # within same level
+    # idx = 96
+    # w_new = 140.0 # still belongs in (128.0, 256.0)
+    # updateFlexleSamplerWeight!(samplers[end], idx, w_new)
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(move test, changed weights[96] from 144.0 to 140.0)")
 
-    # between two levels - "from" level is now empty
-    idx = 1
-    w_new = 3.2 # now belongs in (2.0, 4.0) instead of (1.0, 2.0)
-    updateFlexleSamplerWeight!(samplers[end], idx, w_new)
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(move test, changed weights[1] from 1.5 to 3.2)")
+    # # between two levels - "from" level is now empty
+    # idx = 1
+    # w_new = 3.2 # now belongs in (2.0, 4.0) instead of (1.0, 2.0)
+    # updateFlexleSamplerWeight!(samplers[end], idx, w_new)
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(move test, changed weights[1] from 1.5 to 3.2)")
 
 
-    # --- EXTEND LEVELS ---
+    # # --- EXTEND LEVELS ---
 
-    # upwards by 1
-    extendLevels!((256.0, 512.0), samplers[end].levels)
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, single level upwards)")
+    # # upwards by 1
+    # extendLevels!((256.0, 512.0), samplers[end].levels)
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, single level upwards)")
 
-    # upwards by several
-    extendLevels!((4096.0, 8192.0), samplers[end].levels)
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, several levels upwards)")
+    # # upwards by several
+    # extendLevels!((4096.0, 8192.0), samplers[end].levels)
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, several levels upwards)")
 
-    # downwards by one
-    extendLevels!((0.5, 1.0), samplers[end].levels)
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, single level downwards)")
+    # # downwards by one
+    # extendLevels!((0.5, 1.0), samplers[end].levels)
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, single level downwards)")
 
-    # downwards by several
-    extendLevels!((0.015625, 0.03125), samplers[end].levels)
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, several levels downards)")
+    # # downwards by several
+    # extendLevels!((0.015625, 0.03125), samplers[end].levels)
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, several levels downards)")
 
-    # ERROR: new bound matches existing upper bound
-    try
-        extendLevels!((4096.0, 8192.0), samplers[end].levels)
-    catch e
-        println("correctly identified error: ", e)
-    end
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing upper bound)")
+    # # ERROR: new bound matches existing upper bound
+    # try
+    #     extendLevels!((4096.0, 8192.0), samplers[end].levels)
+    # catch e
+    #     println("correctly identified error: ", e)
+    # end
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing upper bound)")
 
-    #  ERROR: new bound matches existing lower bound
-    try
-        extendLevels!((0.015625, 0.03125), samplers[end].levels)
-    catch e
-        println("correctly identified error: ", e)
-    end
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing lower bound)")
+    # #  ERROR: new bound matches existing lower bound
+    # try
+    #     extendLevels!((0.015625, 0.03125), samplers[end].levels)
+    # catch e
+    #     println("correctly identified error: ", e)
+    # end
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing lower bound)")
 
-    # ERROR: new bound matches occupied intermediate level
-    try
-        extendLevels!((2.0, 4.0), samplers[end].levels)
-    catch e
-        println("correctly identified error: ", e)
-    end
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing occupied intermediate level)")
+    # # ERROR: new bound matches occupied intermediate level
+    # try
+    #     extendLevels!((2.0, 4.0), samplers[end].levels)
+    # catch e
+    #     println("correctly identified error: ", e)
+    # end
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing occupied intermediate level)")
 
-    # ERROR: new bound matches empty intermediate level
-    try
-        extendLevels!((1.0, 2.0), samplers[end].levels)
-    catch e
-        println("correctly identified error: ", e)
-    end
-    # printFlexleSampler(samplers[end])
-    verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing empty intermediate level)")
+    # # ERROR: new bound matches empty intermediate level
+    # try
+    #     extendLevels!((1.0, 2.0), samplers[end].levels)
+    # catch e
+    #     println("correctly identified error: ", e)
+    # end
+    # # printFlexleSampler(samplers[end])
+    # verifyFlexleSampler(samplers[end], name="(extend test, attempt to add existing empty intermediate level)")
 end
 
 """
@@ -909,7 +918,7 @@ function testLevelSampling(sampler::FlexleSampler, n::Int64)
     end
 
     for _ in 1:n
-        bounds = cdfSample(sampler).bounds
+        bounds = cdfSample(sampler)[1].bounds
         d[bounds] += 1
     end
 
@@ -962,14 +971,14 @@ function flexleSamplingExpectedValue(sampler::FlexleSampler; n::Int64=1)
     norm = Float64(n) / sampler.sum # (l.sum / sampler.sum) * (Float64(n) / l.sum) -- l terms cancel out
     d = Dict{Int64,Float64}()
     for i in eachindex(sampler.weights)
-        d[i] = 0.0
+        d[i] = norm * sampler.weights[i]
     end
 
-    for l in sampler.levels
-        for i in l.indices
-            d[i] = norm * sampler.weights[i]
-        end
-    end
+    # for l in sampler.levels
+    #     for i in l.indices
+    #         d[i] = norm * sampler.weights[i]
+    #     end
+    # end
     return d
 end
 

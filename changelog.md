@@ -14,6 +14,13 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 21 March 2025
+- New strategy for recording `index_positions` as `Vector` at `FlexleSampler` level
+(as opposed to `Dict` at `FlexLevel` level), ~30-50x speedup to addition/removal of
+new weights (CLM)
+- Revert to old `rejectionSample` technique; yet-unidentified bug in previous
+strategy caused sample distribution to be wrong
+
 ## 19 March 2025
 - Added (+clarified existing) docstrings for most `flexle.jl` functions (CLM)
 
