@@ -14,6 +14,11 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 22 March 2025
+- Reorganize `Flexle` into its own module (CLM)
+- Refactor API to be more idiomatically "Julia", i.e. rename functions where appropriate
+to be methods of existing functions like `push!` or `deleteat!` (CLM)
+
 ## 21 March 2025
 - New strategy for recording `index_positions` as `Vector` at `FlexleSampler` level
 (as opposed to `Dict` at `FlexLevel` level), ~30-50x speedup to addition/removal of
