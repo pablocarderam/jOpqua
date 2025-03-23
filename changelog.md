@@ -18,6 +18,7 @@ TODO: Not debugged:
 - Reorganize `Flexle` into its own module (CLM)
 - Refactor API to be more idiomatically "Julia", i.e. rename functions where appropriate
 to be methods of existing functions like `push!` or `deleteat!` (CLM)
+- Write `Flexle` API doc (CLM)
 
 ## 21 March 2025
 - New strategy for recording `index_positions` as `Vector` at `FlexleSampler` level
