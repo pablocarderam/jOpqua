@@ -168,8 +168,38 @@ Take a single random sample from `sampler`, returning the index of the element s
 Samples by inverse transform sampling (see `cdfSample`(@ref)) to select a `FlexLevel` in `sampler`, then rejection
 sampling (see `rejectionSample`(@ref)) an index from said `FlexLevel`.
 """
-function sample(sampler::FlexleSampler)
+@inline function sample(sampler::FlexleSampler)
     level, rand_n = cdfSample(sampler)
     return rejectionSample(rand_n, level, sampler.weights)
+
+    # CDF sample level
+    # local chosen_level::FlexLevel
+    # norm_rand_n = rand() * sampler.sum
+    # cum_sum = 0.0
+    # for level::FlexLevel in sampler.levels
+    #     cum_sum += level.sum
+    #     chosen_level = level
+    #     (cum_sum > norm_rand_n) && break
+    # end
+
+    # rejection sample within level
+    # rand_n::Float64 = (norm_rand_n - cum_sum + chosen_level.sum) / chosen_level.sum
+    # while true
+    #     i = rand(chosen_level.indices)
+    #     if sampler.weights[i] > rand_n * chosen_level.max
+    #         return i
+    #     end
+    #     rand_n = rand()
+    # end
+    # while true
+    #     r = rand_n * len
+    #     d::Float64, i::Int64 = modf(r)
+    #     idx = chosen_level.indices[i + 1]   # +1 to offset for 1-indexing
+    #     # if sampler.weights[idx] > (d*chosen_level.max)
+    #     if sampler.weights[idx] > d*chosen_level.max
+    #         return idx
+    #     end
+    #     rand_n = rand()
+    # end
 end
 

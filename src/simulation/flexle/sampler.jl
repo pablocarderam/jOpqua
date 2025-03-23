@@ -369,7 +369,7 @@ Randomly select a `FlexLevel` from `sampler` using inverse transform sampling.
 Also returns a "free" random number in [0, 1) for use in subsequent rejection sampling
 (see [`rejectionSample`](@ref)).
 """
-function cdfSample(sampler::FlexleSampler)
+@inline function cdfSample(sampler::FlexleSampler)
     local chosen_level::FlexLevel
     norm_rand_n = rand() * sampler.sum
     cum_sum = 0.0
@@ -390,15 +390,15 @@ and a `Vector` of `weights`.
 `rand_n` is generated in the course of inverse transform sampling (see [`cdfSample`](@ref))
 performed prior to rejection sampling.
 """
-function rejectionSample(rand_n::Float64, level::FlexLevel, weights::Vector{Float64})
+@inline function rejectionSample(rand_n::Float64, level::FlexLevel, weights::Vector{Float64})
     # while true
     #     r = rand_n * length(level.indices)
-    #     i = floor(r)
-    #     idx = level.indices[Int64(i) + 1]   # +1 to offset for 1-indexing
-    #     rand_n = r - i
-    #     if weights[idx] > (rand_n * level.max)
+    #     d::Float64, i::Int64 = modf(r)
+    #     idx = level.indices[i + 1]   # +1 to offset for 1-indexing
+    #     if weights[idx]/level.max > d
     #         return idx
     #     end
+    #     rand_n = rand()
     # end
     while true
         i = rand(level.indices)
@@ -408,12 +408,3 @@ function rejectionSample(rand_n::Float64, level::FlexLevel, weights::Vector{Floa
         rand_n = rand()
     end
 end
-
-# function rejectionSample(level::FlexLevel, weights::Vector{Float64})
-#     while true
-#         i = rand(level.indices)
-#         if weights[i] > rand() * level.max
-#             return i
-#         end
-#     end
-# end

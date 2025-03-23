@@ -1,8 +1,7 @@
-using .Flexle
 using BenchmarkTools
 using Printf
 using Random
-using Revise
+using ProfileView
 
 """
     verify(sampler, name="")
