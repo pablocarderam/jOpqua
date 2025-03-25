@@ -2,6 +2,7 @@
 
 module Flexle
 
+using Revise
 using Printf
 using Random
 using BenchmarkTools

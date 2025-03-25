@@ -1,5 +1,8 @@
 # User interface containing all exported Flexle functions
 
+using Revise
+using Random
+
 """
     FlexleSampler(weights)
 
@@ -79,34 +82,47 @@ end
 Set the weight of element `i` in `sampler` equal to `w`, returning the difference between the new and old values of `i`.
 """
 function Base.setindex!(sampler::FlexleSampler, w::Float64, i::Int64)
-    # remove from current level
-    w_old::Float64 = sampler.weights[i]
+    from::Union{Nothing, FlexLevel} = nothing
+    to::Union{Nothing, FlexLevel} = nothing
     levels = sampler.levels
-    if !iszero(w_old)
+    w_old::Float64 = sampler.weights[i]
+    delta::Float64 = w - w_old
+    nonzero = !iszero(w_old), !iszero(w)
+    if nonzero[1]
         from = getLevel(w_old, levels)
-        removeFromFlexLevel!(i, from, sampler, update_sampler_sum=false)
     end
-
-    # update weights vector - has to be done between removal and addition
-    sampler.weights[i] = w
-
-    # move to new level
-    if !iszero(w)
+    if nonzero[2]
         bounds = logBounds(w)
         if !inSampler(bounds, sampler)
             extendLevels!(bounds, levels)
         end
         to = getLevel(bounds, levels)
+        if from == to
+            sampler.weights[i] = w
+            to.sum += delta
+            sampler.sum += delta
+            if w > to.max
+                to.max = w
+            end
+            return delta
+        end
+    end
+
+    if nonzero[1]
+        removeFromFlexLevel!(i, from, sampler, update_sampler_sum=false)
+    end
+    sampler.weights[i] = w  # weight vector update must be between removal and addition
+    if nonzero[2]
         addToFlexLevel!(i, to, sampler, update_sampler_sum=false)
     end
-    sampler.sum += w - w_old
+    sampler.sum += delta
 
     # trim excess levels (to save time, only if removed element from a level on the end)
-    if !iszero(w_old) && (from === levels[begin] || from === levels[end]) && isempty(from.indices)
+    if nonzero[1] && (from === levels[begin] || from === levels[end]) && !levelIsPopulated(from)
         trimTrailingLevels!(sampler)
     end
 
-    return w - w_old
+    return delta
 end
 
 """
@@ -147,9 +163,10 @@ function Base.deleteat!(sampler::FlexleSampler, i::Int64)
     end
     deleteat!(sampler.weights, i)
     for level in sampler.levels
-        for j in eachindex(level.indices)
-            if level.indices[j] > i
-                level.indices[j] -= 1
+        indices = level.indices
+        for j in eachindex(indices)
+            if indices[j] > i
+                indices[j] -= 1
             end
         end
     end
@@ -171,35 +188,5 @@ sampling (see `rejectionSample`(@ref)) an index from said `FlexLevel`.
 @inline function sample(sampler::FlexleSampler)
     level, rand_n = cdfSample(sampler)
     return rejectionSample(rand_n, level, sampler.weights)
-
-    # CDF sample level
-    # local chosen_level::FlexLevel
-    # norm_rand_n = rand() * sampler.sum
-    # cum_sum = 0.0
-    # for level::FlexLevel in sampler.levels
-    #     cum_sum += level.sum
-    #     chosen_level = level
-    #     (cum_sum > norm_rand_n) && break
-    # end
-
-    # rejection sample within level
-    # rand_n::Float64 = (norm_rand_n - cum_sum + chosen_level.sum) / chosen_level.sum
-    # while true
-    #     i = rand(chosen_level.indices)
-    #     if sampler.weights[i] > rand_n * chosen_level.max
-    #         return i
-    #     end
-    #     rand_n = rand()
-    # end
-    # while true
-    #     r = rand_n * len
-    #     d::Float64, i::Int64 = modf(r)
-    #     idx = chosen_level.indices[i + 1]   # +1 to offset for 1-indexing
-    #     # if sampler.weights[idx] > (d*chosen_level.max)
-    #     if sampler.weights[idx] > d*chosen_level.max
-    #         return idx
-    #     end
-    #     rand_n = rand()
-    # end
 end
 

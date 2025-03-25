@@ -1,8 +1,13 @@
 # Structs and maintenance functions internal to the module
 
+using Printf
+using Random
+
 const EXPONENT_MASK_FLOAT64::Int64   = 0x7FF0000000000000
 const EXPONENT_SHIFT_FLOAT64::Int64  = 52
 const EXPONENT_OFFSET_FLOAT64::Int64 = 1023
+const MANTISSA_MASK_FLOAT64::Int64   = 0x000FFFFFFFFFFFFF
+const MANTISSA_PLUS1_FLOAT64::Int64  = 0x0010000000000000 
 
 # Structs
 
@@ -30,7 +35,29 @@ end
 
 import Base.&
 
-Base.:&(f::Float64, i::Int64) = reinterpret(Float64, (reinterpret(Int64, f) & i))
+Base.:&(f::Float64, i::Int64) = Core.bitcast(Int64, f) & i  # reinterpret(Int64, f) & i
+
+"""
+    get_exponent_bits(a)
+
+Get an Int64 representing the exponent bits in the IEEE754 representation of `a`.
+"""
+@inline function get_exponent_bits(a::Float64)
+    return (a & EXPONENT_MASK_FLOAT64) >> EXPONENT_SHIFT_FLOAT64
+end
+
+"""
+    fast_Int64(n)
+
+Truncate and convert `n` to an `Int64`, but only safely for positive numbers.
+
+Returns the `Int64`-converted and truncated values of `n` as a 2-tuple.
+"""
+@inline function fast_Int64(n::Float64)
+    exponent_bits = get_exponent_bits(n) - EXPONENT_OFFSET_FLOAT64
+    shift = EXPONENT_SHIFT_FLOAT64 - exponent_bits
+    return ((n & MANTISSA_MASK_FLOAT64) | MANTISSA_PLUS1_FLOAT64) >> shift, Core.bitcast(Float64, (Core.bitcast(Int64, n) >> shift) << shift)
+end
 
 """
     approxeq(a, b, t=1e-9)
@@ -55,7 +82,7 @@ Get the largest power of 2 less than or equal to a non-negative `n`.
 `lowerLog2Bound(0.75)` ==> `0.5`
 """
 function lowerLog2Bound(n::Float64)
-    return n & EXPONENT_MASK_FLOAT64
+    return Core.bitcast(Float64, n & EXPONENT_MASK_FLOAT64)
 end
 
 """
@@ -72,7 +99,7 @@ Get the `Int64` floor of the log2 of `n`.
 `floorLog2(0.75)` ==> `-1`
 """
 function floorLog2(n::Float64)
-    return ((reinterpret(Int64, n) & EXPONENT_MASK_FLOAT64) >> EXPONENT_SHIFT_FLOAT64) - EXPONENT_OFFSET_FLOAT64
+    return ((n & EXPONENT_MASK_FLOAT64) >> EXPONENT_SHIFT_FLOAT64) - EXPONENT_OFFSET_FLOAT64
 end
 
 """
@@ -391,11 +418,12 @@ and a `Vector` of `weights`.
 performed prior to rejection sampling.
 """
 @inline function rejectionSample(rand_n::Float64, level::FlexLevel, weights::Vector{Float64})
+    # l = Float64(length(level.indices))
     # while true
-    #     r = rand_n * length(level.indices)
-    #     d::Float64, i::Int64 = modf(r)
+    #     r = rand_n * l
+    #     i::Int64, r_floor::Float64 = fast_Int64(r)
     #     idx = level.indices[i + 1]   # +1 to offset for 1-indexing
-    #     if weights[idx]/level.max > d
+    #     if weights[idx] > (r - r_floor) * level.max
     #         return idx
     #     end
     #     rand_n = rand()

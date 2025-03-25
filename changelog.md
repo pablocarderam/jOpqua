@@ -14,6 +14,10 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 25 March 2025
+- `Flexle.setindex!` avoid adding to/removing from level when new and old weights belong
+in same level (CLM)
+
 ## 22 March 2025
 - Reorganize `Flexle` into its own module (CLM)
 - Refactor API to be more idiomatically "Julia", i.e. rename functions where appropriate

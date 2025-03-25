@@ -15,4 +15,4 @@ Fast, dynamically weighted random sampling.
 
 
 [^1]: Implemented as `getindex(sampler, i)`.
-[^2]: Implemented as `setindex(sampler, w, i)`. When `setindex` is called explicitly, it also returns the difference between the new and old weight of element `i`.
+[^2]: Implemented as `setindex!(sampler, w, i)`. When `setindex!` is called explicitly, it also returns the difference between the new and old weight of element `i`.
