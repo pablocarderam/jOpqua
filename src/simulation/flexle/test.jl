@@ -24,6 +24,7 @@ Checks are as follows:
     - each level's `sum` is (approximately) equal to the sum of the weights of the indexes it holds
     - each level's `max` is equal to the maximum of the weights of the indexes it holds
     - `sampler.sum` is (approximately) equal to the sum of `sampler.weights`
+    - `sampler.max_log2_upper_bound` is equal to the log2 of the highest level's upper bound
 """
 function verify(sampler::FlexleSampler; name::String="")
     @printf "Verifying FlexleSampler %s...\n" name
@@ -64,14 +65,14 @@ function verify(sampler::FlexleSampler; name::String="")
     end
     for idx in eachindex(d)
         pos = d[idx]
-        level = Flexle.getLevel(sampler.weights[idx], sampler.levels)
+        level = Flexle.getLevel(sampler.weights[idx], sampler)
         if !iszero(pos) && ((pos > length(level.indices)) || !(level.indices[pos] == idx))
             errors += 1
             @printf "Error %i: element %i (level (%f, %f), weight %f) incorrectly recorded as position %i in index_positions\n" errors idx level.bounds[1] level.bounds[2] sampler.weights[idx] pos
         end
     end
 
-    # all level sums/maxes correct?
+    # all recorded stats correct?
     overall_sum = 0.0
     for level in sampler.levels
         empty = isempty(level.indices)
@@ -91,6 +92,10 @@ function verify(sampler::FlexleSampler; name::String="")
     if !Flexle.approxeq(overall_sum, sampler.sum)     # correct for probable floating point error
         errors += 1
         @printf "Error %i: overall sampler sum incorrect (expected %f, got %f)" errors overall_sum sampler.sum
+    end
+    if !((isempty(sampler.levels) && isnothing(sampler.max_log2_upper_bound)) || (!isempty(sampler.levels) && (sampler.max_log2_upper_bound == Flexle.floorLog2(sampler.levels[1].bounds[2]))))
+        errors += 1
+        @printf "Error %i: sampler max_log2_upper_bound incorrect (expected %i, got %i)" errors Flexle.floorLog2(sampler.levels[1].bounds[2]) sampler.max_log2_upper_bound
     end
 
     @printf"Final error count: %i\n" errors
@@ -198,28 +203,28 @@ function testFlexleSampler(seed=0)
     # --- EXTEND LEVELS ---
 
     # upwards by 1
-    Flexle.extendLevels!((256.0, 512.0), samplers[end].levels)
+    Flexle.extendLevels!((256.0, 512.0), samplers[end])
     # printFlexleSampler(samplers[end])
     verify(samplers[end], name="(extend test, single level upwards)")
 
     # upwards by several
-    Flexle.extendLevels!((4096.0, 8192.0), samplers[end].levels)
+    Flexle.extendLevels!((4096.0, 8192.0), samplers[end])
     # printFlexleSampler(samplers[end])
     verify(samplers[end], name="(extend test, several levels upwards)")
 
     # downwards by one
-    Flexle.extendLevels!((0.5, 1.0), samplers[end].levels)
+    Flexle.extendLevels!((0.5, 1.0), samplers[end])
     # printFlexleSampler(samplers[end])
     verify(samplers[end], name="(extend test, single level downwards)")
 
     # downwards by several
-    Flexle.extendLevels!((0.015625, 0.03125), samplers[end].levels)
+    Flexle.extendLevels!((0.015625, 0.03125), samplers[end])
     # printFlexleSampler(samplers[end])
     verify(samplers[end], name="(extend test, several levels downards)")
 
     # ERROR: new bound matches existing upper bound
     try
-        Flexle.extendLevels!((4096.0, 8192.0), samplers[end].levels)
+        Flexle.extendLevels!((4096.0, 8192.0), samplers[end])
     catch e
         println("correctly identified error: ", e)
     end
@@ -228,7 +233,7 @@ function testFlexleSampler(seed=0)
 
     #  ERROR: new bound matches existing lower bound
     try
-        Flexle.extendLevels!((0.015625, 0.03125), samplers[end].levels)
+        Flexle.extendLevels!((0.015625, 0.03125), samplers[end])
     catch e
         println("correctly identified error: ", e)
     end
@@ -237,7 +242,7 @@ function testFlexleSampler(seed=0)
 
     # ERROR: new bound matches occupied intermediate level
     try
-        Flexle.extendLevels!((2.0, 4.0), samplers[end].levels)
+        Flexle.extendLevels!((2.0, 4.0), samplers[end])
     catch e
         println("correctly identified error: ", e)
     end
@@ -246,7 +251,7 @@ function testFlexleSampler(seed=0)
 
     # ERROR: new bound matches empty intermediate level
     try
-        Flexle.extendLevels!((1.0, 2.0), samplers[end].levels)
+        Flexle.extendLevels!((1.0, 2.0), samplers[end])
     catch e
         println("correctly identified error: ", e)
     end

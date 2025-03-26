@@ -14,6 +14,9 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 26 March 2025
+- Precompute log2 of `Flexle` max level upper bound for faster indexing (CLM)
+
 ## 25 March 2025
 - `Flexle.setindex!` avoid adding to/removing from level when new and old weights belong
 in same level (CLM)

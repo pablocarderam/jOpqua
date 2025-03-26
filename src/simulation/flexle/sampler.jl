@@ -12,7 +12,7 @@ const MANTISSA_PLUS1_FLOAT64::Int64  = 0x0010000000000000
 # Structs
 
 mutable struct FlexLevel
-    bounds::Tuple{Float64,Float64}
+    bounds::Tuple{Float64,Float64}  # lower, upper
     sum::Float64
     max::Float64
     indices::Vector{Int64}
@@ -23,6 +23,7 @@ mutable struct FlexleSampler
     weights::Vector{Float64}
     sum::Float64
     index_positions::Vector{Int64}
+    max_log2_upper_bound::Union{Int64, Nothing}     # nothing when levels is empty
 end
 
 # Initialization
@@ -35,7 +36,7 @@ end
 
 import Base.&
 
-Base.:&(f::Float64, i::Int64) = Core.bitcast(Int64, f) & i  # reinterpret(Int64, f) & i
+Base.:&(f::Float64, i::Int64) = reinterpret(Int64, f) & i
 
 """
     get_exponent_bits(a)
@@ -56,7 +57,7 @@ Returns the `Int64`-converted and truncated values of `n` as a 2-tuple.
 @inline function fast_Int64(n::Float64)
     exponent_bits = get_exponent_bits(n) - EXPONENT_OFFSET_FLOAT64
     shift = EXPONENT_SHIFT_FLOAT64 - exponent_bits
-    return ((n & MANTISSA_MASK_FLOAT64) | MANTISSA_PLUS1_FLOAT64) >> shift, Core.bitcast(Float64, (Core.bitcast(Int64, n) >> shift) << shift)
+    return ((n & MANTISSA_MASK_FLOAT64) | MANTISSA_PLUS1_FLOAT64) >> shift, reinterpret(Float64, (reinterpret(Int64, n) >> shift) << shift)
 end
 
 """
@@ -69,20 +70,20 @@ function approxeq(a::Float64, b::Float64; t::Float64=1e-9)
 end
 
 """
-    lowerLog2Bound(n)
+    lowerPowerOf2Bound(n)
 
 Get the largest power of 2 less than or equal to a non-negative `n`.
 
 # Examples
 
-`lowerLog2Bound(33.0)` ==> `32.0`
+`lowerPowerOf2Bound(33.0)` ==> `32.0`
 
-`lowerLog2Bound(32.0)` ==> `32.0`
+`lowerPowerOf2Bound(32.0)` ==> `32.0`
 
-`lowerLog2Bound(0.75)` ==> `0.5`
+`lowerPowerOf2Bound(0.75)` ==> `0.5`
 """
-function lowerLog2Bound(n::Float64)
-    return Core.bitcast(Float64, n & EXPONENT_MASK_FLOAT64)
+function lowerPowerOf2Bound(n::Float64)
+    return reinterpret(Float64, n & EXPONENT_MASK_FLOAT64)
 end
 
 """
@@ -108,7 +109,7 @@ end
 Return a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
 """
 function logBounds(n::Float64)
-    l = lowerLog2Bound(n)
+    l = lowerPowerOf2Bound(n)
     return l, l*2.0
 end
 
@@ -130,56 +131,43 @@ starts with a level of bounds `(32.0, 64.0)` (`64` being `2^6`) is at `levels[3]
 
 `levelIndex(8.0, 5)` ==> `2`
 """
-function levelIndex(w::Float64, u::Int64)
-    return iszero(w) ? 0 : u - floorLog2(w)
+function levelIndex(w::Float64, u::Union{Int64, Nothing})
+    return iszero(w) || isnothing(u) ? 0 : u - floorLog2(w)
 end
 
 """
-    levelIndex(w, levels)
+    levelIndex(bounds, u)
 
-Get the index of the `FlexLevel` in `levels` where a weight `w` would belong.
+Get the index of the `FlexLevel` that has bounds given by `bounds` in some `FlexleSampler.levels` with maximum upper bound `2^u`.
 
 Returns `0` if no such level exists.
 """
-function levelIndex(w::Float64, levels::Vector{FlexLevel})
-    isempty(levels) && return 0
-    idx = floorLog2(levels[1].bounds[2]) - floorLog2(w)
-    return idx > length(levels) ? 0 : idx
+function levelIndex(bounds::Tuple{Float64,Float64}, u::Union{Int64, Nothing})
+    return levelIndex(bounds[1], u)
 end
 
 """
-    levelIndex(bounds, levels)
+    getLevel(bounds, sampler)
 
-Get the index of the `FlexLevel` in `levels` with bounds given by `bounds`.
-
-Returns `0` if no such level exists.
-"""
-function levelIndex(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
-    return levelIndex(bounds[1], levels)
-end
-
-"""
-    getLevel(bounds, levels)
-
-Return the `FlexLevel` in `levels` with bounds given by `bounds`.
+Return the `FlexLevel` in `sampler.levels` with bounds given by `bounds`.
 
 Returns `nothing` if no such level exists.
 """
-function getLevel(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
-    l = levelIndex(bounds, levels)
-    return l==0 ? nothing : levels[l]
+function getLevel(bounds::Tuple{Float64,Float64}, sampler::FlexleSampler)
+    l = levelIndex(bounds[1], sampler.max_log2_upper_bound)
+    return l==0 ? nothing : sampler.levels[l]
 end
 
 """
     getLevel(w, levels)
 
-Return the `FlexLevel` in `levels` where a weight `w` would belong.
+Return the `FlexLevel` in `sampler.levels` where a weight `w` would belong.
 
 Returns `nothing` if no such level exists.
 """
-function getLevel(w::Float64, levels::Vector{FlexLevel})
-    l = levelIndex(w, levels)
-    return l==0 ? nothing : levels[l]
+function getLevel(w::Float64, sampler::FlexleSampler)
+    l = levelIndex(w, sampler.max_log2_upper_bound)
+    return l==0 ? nothing : sampler.levels[l]
 end
 
 """
@@ -337,41 +325,42 @@ function removeFromFlexLevel!(i::Int64, level::FlexLevel, sampler::FlexleSampler
 end
 
 """
-    extendLevels!(bounds, levels)
+    extendLevels!(bounds, sampler)
 
-Extend `levels` to contain all appropriate `FlexLevel`s up to and including that specified by `bounds`.
+Extend `sampler.levels` to contain all appropriate `FlexLevel`s up to and including that specified by `bounds`.
 
 Throws an error if a level with such bounds already exists in `levels`.
 """
-function extendLevels!(bounds::Tuple{Float64,Float64}, levels::Vector{FlexLevel})
+function extendLevels!(bounds::Tuple{Float64,Float64}, sampler::FlexleSampler)
     if bounds[1] * 2.0 != bounds[2]
         throw("Invalid bounds - must be two adjacent powers of 2")
     end
 
     l_bound = bounds[1]
-    extend_up = l_bound > levels[begin].bounds[1]
-    extend_down = l_bound < levels[end].bounds[1]
+    extend_up = l_bound > sampler.levels[begin].bounds[1]
+    extend_down = l_bound < sampler.levels[end].bounds[1]
     if extend_up
-        num_new_levels = logDist(levels[begin].bounds[1], l_bound)
+        num_new_levels = logDist(sampler.levels[begin].bounds[1], l_bound)
         pre = Vector{FlexLevel}(undef, num_new_levels)
         for i in 1:num_new_levels
             u_bound = l_bound * 2.0
             pre[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
             l_bound /= 2.0
         end
-        prepend!(levels, pre)
+        prepend!(sampler.levels, pre)
     elseif extend_down
-        num_new_levels = logDist(l_bound, levels[end].bounds[1])
+        num_new_levels = logDist(l_bound, sampler.levels[end].bounds[1])
         post = Vector{FlexLevel}(undef, num_new_levels)
         for i in num_new_levels:-1:1
             u_bound = l_bound * 2.0
             post[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
             l_bound = u_bound
         end
-        append!(levels, post)
+        append!(sampler.levels, post)
     else
-        throw("levels already contains FlexLevel of specified bounds")
+        throw("sampler already contains FlexLevel of specified bounds")
     end
+    sampler.max_log2_upper_bound = floorLog2(sampler.levels[1].bounds[2])
 end
 
 """
@@ -381,8 +370,14 @@ Remove all empty `FlexLevel`s from the front and back of `sampler`.
 """
 function trimTrailingLevels!(sampler::FlexleSampler)
     first = findfirst(levelIsPopulated, sampler.levels)
-    last = findlast(levelIsPopulated, sampler.levels)
-    sampler.levels = sampler.levels[first:last]
+    if isnothing(first)
+        sampler.levels = Vector{FlexLevel}()
+        sampler.max_log2_upper_bound = nothing
+    else
+        last = findlast(levelIsPopulated, sampler.levels)
+        sampler.levels = sampler.levels[first:last]
+        sampler.max_log2_upper_bound = floorLog2(sampler.levels[1].bounds[2])
+    end
 end
 
 

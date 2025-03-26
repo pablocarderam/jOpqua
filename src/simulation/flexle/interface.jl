@@ -9,62 +9,53 @@ using Random
 Create a `FlexleSampler` from a `Vector` of `weights`.
 """
 function FlexleSampler(weights::AbstractVector{Float64})
-    if length(weights) == 0
+    w_vector = Vector(weights)
+
+    if length(w_vector) == 0
         throw("Cannot create FlexleSampler from AbstractVector of length 0.")
     end
 
     w_sum = 0.0
     weights_nonzero = filter(x -> !iszero(x), weights)
-    all_zero = isempty(weights_nonzero)
-
-    if all_zero
-        w_min, w_max = 0.0, 0.0
-        num_levels = 0
-    else
-        w_min, w_max = Inf, 0.0
-        for w in weights_nonzero
-            (w < w_min) && (w_min = w)
-            (w > w_max) && (w_max = w)
-        end
-
+    if isempty(weights_nonzero)
+        return FlexleSampler(Vector{FlexLevel}(), w_vector, w_sum, zeros(Int64, length(w_vector)), nothing)
+    end
+    
+    w_min, w_max = Inf, 0.0
+    for w in weights_nonzero
+        (w < w_min) && (w_min = w)
+        (w > w_max) && (w_max = w)
+    end
+    
+    uppermost_log_bound = let 
         logmax = log2(w_max)
-        if logmax == ceil(logmax)   # if w_max is a power of 2, can't take its ceiling to get its upper bound; need to add 1 instead
-            max_u_log = Int64(logmax) + 1
-        else
-            max_u_log = Int64(ceil(logmax))
-        end
-
-        min_l_log_f = floor(log2(w_min))
-        min_l_log = Int64(min_l_log_f)
-
-        l_bound = 2.0^min_l_log_f
-        num_levels = max_u_log - min_l_log     # e.g. -2,5 ==> 7 levels [4,3,2,1,0,-1,-2]
+        ceil_logmax = ceil(logmax)
+        (logmax == ceil_logmax) ? Int64(logmax) + 1 : Int64(ceil_logmax) # if w_max is a power of 2, can't take its ceiling to get its upper bound - need to add 1 instead
     end
-
+    num_levels = uppermost_log_bound - floorLog2(w_min)     # e.g. -2,5 ==> 7 levels [4,3,2,1,0,-1,-2]
+    
     levels = Vector{FlexLevel}(undef, num_levels)   # add check for unreasonable number of levels before allocating space?
-    index_positions = zeros(Int64, length(weights))
+    index_positions = zeros(Int64, length(w_vector))
 
-    if !all_zero
-        for i in num_levels:-1:1
-            u_bound = l_bound * 2.0
-            levels[i] = FlexLevel((l_bound, u_bound), 0.0, 0.0, Vector{Int64}())
-            l_bound = u_bound
-        end
-
-        for i in eachindex(weights)
-            w = weights[i]
-            if !iszero(w)
-                l = levels[levelIndex(w, max_u_log)]
-                push!(l.indices, i)
-                (w > l.max) && (l.max = w)
-                l.sum += w
-                index_positions[i] = length(l.indices)
-                w_sum += w
-            end
-        end
+    lower_bound = lowerPowerOf2Bound(w_min)
+    for i in num_levels:-1:1
+        upper_bound = lower_bound * 2.0
+        levels[i] = FlexLevel((lower_bound, upper_bound), 0.0, 0.0, Vector{Int64}())
+        lower_bound = upper_bound
     end
 
-    return FlexleSampler(levels, Vector(weights), w_sum, index_positions)
+    for i in eachindex(w_vector)
+        w::Float64 = w_vector[i]
+        iszero(w) && continue
+        l = levels[levelIndex(w, uppermost_log_bound)]
+        push!(l.indices, i)
+        (w > l.max) && (l.max = w)
+        l.sum += w
+        index_positions[i] = length(l.indices)
+        w_sum += w
+    end
+
+    return FlexleSampler(levels, w_vector, w_sum, index_positions, uppermost_log_bound)
 end
 
 """
@@ -89,14 +80,14 @@ function Base.setindex!(sampler::FlexleSampler, w::Float64, i::Int64)
     delta::Float64 = w - w_old
     nonzero = !iszero(w_old), !iszero(w)
     if nonzero[1]
-        from = getLevel(w_old, levels)
+        from = getLevel(w_old, sampler)
     end
     if nonzero[2]
         bounds = logBounds(w)
         if !inSampler(bounds, sampler)
-            extendLevels!(bounds, levels)
+            extendLevels!(bounds, sampler)
         end
-        to = getLevel(bounds, levels)
+        to = getLevel(bounds, sampler)
         if from == to
             sampler.weights[i] = w
             to.sum += delta
@@ -117,7 +108,6 @@ function Base.setindex!(sampler::FlexleSampler, w::Float64, i::Int64)
     end
     sampler.sum += delta
 
-    # trim excess levels (to save time, only if removed element from a level on the end)
     if nonzero[1] && (from === levels[begin] || from === levels[end]) && !levelIsPopulated(from)
         trimTrailingLevels!(sampler)
     end
@@ -137,9 +127,9 @@ function Base.push!(sampler::FlexleSampler, w::Float64)
     if !iszero(w)
         bounds = logBounds(w)
         if !inSampler(bounds, sampler)
-            extendLevels!(bounds, sampler.levels)
+            extendLevels!(bounds, sampler)
         end
-        to = getLevel(bounds, sampler.levels)
+        to = getLevel(bounds, sampler)
         addToFlexLevel!(length(sampler.weights), to, sampler)
     end
     return length(sampler.weights)
@@ -158,7 +148,7 @@ function Base.deleteat!(sampler::FlexleSampler, i::Int64)
     w::Float64 = sampler.weights[i]
     if !iszero(w)
         bounds = logBounds(w)
-        from = getLevel(bounds, sampler.levels)
+        from = getLevel(bounds, sampler)
         removeFromFlexLevel!(i, from, sampler)
     end
     deleteat!(sampler.weights, i)
