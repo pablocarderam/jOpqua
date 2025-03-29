@@ -14,6 +14,13 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 29 March 2025
+- Remove `Flexle` source code, now in [separate package](https://github.com/connormurphy798/Flexle.jl)
+included in `jOpqua` dependencies (CLM)
+
+## 27 March 2025
+- Minor bug fix (`Flexle.index_positions` not updating when 0-weight element pushed) (CLM)
+
 ## 26 March 2025
 - Precompute log2 of `Flexle` max level upper bound for faster indexing (CLM)
 
