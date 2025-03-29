@@ -43,7 +43,7 @@ function makeFlexleExampleGraphs(; seed::Int64=3, filepath="examples/flexlegraph
     plotCDF(w, filepath, d34, n=n)
     plotRejection(w, filepath, d34)
     s = FlexleSampler(w)
-    printFlexleSampler(s)
+    print(s)
     f = []
     f_lsize = maximum(length(l.indices) for l in s.levels)
     for i in eachindex(s.levels)

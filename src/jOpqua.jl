@@ -2,7 +2,6 @@ module jOpqua
 
 # Groundwork
 include("utils.jl")
-include("simulation/flexle/flexle.jl")
 
 # Structure
 include("simulation/constants.jl")
