@@ -1,7 +1,7 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-- Flexle results in performance decrease compared to randChoose
+- `Flexle` results in 15% performance decrease compared to `randChoose`
 
 TODO: Not debugged:
 - Mutant establishment
@@ -11,6 +11,9 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 11 April 2025
+- Moved `flexleSamplers` methods from `Flexle` into `utils.jl`
 
 ## 10 April 2025
 - `Flexle` sampling has been incorporated into `Host` sampling within a `Population`;

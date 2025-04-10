@@ -3,11 +3,11 @@
 using Printf
 using Random
 
-const EXPONENT_MASK_FLOAT64::Int64   = 0x7FF0000000000000
-const EXPONENT_SHIFT_FLOAT64::Int64  = 52
+const EXPONENT_MASK_FLOAT64::Int64 = 0x7FF0000000000000
+const EXPONENT_SHIFT_FLOAT64::Int64 = 52
 const EXPONENT_OFFSET_FLOAT64::Int64 = 1023
-const MANTISSA_MASK_FLOAT64::Int64   = 0x000FFFFFFFFFFFFF
-const MANTISSA_PLUS1_FLOAT64::Int64  = 0x0010000000000000
+const MANTISSA_MASK_FLOAT64::Int64 = 0x000FFFFFFFFFFFFF
+const MANTISSA_PLUS1_FLOAT64::Int64 = 0x0010000000000000
 
 # Structs
 
@@ -23,7 +23,7 @@ mutable struct FlexleSampler
     weights::Vector{Float64}
     sum::Float64
     index_positions::Vector{Int64}
-    max_log2_upper_bound::Union{Int64, Nothing}     # nothing when levels is empty
+    max_log2_upper_bound::Union{Int64,Nothing}     # nothing when levels is empty
 end
 
 # Initialization
@@ -110,7 +110,7 @@ Return a tuple `l,u` giving two adjacent powers of 2 such that `l <= n < u`.
 """
 function logBounds(n::Float64)
     l = lowerPowerOf2Bound(n)
-    return l, l*2.0
+    return l, l * 2.0
 end
 
 """
@@ -131,7 +131,7 @@ starts with a level of bounds `(32.0, 64.0)` (`64` being `2^6`) is at `levels[3]
 
 `levelIndex(8.0, 5)` ==> `2`
 """
-function levelIndex(w::Float64, u::Union{Int64, Nothing})
+function levelIndex(w::Float64, u::Union{Int64,Nothing})
     return iszero(w) || isnothing(u) ? 0 : u - floorLog2(w)
 end
 
@@ -142,7 +142,7 @@ Get the index of the `FlexLevel` that has bounds given by `bounds` in some `Flex
 
 Returns `0` if no such level exists.
 """
-function levelIndex(bounds::Tuple{Float64,Float64}, u::Union{Int64, Nothing})
+function levelIndex(bounds::Tuple{Float64,Float64}, u::Union{Int64,Nothing})
     return levelIndex(bounds[1], u)
 end
 
@@ -155,7 +155,7 @@ Returns `nothing` if no such level exists.
 """
 function getLevel(bounds::Tuple{Float64,Float64}, sampler::FlexleSampler)
     l = levelIndex(bounds[1], sampler.max_log2_upper_bound)
-    return l==0 ? nothing : sampler.levels[l]
+    return l == 0 ? nothing : sampler.levels[l]
 end
 
 """
@@ -167,7 +167,7 @@ Returns `nothing` if no such level exists.
 """
 function getLevel(w::Float64, sampler::FlexleSampler)
     l = levelIndex(w, sampler.max_log2_upper_bound)
-    return l==0 ? nothing : sampler.levels[l]
+    return l == 0 ? nothing : sampler.levels[l]
 end
 
 """
@@ -259,7 +259,7 @@ function Base.show(io::IO, ::MIME"text/plain", sampler::FlexleSampler)
     l = length(sampler.weights)
     print(io, "FlexleSampler ($l weights):\n")
     for i in eachindex(sampler.weights)
-        cap = i==l ? "" : "\n"
+        cap = i == l ? "" : "\n"
         print(io, "    $i: $(sampler.weights[i])$cap")
     end
 end

@@ -1,4 +1,5 @@
 using PoissonRandom
+# using Flexle
 
 catCol(a::AbstractMatrix{Float64}, b::AbstractVector{Float64}) = reshape(append!(vec(a), vec(b)), size(a)[1:end-1]..., :)
 # Simeon Schaub https://discourse.julialang.org/t/adding-rows-to-a-matrix-dynamically/52984
@@ -27,9 +28,27 @@ end
 # Variate Generation."
 
 function approxeq(a::Float64, b::Float64; t::Float64=1e-9)
-    return abs(a-b) < t
+    return abs(a - b) < t
 end
 
 function approxZero(a::Float64; t::Float64=1e-9)
     return a < t
+end
+
+"""
+    FlexleSamplers(weights, number)
+
+Create a vector with separate `FlexleSampler` built from a `Vector` of `weights`.
+"""
+function flexleSamplers(weights::AbstractVector{Float64}, number::Int64)
+    return [FlexleSampler(weights) for _ in 1:number]
+end
+
+"""
+    FlexleSamplers(number)
+
+Create a vector with separate, empty `FlexleSampler`.
+"""
+function flexleSamplers(number::Int64)
+    return [FlexleSampler() for _ in 1:number]
 end
