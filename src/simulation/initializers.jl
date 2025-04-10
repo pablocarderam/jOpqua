@@ -1,4 +1,5 @@
 using StaticArrays
+# using Flexle
 
 # Model entity initializers
 
@@ -66,8 +67,12 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         Vector{Host}(undef, 0),
         Matrix{Float64}(undef, NUM_EVENTS, 0),
         Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS, 0),
-        Matrix{Float64}(undef, NUM_EVENTS, 0),
-        Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS, 0),
+        # Matrix{Float64}(undef, NUM_EVENTS, 0),
+        # Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS, 0),
+        # MVector{NUM_EVENTS,FlexleSampler}(repeat([FlexleSampler()], outer=NUM_EVENTS)),
+        MVector{NUM_EVENTS,FlexleSampler}(flexlesamplers(NUM_EVENTS)),
+        # MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}(repeat([FlexleSampler()], outer=NUM_CHOICE_MODIFIERS)),
+        MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}(flexlesamplers(NUM_CHOICE_MODIFIERS)),
         0.0, 0.0,
         zeros(Float64, length(model.populations)),
         zeros(Float64, length(model.populations)),

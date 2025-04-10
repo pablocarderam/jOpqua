@@ -83,3 +83,4 @@ end
 
 run(1, collect(0.0:2.0:4.0)) # compile
 @time run(0, collect(0.0:2.0:1500.0))
+# @profview run(2, collect(0.0:2.0:1500.0))

@@ -2,6 +2,7 @@ using StaticArrays
 using StatsBase
 using PoissonRandom
 using Random
+# using Flexle
 
 # General actions
 
@@ -254,8 +255,14 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     push!(population.hosts, new_host)
     population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
     population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS))
-    population.host_weights_with_coefficient = catCol(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS))
-    population.host_weights_receive_with_coefficient = catCol(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS))
+    # population.host_weights_with_coefficient = catCol(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS))
+    # population.host_weights_receive_with_coefficient = catCol(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS))
+    for evt in EVENTS
+        push!(population.host_weights_with_coefficient_sampler[evt], 0.0)
+    end
+    for evt in CHOICE_MODIFIERS
+        push!(population.host_weights_receive_with_coefficient_sampler[evt-CHOICE_MODIFIERS[1]+1], 0.0)
+    end
 
     # TODO: make compatible with `propagateWeightsOnAddHost!`
     for p in 1:length(model.populations)
@@ -309,8 +316,16 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
     # update matrices
     population.host_weights = hcat(population.host_weights, zeros(Float64, NUM_EVENTS, num_hosts))
     population.host_weights_receive = hcat(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS, num_hosts))
-    population.host_weights_with_coefficient = hcat(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS, num_hosts))
-    population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS, num_hosts))
+    # population.host_weights_with_coefficient = hcat(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS, num_hosts))
+    # population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS, num_hosts))
+    for _ in 1:num_hosts
+        for evt in EVENTS
+            push!(population.host_weights_with_coefficient_sampler[evt], 0.0)
+        end
+        for evt in CHOICE_MODIFIERS
+            push!(population.host_weights_receive_with_coefficient_sampler[evt-CHOICE_MODIFIERS[1]+1], 0.0)
+        end
+    end
 
     num_starting_hosts = length(population.hosts)
     for i in 1:num_hosts
@@ -400,8 +415,14 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
 
     population.host_weights = population.host_weights[1:end.!=host_idx, 1:end.!=host_idx]
     population.host_weights_receive = population.host_weights_receive[1:end.!=host_idx, 1:end.!=host_idx]
-    population.host_weights_with_coefficient = population.host_weights_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
-    population.host_weights_receive_with_coefficient = population.host_weights_receive_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
+    # population.host_weights_with_coefficient = population.host_weights_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
+    # population.host_weights_receive_with_coefficient = population.host_weights_receive_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
+    for evt in EVENTS
+        deleteat!(population.host_weights_with_coefficient_sampler[evt], host_idx)
+    end
+    for evt in CHOICE_MODIFIERS
+        deleteat!(population.host_weights_receive_with_coefficient_sampler[evt-CHOICE_MODIFIERS[1]+1], host_idx)
+    end
 
     deleteat!(population.hosts, host_idx)
 end

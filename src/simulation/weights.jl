@@ -1,4 +1,5 @@
 using StaticArrays
+# using Flexle
 
 ## Coefficient and weight calculation (from bottom to top):
 
@@ -145,10 +146,15 @@ function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int6
         # (for everything except clearance, see above)
         hostwide_coefficient += population.hosts[host_idx].pathogens[p].hostwide_coefficients[evt] * population.hosts[host_idx].pathogen_fractions[p]
     end
-    # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * hostwide_coefficient
-    population.host_weights_with_coefficient[evt, host_idx] = (
+    # population.host_weights_with_coefficient[evt, host_idx] = (
+    #     population.host_weights[evt, host_idx] *
+    #     population.parameters.base_coefficients[evt]
+    # )
+    setindex!(
+        population.host_weights_with_coefficient_sampler[evt],
         population.host_weights[evt, host_idx] *
-        population.parameters.base_coefficients[evt]
+        population.parameters.base_coefficients[evt],
+        host_idx
     )
 end
 
@@ -180,10 +186,15 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
         end
         # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * specific_hostwide_coefficient
     end
-    # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * hostwide_coefficient
-    population.host_weights_with_coefficient[evt, host_idx] = (
+    # population.host_weights_with_coefficient[evt, host_idx] = (
+    #     population.host_weights[evt, host_idx] *
+    #     population.parameters.base_coefficients[evt]
+    # )
+    setindex!(
+        population.host_weights_with_coefficient_sampler[evt],
         population.host_weights[evt, host_idx] *
-        population.parameters.base_coefficients[evt]
+        population.parameters.base_coefficients[evt],
+        host_idx
     )
 end
 
@@ -220,9 +231,15 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
                 for re in population.hosts[h].responses
             ]) # no need to account for hostwide coefficients, these are already hostwide
     end
-    population.host_weights_with_coefficient[evt, h] = (
+    # population.host_weights_with_coefficient[evt, h] = (
+    #     population.host_weights[evt, h] *
+    #     population.parameters.base_coefficients[evt]
+    # )
+    setindex!(
+        population.host_weights_with_coefficient_sampler[evt],
         population.host_weights[evt, h] *
-        population.parameters.base_coefficients[evt]
+        population.parameters.base_coefficients[evt],
+        h
     )
 end
 
@@ -264,9 +281,15 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
                 # (except fitness, but that one only matters within host anyway)
             ])
     end
-    population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, h] = (
+    # population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, h] = (
+    #     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
+    #     population.parameters.base_coefficients[evt]
+    # )
+    setindex!(
+        population.host_weights_receive_with_coefficient_sampler[evt-CHOICE_MODIFIERS[1]+1],
         population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
-        population.parameters.base_coefficients[evt]
+        population.parameters.base_coefficients[evt],
+        h
     )
 end
 
@@ -430,9 +453,15 @@ end
 
 function propagateWeightChanges!(change::Float64, host_idx::Int64, population::Population, evt::Int64, model::Model)
     population.host_weights[evt, host_idx] += change
-    population.host_weights_with_coefficient[evt, host_idx] += (
-        change *
-        population.parameters.base_coefficients[evt]
+    # population.host_weights_with_coefficient[evt, host_idx] += (
+    #     change *
+    #     population.parameters.base_coefficients[evt]
+    # )
+    setindex!(
+        population.host_weights_with_coefficient_sampler[evt],
+        population.host_weights[evt, host_idx] *
+        population.parameters.base_coefficients[evt],
+        host_idx
     )
 
     if length(population.hosts) > 0
@@ -500,9 +529,15 @@ end
 
 function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, population::Population, evt::Int64, model::Model)
     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] += change
-    population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, host_idx] += (
-        change *
-        population.parameters.base_coefficients[evt]
+    # population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, host_idx] += (
+    #     change *
+    #     population.parameters.base_coefficients[evt]
+    # )
+    setindex!(
+        population.host_weights_receive_with_coefficient_sampler[evt-CHOICE_MODIFIERS[1]+1],
+        population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] *
+        population.parameters.base_coefficients[evt],
+        host_idx
     )
 
     if evt < INTRAHOST_FITNESS

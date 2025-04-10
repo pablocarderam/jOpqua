@@ -1,6 +1,7 @@
 using StaticArrays
 using FunctionWrappers
 import FunctionWrappers: FunctionWrapper
+# using Flexle
 
 # Lower level (Pathogens, Responses)
 # Parameters structs (entity types):
@@ -140,11 +141,15 @@ mutable struct Population
 
     host_weights::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
     host_weights_receive::Matrix{Float64}
-    # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
+    # size NUM_CHOICE_MODIFIERS x MAX_HOSTS
 
-    host_weights_with_coefficient::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
-    host_weights_receive_with_coefficient::Matrix{Float64}
-    # size NUM_CHOICE_MODIFIERS-1 x MAX_HOSTS; -1 excludes intrahost fitness
+    # host_weights_with_coefficient::Matrix{Float64} # size NUM_EVENTS x MAX_HOSTS
+    # host_weights_receive_with_coefficient::Matrix{Float64}
+    # # size NUM_CHOICE_MODIFIERS x MAX_HOSTS
+
+    host_weights_with_coefficient_sampler::MVector{NUM_EVENTS,FlexleSampler} # size NUM_EVENTS
+    host_weights_receive_with_coefficient_sampler::MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}
+    # size NUM_CHOICE_MODIFIERS
 
     contact_sum::Float64
     transition_sum::Float64
@@ -163,10 +168,10 @@ mutable struct Model
 
     population_weights::Matrix{Float64} # size NUM_EVENTS x POPULATIONS
     population_weights_receive::Matrix{Float64}
-    # size NUM_CHOICE_MODIFIERS-1 x POPULATIONS; -1 excludes intrahost fitness
+    # size NUM_CHOICE_MODIFIERS x POPULATIONS
 
     population_weights_receive_sums::MVector{NUM_CHOICE_MODIFIERS,Float64}
-    # size NUM_CHOICE_MODIFIERS-1; -1 excludes intrahost fitness
+    # size NUM_CHOICE_MODIFIERS
 
     population_contact_weights_receive::Matrix{Float64}
     # size POPULATIONS x POPULATIONS; receiver is on row, emitter is on column

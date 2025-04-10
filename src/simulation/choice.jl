@@ -1,3 +1,4 @@
+# using Flexle
 
 # Generic sampling methods:
 function randChoose(rand_n::Float64, rates::AbstractVector{Float64}, rates_sum::Float64; regenerate_rand::Bool=false)
@@ -59,21 +60,23 @@ end
 
 function chooseHost(population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     if weight > NUM_EVENTS
-        return randChoose(
-            rand_n,
-            @views(model.populations[population_idx].host_weights_receive_with_coefficient[weight-CHOICE_MODIFIERS[1]+1, :]),
-            model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, population_idx],
-            #TODO: revise, maybe this is another field?
-            regenerate_rand=true
-        )
+        return sample(model.populations[population_idx].host_weights_receive_with_coefficient_sampler[weight-CHOICE_MODIFIERS[1]+1]),rand_n
+        # return randChoose(
+        #     rand_n,
+        #     @views(model.populations[population_idx].host_weights_receive_with_coefficient[weight-CHOICE_MODIFIERS[1]+1, :]),
+        #     model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, population_idx],
+        #     #TODO: revise, maybe this is another field?
+        #     regenerate_rand=true
+        # )
     else
-        return randChoose(
-            rand_n,
-            @views(model.populations[population_idx].host_weights_with_coefficient[weight, :]),
-            model.population_weights[weight, population_idx],
-            #TODO: revise, maybe this is another field?
-            regenerate_rand=true
-        )
+        return sample(model.populations[population_idx].host_weights_with_coefficient_sampler[weight]),rand_n
+        # return randChoose(
+        #     rand_n,
+        #     @views(model.populations[population_idx].host_weights_with_coefficient[weight, :]),
+        #     model.population_weights[weight, population_idx],
+        #     #TODO: revise, maybe this is another field?
+        #     regenerate_rand=true
+        # )
     end
 end
 

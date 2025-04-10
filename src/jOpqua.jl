@@ -2,6 +2,8 @@ module jOpqua
 
 # Groundwork
 include("utils.jl")
+include("simulation/flexle/src/sampler.jl")
+include("simulation/flexle/src/interface.jl")
 
 # Structure
 include("simulation/constants.jl")

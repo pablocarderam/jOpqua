@@ -1,9 +1,7 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-
-TODO:
-- Incorporate Flexle into all host sampling
+- Flexle results in performance decrease compared to randChoose
 
 TODO: Not debugged:
 - Mutant establishment
@@ -13,6 +11,11 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 10 April 2025
+- `Flexle` sampling has been incorporated into `Host` sampling within a `Population`;
+`Flexle` results in performance decrease compared to `randChoose` due to possible
+inefficiencies in the calling of `maxLevelWeight` (PCR)
 
 ## 29 March 2025
 - Remove `Flexle` source code, now in [separate package](https://github.com/connormurphy798/Flexle.jl)
