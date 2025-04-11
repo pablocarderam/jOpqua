@@ -41,7 +41,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
     )
 
-    num_hosts = 1000000
+    num_hosts = 100000
     num_infected = Int(num_hosts * 0.05)
     host_genome = ""
 
@@ -82,5 +82,5 @@ function run(seed::Int64, t_vec::Vector{Float64})
 end
 
 run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:2.0:1500.0))
-# @profview run(2, collect(0.0:2.0:1500.0))
+# @time run(0, collect(0.0:2.0:1500.0))
+@profview run(2, collect(0.0:2.0:1500.0))
