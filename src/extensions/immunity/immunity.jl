@@ -1,6 +1,6 @@
 function weightedInteractionArithmeticMean(
-        pathogen::Pathogen, host::Host, evt::Int64;
-        coefficient=responseSpecificCoefficient)
+    pathogen::Pathogen, host::Host, evt::Int64;
+    coefficient=responseSpecificCoefficient)
     # reactivity-weighted arithmetic mean of specific coefficients
     if length(host.responses) > 0
         reac_sum = 0.0
@@ -39,8 +39,8 @@ end
 # end
 
 function weightedInteractionWinnerTakesAll(
-        pathogen::Pathogen, host::Host, evt::Int64;
-        coefficient=responseSpecificCoefficient)
+    pathogen::Pathogen, host::Host, evt::Int64;
+    coefficient=responseSpecificCoefficient)
     if length(host.responses) > 0
         dominant_reaction = 1.0
         dominant_reactivity = 0.0

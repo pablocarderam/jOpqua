@@ -1,7 +1,7 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-- `Flexle` results in 15% performance decrease compared to `randChoose`
+None at the moment
 
 TODO: Not debugged:
 - Mutant establishment
@@ -11,6 +11,11 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 12 April 2025
+- Incorporated Flexle fixes implemented by CLM, results in 63.6% improvement in runtime
+over `randChoose` linear search for `pathogen_evolution.jl` with 10,000 hosts; was even
+able to run that simulation with 10^6 (!!!) hosts in 1034 seconds!
 
 ## 11 April 2025
 - Moved `flexleSamplers` methods from `Flexle` into `utils.jl`
