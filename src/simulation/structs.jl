@@ -1,7 +1,7 @@
 using StaticArrays
 using FunctionWrappers
 import FunctionWrappers: FunctionWrapper
-# using Flexle
+using Flexle
 
 # Lower level (Pathogens, Responses)
 # Parameters structs (entity types):

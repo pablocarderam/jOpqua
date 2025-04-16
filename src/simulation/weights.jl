@@ -1,5 +1,5 @@
 using StaticArrays
-# using Flexle
+using Flexle
 
 ## Coefficient and weight calculation (from bottom to top):
 

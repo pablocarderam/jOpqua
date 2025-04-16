@@ -1,5 +1,5 @@
 using StaticArrays
-# using Flexle
+using Flexle
 
 # Model entity initializers
 

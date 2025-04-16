@@ -1,4 +1,4 @@
-# using Flexle
+using Flexle
 
 # Generic sampling methods:
 function randChoose(rand_n::Float64, rates::AbstractVector{Float64}, rates_sum::Float64; regenerate_rand::Bool=false)
@@ -60,7 +60,7 @@ end
 
 function chooseHost(population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     if weight > NUM_EVENTS
-        return sample(model.populations[population_idx].host_weights_receive_with_coefficient_sampler[weight-CHOICE_MODIFIERS[1]+1]), rand_n
+        return Flexle.sample(model.populations[population_idx].host_weights_receive_with_coefficient_sampler[weight-CHOICE_MODIFIERS[1]+1]), rand_n
         # return randChoose(
         #     rand_n,
         #     @views(model.populations[population_idx].host_weights_receive_with_coefficient[weight-CHOICE_MODIFIERS[1]+1, :]),
@@ -69,7 +69,7 @@ function chooseHost(population_idx::Int64, weight::Int64, model::Model, rand_n::
         #     regenerate_rand=true
         # )
     else
-        return sample(model.populations[population_idx].host_weights_with_coefficient_sampler[weight]), rand_n
+        return Flexle.sample(model.populations[population_idx].host_weights_with_coefficient_sampler[weight]), rand_n
         # return randChoose(
         #     rand_n,
         #     @views(model.populations[population_idx].host_weights_with_coefficient[weight, :]),

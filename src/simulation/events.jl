@@ -2,7 +2,7 @@ using StaticArrays
 using StatsBase
 using PoissonRandom
 using Random
-# using Flexle
+using Flexle
 
 # General actions
 

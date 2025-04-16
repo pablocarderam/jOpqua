@@ -12,6 +12,13 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 16 April 2025
+- Removed local Flexle files
+- Moved Flexle examples to outer directory
+- Updated Flexle requirement to `1.0.2`
+- Added code to use imported Flexle package (including `Flexle.sample` to resolve function
+naming conflicts with `sample`)
+
 ## 12 April 2025
 - Incorporated Flexle fixes implemented by CLM, results in 63.6% improvement in runtime
 over `randChoose` linear search for `pathogen_evolution.jl` with 10,000 hosts; was even
