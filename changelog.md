@@ -12,6 +12,9 @@ TODO: Not debugged:
 - Death
 - Transition
 
+## 25 April 2025
+- Add `Flexle.sample` alias to resolve `sample` function name conflict with `StatsBase`
+
 ## 16 April 2025
 - Removed local Flexle files
 - Moved Flexle examples to outer directory
