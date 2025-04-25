@@ -52,3 +52,5 @@ Create a vector with separate, empty `FlexleSampler`.
 function flexleSamplers(number::Int64)
     return [FlexleSampler() for _ in 1:number]
 end
+
+sample(sampler::FlexleSampler) = Flexle.sample(sampler)
