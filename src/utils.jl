@@ -54,3 +54,7 @@ function flexleSamplers(number::Int64)
 end
 
 sample(sampler::FlexleSampler) = Flexle.sample(sampler)
+
+function hillFunction(x::Float64, K::Float64, h::Float64)
+    return x == 0 ? 0.0 : 1.0 / (1.0 + (K / x)^h)
+end

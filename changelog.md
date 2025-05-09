@@ -1,7 +1,8 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-None at the moment
+- Possible problem with `reactivityCoefficient` normalization
+(particularly when all values are close to zero)
 
 TODO: Not debugged:
 - Mutant establishment
@@ -11,6 +12,10 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 8 May 2025
+- Added legend omission to plots
+- Added Hill function to utils
 
 ## 25 April 2025
 - Add `Flexle.sample` alias to resolve `sample` function name conflict with `StatsBase`

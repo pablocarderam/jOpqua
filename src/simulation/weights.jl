@@ -327,6 +327,7 @@ function hostWeightsNonsampling!(host_idx::Int64, population::Population, evt::I
                 if reactivity_sum > 0.0
                     population.hosts[host_idx].coefficients[evt] = (
                         population.hosts[host_idx].coefficients[evt] * specific_hostwide_coefficient / reactivity_sum
+                        # I suspect this is wrong, dividing by sum inflates reactivity when all weights are small
                     )
                 end
             end
