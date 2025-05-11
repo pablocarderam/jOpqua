@@ -9,7 +9,7 @@ function newPathogen!(
     birth_time::Float64=0.0)
     population.pathogens[sequence] = Pathogen(
         parents, birth_time, sequence,
-        pathogenSequenceCoefficients(sequence, type), pathogenSequenceHostwideCoefficients(sequence, type),
+        pathogenSequenceSpecificCoefficients(sequence, type), pathogenSequenceHostwideCoefficients(sequence, type),
         type
     )
 

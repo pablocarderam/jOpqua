@@ -25,8 +25,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         possible_alleles="AB",
         # mean_effective_inoculum=1.0,
         # mean_mutations_per_replication=0.001,
-        contactCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
-        receiveContactCoefficient=s::String -> 0.0,
+        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
+        receiveContactSpecificCoefficient=s::String -> 0.0,
     )
 
     hos_type = jOpqua.newHostType("hos_type")

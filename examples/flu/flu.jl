@@ -78,10 +78,10 @@ function run(seed::Int64, t_vec::Vector{Float64})
 
     res_type = jOpqua.newResponseType(
         "res_type",
-        reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g, #crossImmunity(imp_g, pat_g),
-        transmissionEfficiencySpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0 - crossImmunity(imp_g, pat_g),
-        clearanceSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0e3 * crossImmunity(imp_g, pat_g),
-        # responseAcquisitionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
+        reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> crossImmunity(imp_g, pat_g),
+        transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0 - crossImmunity(imp_g, pat_g),
+        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0e3 * crossImmunity(imp_g, pat_g),
+        # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
 
     hos_type = jOpqua.newHostType("hos_type")

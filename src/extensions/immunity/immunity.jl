@@ -1,7 +1,7 @@
 function weightedInteractionArithmeticMean(
     pathogen::Pathogen, host::Host, evt::Int64;
-    coefficient=responseSpecificCoefficient)
-    # reactivity-weighted arithmetic mean of specific coefficients
+    coefficient=responseInteractionCoefficient)
+    # reactivity-weighted arithmetic mean of interaction coefficients
     if length(host.responses) > 0
         reac_sum = 0.0
         numerator_sum = 0.0
@@ -27,7 +27,7 @@ end
 #         for response in host.responses
 #             reac = reactivityCoefficient(pathogen, response, host)
 #             reac_sum += reac
-#             numerator_sum += reac * responseSpecificCoefficient(
+#             numerator_sum += reac * responseInteractionCoefficient(
 #                 pathogen, response, host, TRANSMISSION_EFFICIENCY
 #             )
 #         end
@@ -40,14 +40,16 @@ end
 
 function weightedInteractionWinnerTakesAll(
     pathogen::Pathogen, host::Host, evt::Int64;
-    coefficient=responseSpecificCoefficient)
+    coefficient=responseInteractionCoefficient)
+    # In case of ties, takes response that was acquired first
     if length(host.responses) > 0
         dominant_reaction = 1.0
         dominant_reactivity = 0.0
         for response in host.responses
             reactivity = reactivityCoefficient(pathogen, response, host)
             if reactivity > dominant_reactivity
-                dominant_reaction = reactivity * coefficient(pathogen, response, host, evt)
+                dominant_reaction = coefficient(pathogen, response, host, evt)
+                dominant_reactivity = reactivity
             end
         end
 
@@ -64,7 +66,7 @@ end
 #         for response in host.responses
 #             reactivity = reactivityCoefficient(pathogen, response, host)
 #             if reactivity > dominant_reactivity
-#                 dominant_reaction = reactivity * responseSpecificCoefficient(
+#                 dominant_reaction = reactivity * responseInteractionCoefficient(
 #                     pathogen, response, host, TRANSMISSION_EFFICIENCY
 #                 )
 #             end

@@ -33,7 +33,7 @@ const RECEIVE_CONTACT = 11
 const INTRAHOST_FITNESS = 12
 
 # 2. Non-sampling variables and sub-events, zooming out in scale
-# 2.1 Pathogen-specific sub-events
+# 2.1 Pathogen-interaction sub-events
 const MUTATIONS_UPON_INFECTION = 13
 const RECOMBINATIONS_UPON_INFECTION = 14
 const INOCULUM = 15
@@ -41,10 +41,10 @@ const TRANSMISSION_EFFICIENCY = 16
 const VERTICAL_TRANSMISSION = 17
 const RESPONSE_ACQUISITION_UPON_CLEARANCE = 18
 
-# 2.2 Response-specific sub-events
+# 2.2 Response-interaction sub-events
 const RESPONSE_INHERITANCE = 19
 
-# 2.3 Host-specific sub-events
+# 2.3 Host-interaction sub-events
 const HOST_MUTATIONS_UPON_BIRTH = 20
 const HOST_RECOMBINATIONS_UPON_BIRTH = 21
 

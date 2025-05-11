@@ -1,8 +1,11 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-- Possible problem with `reactivityCoefficient` normalization
-(particularly when all values are close to zero)
+- Problem with `reactivityCoefficient` normalization
+(particularly when all values are close to zero) and tiebreaking;
+unsure whether "winner takes all" is correct (and not weighted average)
+- Weight calculations are not correctly accounting for all coefficient types
+- Poor performance with immunity; might require macros to precompile user-defined functions
 
 TODO: Not debugged:
 - Mutant establishment
@@ -12,6 +15,23 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 11 May 2025
+- Corrected bug in `weightedInteractionWinnerTakesAll`
+- Renamed "specific" (interaction-specific) coefficients as "interaction" coefficients
+- Renamed "normal" coefficients are "specific" coefficients (specific to a pathogen or
+response within a host, as opposed to "hostwide" coefficients)
+
+There are now clearly seven types of coefficients modifying `Population`-level parameters:
+1. `Pathogen` specific coefficients
+2. `Pathogen` hostwide coefficients
+3. `Response` specific static coefficients
+4. `Response` specific specific coefficients
+5. `Response` hostwide static coefficients
+6. `Response` hostwide specific coefficients
+7. `Host` (hostwide) coefficients
+All parameters and coefficients are specified in the respective "type" structs:
+`PathogenType`, `ResponseType`, `HostType`, `PopulationType`.
 
 ## 8 May 2025
 - Added legend omission to plots

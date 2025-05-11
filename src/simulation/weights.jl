@@ -35,8 +35,8 @@ function responseStaticCoefficient(response::Response, host::Host, coefficient::
     )
 end
 
-function responseSpecificCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
-    return response.type.specific_coefficient_functions[coefficient](
+function responseInteractionCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
+    return response.type.interaction_coefficient_functions[coefficient](
         host.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
@@ -52,8 +52,8 @@ function responseStaticHostwideCoefficient(response::Response, host::Host, coeff
     )
 end
 
-function responseSpecificHostwideCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
-    return response.type.specific_hostwide_coefficient_functions[coefficient](
+function responseInteractionHostwideCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
+    return response.type.interaction_hostwide_coefficient_functions[coefficient](
         host.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
@@ -82,9 +82,9 @@ function nonsamplingValue(coef::Int64, response::Response, host::Host, populatio
     return response.coefficients[coef] * host.coefficients[coef] * population.parameters.base_coefficients[coef]
 end
 
-function pathogenSequenceCoefficients(sequence::String, type::PathogenType)
+function pathogenSequenceSpecificCoefficients(sequence::String, type::PathogenType)
     return [
-        type.coefficient_functions[evt_id](sequence)
+        type.specific_coefficient_functions[evt_id](sequence)
         for evt_id in 1:NUM_COEFFICIENTS
     ]
 end
@@ -138,7 +138,7 @@ end
 
 function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int64)
     population.host_weights[evt, host_idx] = 0.0
-    hostwide_coefficient = 0.0
+    hostwide_coefficient = 0.0 #TODO: not used??, also #TODO: pathogen hostwide, response static and interaction normal and hostwide coefficients?
     for p in 1:length(population.hosts[host_idx].pathogens)
         pathogenWeights!(p, population.hosts[host_idx], population, evt)
         population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
@@ -161,9 +161,12 @@ end
 function responseWeights!(re::Int64, host::Host, evt::Int64)
     host.response_weights[evt-RESPONSE_EVENTS[1]+1, re] = responseStaticCoefficient(host.responses[re], host, evt)
     # No Response fraction weighting here, just presence of Response is enough
+    #TODO: response interaction normal (non-hostwide) weights
 end
 
 function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int64)
+    #TODO: this function is very strange, it only really takes responseWeights into account and no interaction anything
+    #TODO: pathogen hostwide, response static and interaction normal and hostwide coefficients?
     population.host_weights[evt, host_idx] = 0.0
     hostwide_coefficient = 0.0
     for re in 1:length(population.hosts[host_idx].responses)
@@ -171,9 +174,9 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
         population.host_weights[evt, host_idx] += population.hosts[host_idx].response_weights[evt-RESPONSE_EVENTS[1]+1, re]
         # We sum here because having more responses does imply more events, e.g. losses of response
         hostwide_coefficient += population.hosts[host_idx].responses[re].hostwide_coefficients[evt]
-        length(population.hosts[host_idx].pathogens) > 0 ? specific_hostwide_coefficient = 0.0 : specific_hostwide_coefficient = 1.0
+        length(population.hosts[host_idx].pathogens) > 0 ? interaction_hostwide_coefficient = 0.0 : interaction_hostwide_coefficient = 1.0
         for p in 1:length(population.hosts[host_idx].pathogens)
-            specific_hostwide_coefficient += responseSpecificHostwideCoefficient(
+            interaction_hostwide_coefficient += responseInteractionHostwideCoefficient(
                 population.hosts[host_idx].pathogens[p],
                 population.hosts[host_idx].responses[re],
                 population.hosts[host_idx],
@@ -184,7 +187,9 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
                 population.hosts[host_idx],
             )
         end
-        # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * specific_hostwide_coefficient
+        # population.host_weights[evt, host_idx] = population.host_weights[evt, host_idx] * interaction_hostwide_coefficient
+        #TODO: why is this commented out? interaction_hostwide_coefficient is currently doing nothing here...
+        #TODO: also should the above for loop be a call to a hostwide weightedInteraction function?
     end
     # population.host_weights_with_coefficient[evt, host_idx] = (
     #     population.host_weights[evt, host_idx] *
@@ -201,13 +206,16 @@ end
 # Intra-Population level
 
 function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
+    #TODO: pathogen hostwide, response static and interaction normal and hostwide coefficients?
+    # I think it might be okay here, but then we need to remove redundant user parameters that are
+    # "host hostwide coefficients" in pathogens and responses
     population.host_weights[evt, h] = 1.0
     if length(population.hosts[h].pathogens) > 0
         population.host_weights[evt, h] =
             population.host_weights[evt, h] *
             sum([
                 population.hosts[h].pathogen_fractions[p] *
-                population.hosts[h].pathogens[p].type.coefficient_functions[evt](
+                population.hosts[h].pathogens[p].type.specific_coefficient_functions[evt](
                     population.hosts[h].pathogens[p].sequence
                 ) # no need to account for hostwide coefficients, these are already hostwide
                 for p in 1:length(population.hosts[h].pathogens)
@@ -244,13 +252,16 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
 end
 
 function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
+    #TODO: pathogen hostwide, response static and interaction normal and hostwide coefficients?
+    # I think it might be okay here, but then we need to remove redundant user parameters that are
+    # "host hostwide coefficients" in pathogens and responses
     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] = 1.0
     if length(population.hosts[h].pathogens) > 0
         population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] =
             population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
             sum([
                 population.hosts[h].pathogen_fractions[p] *
-                population.hosts[h].pathogens[p].type.coefficient_functions[evt](
+                population.hosts[h].pathogens[p].type.specific_coefficient_functions[evt](
                     population.hosts[h].pathogens[p].sequence
                 )
                 # no need to account for hostwide coefficients, these are already hostwide
@@ -294,6 +305,8 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
 end
 
 function hostWeightsNonsampling!(host_idx::Int64, population::Population, evt::Int64)
+    #TODO: pathogen hostwide, response static and interaction normal and hostwide coefficients?
+    # Might be mostly okay,
     length(population.hosts[host_idx].pathogens) > 0 ? hostwide_coefficient_pathogens = 0.0 : hostwide_coefficient_pathogens = 1.0
     for p in 1:length(population.hosts[host_idx].pathogens)
         hostwide_coefficient_pathogens += (
@@ -306,9 +319,9 @@ function hostWeightsNonsampling!(host_idx::Int64, population::Population, evt::I
         hostwide_coefficient_responses = 0.0
         for re in 1:length(population.hosts[host_idx].responses)
             hostwide_coefficient_responses += population.hosts[host_idx].responses[re].hostwide_coefficients[evt]
-            specific_hostwide_coefficient = 1.0
+            interaction_hostwide_coefficient = 1.0
             if length(population.hosts[host_idx].pathogens) > 0
-                specific_hostwide_coefficient = 0.0
+                interaction_hostwide_coefficient = 0.0
                 reactivity_sum = 0.0
                 for p in 1:length(population.hosts[host_idx].pathogens)
                     reac = reactivityCoefficient(
@@ -317,17 +330,17 @@ function hostWeightsNonsampling!(host_idx::Int64, population::Population, evt::I
                         population.hosts[host_idx],
                     )
                     reactivity_sum += reac
-                    specific_hostwide_coefficient += responseSpecificHostwideCoefficient(
+                    interaction_hostwide_coefficient += responseInteractionHostwideCoefficient(
                         population.hosts[host_idx].pathogens[p],
                         population.hosts[host_idx].responses[re],
                         population.hosts[host_idx],
                         evt
                     ) * reac
                 end
+                #TODO: should the above for loop be a call to a hostwide weightedInteraction function?
                 if reactivity_sum > 0.0
                     population.hosts[host_idx].coefficients[evt] = (
-                        population.hosts[host_idx].coefficients[evt] * specific_hostwide_coefficient / reactivity_sum
-                        # I suspect this is wrong, dividing by sum inflates reactivity when all weights are small
+                        population.hosts[host_idx].coefficients[evt] * interaction_hostwide_coefficient / reactivity_sum
                     )
                 end
             end
