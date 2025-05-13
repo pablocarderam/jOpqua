@@ -1,6 +1,6 @@
-function weightedInteractionArithmeticMean(
+function weightedInteractionPathogenArithmeticMean(
     pathogen::Pathogen, host::Host, evt::Int64;
-    coefficient=responseInteractionCoefficient)
+    coefficient=responseInteractionSpecificCoefficient)
     # reactivity-weighted arithmetic mean of interaction coefficients
     if length(host.responses) > 0
         reac_sum = 0.0
@@ -27,7 +27,7 @@ end
 #         for response in host.responses
 #             reac = reactivityCoefficient(pathogen, response, host)
 #             reac_sum += reac
-#             numerator_sum += reac * responseInteractionCoefficient(
+#             numerator_sum += reac * responseInteractionSpecificCoefficient(
 #                 pathogen, response, host, TRANSMISSION_EFFICIENCY
 #             )
 #         end
@@ -38,9 +38,9 @@ end
 #     end
 # end
 
-function weightedInteractionWinnerTakesAll(
+function weightedInteractionPathogenWinnerTakesAll(
     pathogen::Pathogen, host::Host, evt::Int64;
-    coefficient=responseInteractionCoefficient)
+    coefficient=responseInteractionSpecificCoefficient)
     # In case of ties, takes response that was acquired first
     if length(host.responses) > 0
         dominant_reaction = 1.0
@@ -59,6 +59,45 @@ function weightedInteractionWinnerTakesAll(
     end
 end
 
+function weightedInteractionResponseWinnerTakesAll(
+    response::Response, host::Host, evt::Int64;
+    coefficient=responseInteractionSpecificCoefficient)
+    # In case of ties, takes response that was acquired first
+    if length(host.pathogens) > 0
+        dominant_reaction = 1.0
+        dominant_reactivity = 0.0
+        for pathogen in host.pathogens
+            reactivity = reactivityCoefficient(pathogen, response, host)
+            if reactivity > dominant_reactivity
+                dominant_reaction = coefficient(pathogen, response, host, evt)
+                dominant_reactivity = reactivity
+            end
+        end
+
+        return dominant_reaction
+    else
+        return 1.0
+    end
+end
+
+function weightedInteractionHostwideProduct(
+    host::Host, evt::Int64;
+    coefficient=responseInteractionSpecificCoefficient)
+
+    reaction = 1.0
+    if length(host.pathogens) > 0
+        for pathogen in host.pathogens
+            if length(host.responses) > 0
+                for response in host.responses
+                    reaction = coefficient(pathogen, response, host, evt)
+                end
+            end
+        end
+    end
+
+    return reaction
+end
+
 # function transmissionEfficiencyWinnerTakesAll(pathogen::Pathogen, host::Host)
 #     if length(host.responses) > 0
 #         dominant_reaction = 1.0
@@ -66,7 +105,7 @@ end
 #         for response in host.responses
 #             reactivity = reactivityCoefficient(pathogen, response, host)
 #             if reactivity > dominant_reactivity
-#                 dominant_reaction = reactivity * responseInteractionCoefficient(
+#                 dominant_reaction = reactivity * responseInteractionSpecificCoefficient(
 #                     pathogen, response, host, TRANSMISSION_EFFICIENCY
 #                 )
 #             end

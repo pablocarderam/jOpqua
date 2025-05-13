@@ -1,4 +1,4 @@
-function pathogenFractionsWinnerTakesAll(host::Host, weightedInteraction::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
+function pathogenFractionsWinnerTakesAll(host::Host, weightedInteractionPathogen::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
     # Currently, we assume pathogen population fraction (share in total fitness)
     # impacts all events equally regardless of event; this is not necessarilly the case, however.
     # We also assume only the most fit pathogen affects events.
@@ -10,13 +10,13 @@ function pathogenFractionsWinnerTakesAll(host::Host, weightedInteraction::Functi
         if length(host.responses) > 0
             for p in 1:length(host.pathogens)
                 fracs[p] =
-                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedInteraction(
+                    host.pathogens[p].specific_coefficients[INTRAHOST_FITNESS] * weightedInteractionPathogen(
                         host.pathogens[p], host, INTRAHOST_FITNESS
                     )
             end
         else
             for p in 1:length(host.pathogens)
-                fracs[p] = host.pathogens[p].coefficients[INTRAHOST_FITNESS]
+                fracs[p] = host.pathogens[p].specific_coefficients[INTRAHOST_FITNESS]
             end
         end
         max_coef = argmax(fracs)
@@ -27,19 +27,19 @@ function pathogenFractionsWinnerTakesAll(host::Host, weightedInteraction::Functi
     return fracs
 end
 
-function pathogenFractionsProportionalFitness(host::Host, weightedInteraction::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
+function pathogenFractionsProportionalFitness(host::Host, weightedInteractionPathogen::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}})
     fracs = Vector{Float64}(undef, length(host.pathogens))
     if length(host.pathogens) > 0
         if length(host.responses) > 0
             for p in 1:length(host.pathogens)
                 fracs[p] =
-                    host.pathogens[p].coefficients[INTRAHOST_FITNESS] * weightedInteraction(
+                    host.pathogens[p].specific_coefficients[INTRAHOST_FITNESS] * weightedInteractionPathogen(
                         host.pathogens[p], host, INTRAHOST_FITNESS
                     )
             end
         else
             for p in 1:length(host.pathogens)
-                fracs[p] = host.pathogens[p].coefficients[INTRAHOST_FITNESS]
+                fracs[p] = host.pathogens[p].specific_coefficients[INTRAHOST_FITNESS]
             end
         end
         fracs = fracs ./ sum(fracs)

@@ -112,7 +112,9 @@ const DEFAULT_POPULATION_TYPE = PopulationType(
         0.0, 0.0, 0.0,
     ],
     pathogenFractionsWinnerTakesAll,
-    weightedInteractionWinnerTakesAll,
+    weightedInteractionPathogenWinnerTakesAll,
+    weightedInteractionResponseWinnerTakesAll,
+    weightedInteractionHostwideProduct,
     deNovoResponse,
     Dict{String,ResponseType}([(DEFAULT_RESPONSE_TYPE.id => DEFAULT_RESPONSE_TYPE)])
 )

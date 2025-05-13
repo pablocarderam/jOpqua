@@ -26,7 +26,7 @@ function newResponse!(
 
     existing_responses[(host_sequence, imprinted_seq, matured_seq, type.id)] = Response(
         parents, birth_time, host_sequence, imprinted_pathogen, matured_pathogen,
-        responseStaticCoefficients(host_sequence, imprinted_seq, matured_seq, type),
+        responseStaticSpecificCoefficients(host_sequence, imprinted_seq, matured_seq, type),
         responseStaticHostwideCoefficients(host_sequence, imprinted_seq, matured_seq, type),
         type
     )

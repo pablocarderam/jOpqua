@@ -225,10 +225,6 @@ function attemptInfection!(pathogen::Pathogen, host_idx::Int64, pop_idx::Int64, 
         TRANSMISSION_EFFICIENCY, pathogen,
         model.populations[pop_idx].hosts[host_idx],
         model.populations[pop_idx]
-    ) * model.populations[pop_idx].parameters.weightedInteraction(
-        pathogen,
-        model.populations[pop_idx].hosts[host_idx],
-        TRANSMISSION_EFFICIENCY
     )
 
         addPathogenToHost!(

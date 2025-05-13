@@ -22,9 +22,9 @@ struct ResponseType
 
     reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    static_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
+    static_specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
     # each takes host, imprinted, matured sequences and returns Float64 coefficient
-    interaction_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
+    interaction_specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
     # each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     static_hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
     # each takes host, imprinted, matured sequences and returns Float64 coefficient
@@ -49,7 +49,7 @@ struct Pathogen
     birth_time::Float64
     # This is only useful for response lineage tracing, but not the simulation?
     sequence::String
-    coefficients::SVector{NUM_COEFFICIENTS,Float64}
+    specific_coefficients::SVector{NUM_COEFFICIENTS,Float64}
     hostwide_coefficients::SVector{NUM_COEFFICIENTS,Float64}
     type::PathogenType
 end
@@ -61,7 +61,7 @@ struct Response
     host_sequence::String
     imprinted_pathogen::Union{Pathogen,Nothing} # This will track the Pathogen imprinted in the naive response
     matured_pathogen::Union{Pathogen,Nothing}
-    coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
+    specific_coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     hostwide_coefficients::SVector{NUM_COEFFICIENTS,Float64} # static coefficients
     type::ResponseType
 end
@@ -116,9 +116,16 @@ struct PopulationType
     pathogenFractions::FunctionWrapper{Vector{Float64},Tuple{Host,FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}}}
     # Takes Host entity and Population's weightedInteraction function,
     # returns vector with fractional representation of each pathogen present
-    weightedInteraction::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
+    weightedInteractionPathogen::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
     # Takes Pathogen entity, Host entity, and event number;
     # returns aggregated response coefficient against that Pathogen for that event
+    weightedInteractionResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
+    # Takes Response entity, Host entity, and event number;
+    # returns aggregated response coefficient of that Response for that event
+    weightedInteractionHostwide::FunctionWrapper{Float64,Tuple{Host,Int64}}
+    # Takes Host entity and event number;
+    # returns aggregated hostwide response coefficient based on all pairwise
+    # interactions between Responses and Pathogens for that event
 
     developResponses::FunctionWrapper{Vector{Response},Tuple{Pathogen,Host,Dict{Tuple{String,String,String,String},Response},Dict{String,ResponseType},Float64}}
     # takes in Pathogen, Host, population's Dict of Responses, population type's dictionary of ResponseTypes, and birth time as arguments, returns Response entities to be added

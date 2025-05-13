@@ -1,13 +1,13 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-- Problem with `reactivityCoefficient` normalization
-(particularly when all values are close to zero) and tiebreaking;
-unsure whether "winner takes all" is correct (and not weighted average)
-- Weight calculations are not correctly accounting for all coefficient types
 - Poor performance with immunity; might require macros to precompile user-defined functions
 
-TODO: Not debugged:
+TODO:
+- Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
+events/nonsampling coefficients (and viceversa) or to `Host` events/nonsampling coefficients
+
+Debug the following:
 - Mutant establishment
 - Recombinant establishment
 - Recombination upon contact
@@ -15,6 +15,14 @@ TODO: Not debugged:
 - Birth
 - Death
 - Transition
+
+## 13 May 2025
+- Continued changing nomenclature of specific/hostwide and static/interaction coefficients
+- Changed weight computation to correctly account for all kinds of coefficients
+- Added new parameters for functions controlling `Pathogen`-`Response` interaction weighting
+for a specific `Pathogen`, a specific `Response`, and a hostwide function
+(`weightedInteractionPathogen`, `weightedInteractionResponse`, and `weightedInteractionHostwide`,
+respectively)
 
 ## 11 May 2025
 - Corrected bug in `weightedInteractionWinnerTakesAll`
