@@ -1,7 +1,8 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-None at the moment
+- Garbage collection time is higher than expected for 100k host simulations, suspected type
+instabilities in weights/immunity changes
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
@@ -16,11 +17,14 @@ Debug the following:
 - Death
 - Transition
 
+## 15 May 2025
+- Changed parameter in `pathogen_evolution.jl` example to the new correct hostwide parameter
+- Removed type instabilities in `immunity.jl` functions
+
 ## 14 May 2025
 - Changed order of loading files to avoid import conflicts
 This is actually crucial for performance! Without it, the new immunity changes led to a ~3.8X
 slowdown for the `pathogen_evolution.jl` with 10000 hosts
-- Changed parameter in `pathogen_evolution.jl` example to the new correct hostwide parameter
 
 ## 13 May 2025
 - Continued changing nomenclature of specific/hostwide and static/interaction coefficients
