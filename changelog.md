@@ -1,7 +1,7 @@
 # jOpqua Changelog
 
 KNOWN ISSUES:
-- Poor performance with immunity; might require macros to precompile user-defined functions
+None at the moment
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
@@ -15,6 +15,12 @@ Debug the following:
 - Birth
 - Death
 - Transition
+
+## 14 May 2025
+- Changed order of loading files to avoid import conflicts
+This is actually crucial for performance! Without it, the new immunity changes led to a ~3.8X
+slowdown for the `pathogen_evolution.jl` with 10000 hosts
+- Changed parameter in `pathogen_evolution.jl` example to the new correct hostwide parameter
 
 ## 13 May 2025
 - Continued changing nomenclature of specific/hostwide and static/interaction coefficients

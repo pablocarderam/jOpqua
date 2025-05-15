@@ -26,7 +26,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         # mean_effective_inoculum=1.0,
         # mean_mutations_per_replication=0.001,
         contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
-        receiveContactSpecificCoefficient=s::String -> 0.0,
+        receiveContactHostwideCoefficient=s::String -> 0.0,
     )
 
     hos_type = jOpqua.newHostType("hos_type")
@@ -82,5 +82,5 @@ function run(seed::Int64, t_vec::Vector{Float64})
 end
 
 run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:2.0:1500.0))
+@time run(2, collect(0.0:2.0:1500.0))
 # @profview run(2, collect(0.0:2.0:1500.0))

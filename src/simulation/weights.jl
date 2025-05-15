@@ -76,14 +76,14 @@ end
 
 function nonsamplingValue(coef::Int64, pathogen::Pathogen, host::Host, population::Population)
     return pathogen.specific_coefficients[coef] * population.parameters.weightedInteractionPathogen(
-        pathogen, host, coef
-    ) * host.coefficients[coef] * hostwideNetCoefficient(host, population, coef) * population.parameters.base_coefficients[coef]
+               pathogen, host, coef
+           ) * host.coefficients[coef] * hostwideNetCoefficient(host, population, coef) * population.parameters.base_coefficients[coef]
 end
 
 function nonsamplingValue(coef::Int64, response::Response, host::Host, population::Population)
     return response.specific_coefficients[coef] * population.parameters.weightedInteractionResponse(
-        response, host, coef
-    ) * host.coefficients[coef] * hostwideNetCoefficient(host, population, coef) * population.parameters.base_coefficients[coef]
+               response, host, coef
+           ) * host.coefficients[coef] * hostwideNetCoefficient(host, population, coef) * population.parameters.base_coefficients[coef]
 end
 
 function pathogenSequenceSpecificCoefficients(sequence::String, type::PathogenType)
