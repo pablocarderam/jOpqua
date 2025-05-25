@@ -20,14 +20,19 @@ using ProfileView
 # Model setup
 function run(seed::Int64, t_vec::Vector{Float64})
     # Parameters
-    ha_sn89 = "MKAKLLVLLCAFTATDADTICIGYHANNSTDTVDTVLEKNVTVTHSVNLLEDSHNGKLCRLKGIAPLQLGNCSIAGWILGNPECESLFSKESWSYIAETPNSENGTCYPGYFADYEELREQLSSVSSFERFEIFPKESSWPNHTVTKGVTAACSHNGKSSFYRNLLWLTEKNGLYPNLSKSYVNNKEKEVLVLWGVHHPSNIGDQRAIYHTENAYVSVVSSHYSRRFTPEIAKRPKVRGQEGRINYYWTLLEPGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMDECDAKCQTPQGAINSSLPFQNVHPVTIGECPKYVRSTKLRMVTGLRNIPSVQSRGLFGAIAGFIEGGWTGMIDGWYGYHHQNEQGSGYAADQKSTQNAINGITNKVNSVIEKMNTQFTAVGKEFNKLERRMENLNKKVDDGFLDIWTYNAELLVLLENERTLDFHDSNVKNLYEKVKSQLKNNAKEIGNGCFEFYHKCNNECMESVKNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILAIYSTVASSLVLLVSLGAISFWMCSNGSLQCRICI*"
-    rbs_residues = collect(range(140, 210))
-    rbs_epitope_key_residues = [144, 147, 159, 169, 170, 171, 172, 173, 203, 207]
+    # ha_sn89 = "MKAKLLVLLCAFTATDADTICIGYHANNSTDTVDTVLEKNVTVTHSVNLLEDSHNGKLCRLKGIAPLQLGNCSIAGWILGNPECESLFSKESWSYIAETPNSENGTCYPGYFADYEELREQLSSVSSFERFEIFPKESSWPNHTVTKGVTAACSHNGKSSFYRNLLWLTEKNGLYPNLSKSYVNNKEKEVLVLWGVHHPSNIGDQRAIYHTENAYVSVVSSHYSRRFTPEIAKRPKVRGQEGRINYYWTLLEPGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMDECDAKCQTPQGAINSSLPFQNVHPVTIGECPKYVRSTKLRMVTGLRNIPSVQSRGLFGAIAGFIEGGWTGMIDGWYGYHHQNEQGSGYAADQKSTQNAINGITNKVNSVIEKMNTQFTAVGKEFNKLERRMENLNKKVDDGFLDIWTYNAELLVLLENERTLDFHDSNVKNLYEKVKSQLKNNAKEIGNGCFEFYHKCNNECMESVKNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILAIYSTVASSLVLLVSLGAISFWMCSNGSLQCRICI*"
+    # rbs_residues = collect(range(140, 210))
+    # rbs_epitope_key_residues = [144, 147, 159, 169, 170, 171, 172, 173, 203, 207]
+
+    ha_sn89 = "AAAAAAAAAA"
+    ha_sn89_mut = "*AAAAAAAAA"
+    rbs_residues = collect(range(1,10))
+    rbs_epitope_key_residues = [1,2,3,4]
 
     function crossImmunity(
         seq1, seq2;
         epitope_residues=rbs_epitope_key_residues,
-        distance_half_all_residues=length(ha_sn89) * 0.000025, hill_coef_all_residues=5.0,
+        distance_half_all_residues=length(ha_sn89) * 1.0, hill_coef_all_residues=5.0,
         distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.25, hill_coef_epitope_residues=5.0)
 
         distance_key_residues = 0.0
@@ -35,14 +40,14 @@ function run(seed::Int64, t_vec::Vector{Float64})
             distance_key_residues += seq1[p] != seq2[p]
         end
 
-        return (1.0 - jOpqua.hillFunction(
-            Float64(hamming(seq1, seq2)),
-            distance_half_all_residues, hill_coef_all_residues
-        )) * (1.0 - jOpqua.hillFunction(
-            distance_key_residues,
-            distance_half_epitope_residues, hill_coef_epitope_residues
-        ))
-        # return seq1 == seq2
+        # return (1.0 - jOpqua.hillFunction(
+        #     Float64(hamming(seq1, seq2)),
+        #     distance_half_all_residues, hill_coef_all_residues
+        # )) * (1.0 - jOpqua.hillFunction(
+        #     distance_key_residues,
+        #     distance_half_epitope_residues, hill_coef_epitope_residues
+        # ))
+        return seq1 == seq2
     end
 
     function proteinFitness(
@@ -72,8 +77,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         possible_alleles="ARNDCEQGHILKMFPSTWYV*",
         # mean_effective_inoculum=1.0,
         # mean_mutations_per_replication=0.00003,
-        contactCoefficient=s::String -> proteinFitness(s, ha_sn89),
-        receiveContactCoefficient=s::String -> 0.0,
+        contactSpecificCoefficient=s::String -> proteinFitness(s, ha_sn89),
+        receiveContactHostwideCoefficient=s::String -> 0.0,
     )
 
     res_type = jOpqua.newResponseType(
@@ -90,10 +95,10 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "pop_type",
         clearance_coefficient=1.0e-3,
         contact_coefficient=1.05,
-        response_acquisition_coefficient=0.5,
+        response_acquisition_coefficient=0.0,
         response_loss_coefficient=0.0,
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.1,
+        mutations_upon_infection_coefficient=1.0,
         inoculum_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type.id => res_type)]),
@@ -108,8 +113,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         ),
     )
 
-    num_hosts = 5000
-    num_infected = Int(num_hosts * 0.05)
+    num_hosts = 10
+    num_infected = 10#Int(num_hosts * 0.05)
     host_genome = ""
 
     # Setup
@@ -117,16 +122,26 @@ function run(seed::Int64, t_vec::Vector{Float64})
     pop = jOpqua.newPopulation!("pop", pop_type, model)
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop, model)
     pat = jOpqua.newPathogen!(ha_sn89, pop, pat_type)
+    pat_mut = jOpqua.newPathogen!(ha_sn89_mut, pop, pat_type)
+
+    for h in 1:num_hosts
+        println(h)
+        jOpqua.addPathogenToHost!(pat, h, pop, model)
+        jOpqua.acquireResponse!(1, h, 1, model, rand())
+    end
 
     for h in 1:num_infected
-        jOpqua.addPathogenToHost!(pat, h, pop, model)
+        jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
     end
+
+    # println(("Host responses: ", [h.responses for h in pop.hosts]))
 
     # Simulate
     Random.seed!(seed)
     model, output = jOpqua.simulate!(
-        model, t_vec, population_host_samples=Dict("pop" => 200)
+        model, t_vec, population_host_samples=Dict("pop" => 20)
     )
+    # println(("Host responses: ", [h.responses for h in pop.hosts]))
 
     # Data output and plots
     compartment_data = jOpqua.saveCompartments(output, "examples/flu/compartment_flu.csv")
@@ -243,4 +258,4 @@ function run(seed::Int64, t_vec::Vector{Float64})
 end
 
 run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:2:100.0))
+@time run(0, collect(0.0:0.1:10.0))

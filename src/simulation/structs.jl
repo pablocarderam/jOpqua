@@ -119,7 +119,7 @@ struct PopulationType
     weightedInteractionPathogen::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
     # Takes Pathogen entity, Host entity, and event number;
     # returns aggregated response coefficient against that Pathogen for that event
-    weightedInteractionResponse::FunctionWrapper{Float64,Tuple{Pathogen,Host,Int64}}
+    weightedInteractionResponse::FunctionWrapper{Float64,Tuple{Response,Host,Int64}}
     # Takes Response entity, Host entity, and event number;
     # returns aggregated response coefficient of that Response for that event
     weightedInteractionHostwide::FunctionWrapper{Float64,Tuple{Host,Int64}}

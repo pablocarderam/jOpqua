@@ -183,7 +183,7 @@ end
 
 function responseWeights!(re::Int64, host::Host, population::Population, evt::Int64)
     host.response_weights[evt-RESPONSE_EVENTS[1]+1, re] = host.responses[re].specific_coefficients[evt] * population.parameters.weightedInteractionResponse(
-        re, host, evt
+        host.responses[re], host, evt
     )
     # No Response fraction weighting here, just presence of Response is enough
 end

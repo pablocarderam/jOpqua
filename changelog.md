@@ -3,6 +3,7 @@
 KNOWN ISSUES:
 - Garbage collection time is higher than expected for 100k host simulations, suspected type
 instabilities in weights/immunity changes
+- Steep (nonzero) Hill function does not behave as expected based on all-none immunity
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
@@ -16,6 +17,11 @@ Debug the following:
 - Birth
 - Death
 - Transition
+
+## 24 May 2025
+- Fixed bug in `weightedInteractionResponse` parameter types
+- Fixed bug in `weightedInteractionHostwideProduct`, called the wrong function (specific
+instead of hostwide)
 
 ## 15 May 2025
 - Changed parameter in `pathogen_evolution.jl` example to the new correct hostwide parameter

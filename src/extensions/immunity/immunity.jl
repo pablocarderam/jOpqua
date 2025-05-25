@@ -75,13 +75,12 @@ function weightedInteractionResponseWinnerTakesAll(response::Response, host::Hos
 end
 
 function weightedInteractionHostwideProduct(host::Host, evt::Int64)
-
     reaction = 1.0
     if length(host.pathogens) > 0
-        for pathogen in host.pathogens
-            if length(host.responses) > 0
+        if length(host.responses) > 0
+            for pathogen in host.pathogens
                 for response in host.responses
-                    reaction = responseInteractionSpecificCoefficient(pathogen, response, host, evt)
+                    reaction = reaction * responseInteractionHostwideCoefficient(pathogen, response, host, evt)
                 end
             end
         end
