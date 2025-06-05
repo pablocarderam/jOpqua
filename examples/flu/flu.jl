@@ -1,3 +1,4 @@
+using BenchmarkTools: colormap
 # Run from base jOpqua directory as
 # julia --project=. examples/flu/acquired_immunity.jl
 # unless viewing flamegraph, then run from console
@@ -11,8 +12,11 @@ using Random
 using Distances
 
 using Statistics
+using MultivariateStats
 using DataFrames
 using Plots
+using Plots.PlotMeasures
+using CSV
 
 using BenchmarkTools
 using ProfileView
@@ -20,56 +24,71 @@ using ProfileView
 # Model setup
 function run(seed::Int64, t_vec::Vector{Float64})
     # Parameters
-    # ha_sn89 = "MKAKLLVLLCAFTATDADTICIGYHANNSTDTVDTVLEKNVTVTHSVNLLEDSHNGKLCRLKGIAPLQLGNCSIAGWILGNPECESLFSKESWSYIAETPNSENGTCYPGYFADYEELREQLSSVSSFERFEIFPKESSWPNHTVTKGVTAACSHNGKSSFYRNLLWLTEKNGLYPNLSKSYVNNKEKEVLVLWGVHHPSNIGDQRAIYHTENAYVSVVSSHYSRRFTPEIAKRPKVRGQEGRINYYWTLLEPGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMDECDAKCQTPQGAINSSLPFQNVHPVTIGECPKYVRSTKLRMVTGLRNIPSVQSRGLFGAIAGFIEGGWTGMIDGWYGYHHQNEQGSGYAADQKSTQNAINGITNKVNSVIEKMNTQFTAVGKEFNKLERRMENLNKKVDDGFLDIWTYNAELLVLLENERTLDFHDSNVKNLYEKVKSQLKNNAKEIGNGCFEFYHKCNNECMESVKNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILAIYSTVASSLVLLVSLGAISFWMCSNGSLQCRICI*"
-    # rbs_residues = collect(range(140, 210))
-    # rbs_epitope_key_residues = [144, 147, 159, 169, 170, 171, 172, 173, 203, 207]
+    ha_sn89 = "MKAKLLVLLCAFTATDADTICIGYHANNSTDTVDTVLEKNVTVTHSVNLLEDSHNGKLCRLKGIAPLQLGNCSIAGWILGNPECESLFSKESWSYIAETPNSENGTCYPGYFADYEELREQLSSVSSFERFEIFPKESSWPNHTVTKGVTAACSHNGKSSFYRNLLWLTEKNGLYPNLSKSYVNNKEKEVLVLWGVHHPSNIGDQRAIYHTENAYVSVVSSHYSRRFTPEIAKRPKVRGQEGRINYYWTLLEPGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMDECDAKCQTPQGAINSSLPFQNVHPVTIGECPKYVRSTKLRMVTGLRNIPSVQSRGLFGAIAGFIEGGWTGMIDGWYGYHHQNEQGSGYAADQKSTQNAINGITNKVNSVIEKMNTQFTAVGKEFNKLERRMENLNKKVDDGFLDIWTYNAELLVLLENERTLDFHDSNVKNLYEKVKSQLKNNAKEIGNGCFEFYHKCNNECMESVKNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILAIYSTVASSLVLLVSLGAISFWMCSNGSLQCRICI"
+    rbs_residues = collect(range(140, 210))
+    rbs_epitope_key_residues = [144, 147, 159, 169, 170, 171, 172, 173, 203, 207]
 
-    ha_sn89 = "AAAAAAAAAA"
-    ha_sn89_mut = "*AAAAAAAAA"
-    rbs_residues = collect(range(1,10))
-    rbs_epitope_key_residues = [1,2,3,4]
+    ha_sn89_mut = "MKAKLLVLLCAFTATDADTICIGYHANNSTDTVWTVLEKSVTVTHSVNLLEDSHNGKLCRLKGIAPLQLGNCSIAGWILGNPECESLFSKESWSYIAETPNSENLTCYPGHFADYEELREQLSSVSSFERFEIFPKESSWPNHFVTFGVTAACSHNGKSSFYRNLLWLTEKQGLYPNKSKSYVNNKEKEVLVLWGVHHPSNIGDQRAIYHTENAYVSVNGSHYSRRFTPEIAKRPKVRGQEGRINYYWTLLEPGDTIIFYANGNLIAPWYAFALSRGFGSSIITSNASEENCDAKCQTPQGAINSSLPFQNVHNVTIGEHPKYVRSTKLRMVTGLRNRPSVQSRGLFGAIAGFIWGGWTGMIDGWYGYHHQNEQGSGYAADQKSTQNAINGIVNKVNSVIEKMNTQFTAVGKEFNKLERRMENLNKKVDDGFLYIWVYNAELLVLLENERTLDFHDSNVKNLYEKVKSQLKNNAKEIGNGCFEFYHKCNNECMFSVKNGTYDYPKYSKESKLNPEKIDGVKGESMGVYQILAIYSTVASSLVLLVSLGAISFWMCSNGSLQCRICI"
+
+    # ha_sn89 = "AAAAAAAAAA"
+    # ha_sn89_mut = "*AAAAAAAAA"
+    # rbs_residues = collect(range(1,10))
+    # rbs_epitope_key_residues = [1,2,3,4]
 
     function crossImmunity(
         seq1, seq2;
         epitope_residues=rbs_epitope_key_residues,
-        distance_half_all_residues=length(ha_sn89) * 1.0, hill_coef_all_residues=5.0,
-        distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.25, hill_coef_epitope_residues=5.0)
+        distance_half_all_residues=length(ha_sn89) * 0.025, hill_coef_all_residues=2.0,
+        distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.1, hill_coef_epitope_residues=2.0)
 
         distance_key_residues = 0.0
         for p in epitope_residues
             distance_key_residues += seq1[p] != seq2[p]
         end
 
-        # return (1.0 - jOpqua.hillFunction(
-        #     Float64(hamming(seq1, seq2)),
-        #     distance_half_all_residues, hill_coef_all_residues
-        # )) * (1.0 - jOpqua.hillFunction(
+        return (1.0 - jOpqua.hillFunction(
+            Float64(hamming(seq1, seq2)),
+            distance_half_all_residues, hill_coef_all_residues
+        )) #* (1.0 - jOpqua.hillFunction(
         #     distance_key_residues,
         #     distance_half_epitope_residues, hill_coef_epitope_residues
         # ))
-        return seq1 == seq2
+        # return seq1 == seq2
     end
 
+    # println(("TEST SAME: ", 1.0 - crossImmunity(ha_sn89, ha_sn89)))
+    # println(("TEST MUT: ", 1.0 - crossImmunity(ha_sn89, ha_sn89_mut)))
+
     function proteinFitness(
-        seq1, seq2;
+        seq, seq_wt;
         functional_site=rbs_residues,
         distance_half_all_residues=length(ha_sn89) * 0.5, hill_coef_all_residues=5.0,
         distance_half_functional_site_residues=length(rbs_residues) * 0.5, hill_coef_functional_site_residues=5.0)
 
-        distance_key_residues = 0.0
-        for p in functional_site
-            distance_key_residues += seq1[p] != seq2[p]
-        end
+        # if occursin("*", seq)
+        #     return 0.0
+        # else
+        #     distance_key_residues = 0.0
+        #     for p in functional_site
+        #         distance_key_residues += seq[p] != seq_wt[p]
+        #     end
 
-        return (1.0 - jOpqua.hillFunction(
-            Float64(hamming(seq1, seq2)),
-            distance_half_all_residues, hill_coef_all_residues
-        )) * (1.0 - jOpqua.hillFunction(
-            distance_key_residues,
-            distance_half_functional_site_residues, hill_coef_functional_site_residues
-        ))
-        # return 1.0
+        #     return (1.0 - jOpqua.hillFunction(
+        #         Float64(hamming(seq, seq_wt)),
+        #         distance_half_all_residues, hill_coef_all_residues
+        #     )) * (1.0 - jOpqua.hillFunction(
+        #         distance_key_residues,
+        #         distance_half_functional_site_residues, hill_coef_functional_site_residues
+        #     ))
+        # end
+        return 1.0
     end
+
+    # println(("TEST SAME fit: ", proteinFitness(ha_sn89, ha_sn89)))
+    # println(("TEST MUT fit: ", proteinFitness(ha_sn89, ha_sn89_mut)))
+
+    # println(("TEST SAME hamm: ", hamming(ha_sn89, ha_sn89)))
+    # println(("TEST MUT hamm: ", hamming(ha_sn89, ha_sn89_mut)))
 
     pat_type = jOpqua.newPathogenType(
         "pat_type",
@@ -95,10 +114,10 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "pop_type",
         clearance_coefficient=1.0e-3,
         contact_coefficient=1.05,
-        response_acquisition_coefficient=0.0,
+        response_acquisition_coefficient=0.5,
         response_loss_coefficient=0.0,
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=1.0,
+        mutations_upon_infection_coefficient=0.5,
         inoculum_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type.id => res_type)]),
@@ -113,8 +132,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         ),
     )
 
-    num_hosts = 10
-    num_infected = 10#Int(num_hosts * 0.05)
+    num_hosts = 100000
+    num_infected = Int(num_hosts * 0.05)
     host_genome = ""
 
     # Setup
@@ -122,24 +141,24 @@ function run(seed::Int64, t_vec::Vector{Float64})
     pop = jOpqua.newPopulation!("pop", pop_type, model)
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop, model)
     pat = jOpqua.newPathogen!(ha_sn89, pop, pat_type)
-    pat_mut = jOpqua.newPathogen!(ha_sn89_mut, pop, pat_type)
-
-    for h in 1:num_hosts
-        println(h)
-        jOpqua.addPathogenToHost!(pat, h, pop, model)
-        jOpqua.acquireResponse!(1, h, 1, model, rand())
-    end
+    # pat_mut = jOpqua.newPathogen!(ha_sn89_mut, pop, pat_type)
 
     for h in 1:num_infected
-        jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
+        # println((h,num_hosts))
+        jOpqua.addPathogenToHost!(pat, h, pop, model)
+        # jOpqua.acquireResponse!(1, h, 1, model, rand())
     end
+
+    # for h in 1:num_infected
+    #     jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
+    # end
 
     # println(("Host responses: ", [h.responses for h in pop.hosts]))
 
     # Simulate
     Random.seed!(seed)
     model, output = jOpqua.simulate!(
-        model, t_vec, population_host_samples=Dict("pop" => 20)
+        model, t_vec, population_host_samples=Dict("pop" => 200)
     )
     # println(("Host responses: ", [h.responses for h in pop.hosts]))
 
@@ -184,15 +203,17 @@ function run(seed::Int64, t_vec::Vector{Float64})
                 # for seqs in subset(his_dat, :Time => ByRow(Time -> Time == t))[!, "Pathogen_sequence"]
                 for s in split(seqs, jOpqua.WITHIN_HOST_SEPARATOR)
             ]))
+        else
+            push!(distances, 0.0)
         end
     end
     font_scale = 2.0
     Plots.scalefontsizes(font_scale)
-    plot(distances, xlabel="Time", ylabel="Distance from SN98 (aa)",
+    plot(t_vec, distances, xlabel="Time", ylabel="Mean distance from SN98 (aa)",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
-    plot!(size=(800, 700))
+    plot!(size=(1000, 600), margin=20mm)
     savefig("examples/flu/mean_distances.png")
 
     distances = []
@@ -204,14 +225,16 @@ function run(seed::Int64, t_vec::Vector{Float64})
                 # for seqs in subset(his_dat, :Time => ByRow(Time -> Time == t))[!, "Pathogen_sequence"]
                 for s in split(seqs, jOpqua.WITHIN_HOST_SEPARATOR)
             ]))
+        else
+            push!(distances, 0.0)
         end
     end
     # Plots.scalefontsizes(2.0)
-    plot(distances, xlabel="Time", ylabel="Distance from SN98 (aa)",
+    plot(t_vec, distances, xlabel="Time", ylabel="Max distance from SN98 (aa)",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
-    plot!(size=(800, 700))
+    plot!(size=(1000, 600), margin=20mm)
     savefig("examples/flu/max_distances.png")
     Plots.scalefontsizes(1 / font_scale)
 
@@ -224,15 +247,17 @@ function run(seed::Int64, t_vec::Vector{Float64})
                 # for seqs in subset(his_dat, :Time => ByRow(Time -> Time == t))[!, "Pathogen_sequence"]
                 for s in split(seqs, jOpqua.WITHIN_HOST_SEPARATOR)
             ]))
+        else
+            push!(distances, 0.0)
         end
     end
     font_scale = 2.0
     Plots.scalefontsizes(font_scale)
-    plot(distances, xlabel="Time", ylabel="Cross-immunity to SN98",
+    plot(t_vec, distances, xlabel="Time", ylabel="Mean cross-immunity to SN98",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
-    plot!(size=(800, 700))
+    plot!(size=(1000, 600), margin=20mm)
     savefig("examples/flu/mean_distances_antigenic.png")
 
     distances = []
@@ -244,18 +269,127 @@ function run(seed::Int64, t_vec::Vector{Float64})
                 # for seqs in subset(his_dat, :Time => ByRow(Time -> Time == t))[!, "Pathogen_sequence"]
                 for s in split(seqs, jOpqua.WITHIN_HOST_SEPARATOR)
             ]))
+        else
+            push!(distances, 0.0)
         end
     end
     # Plots.scalefontsizes(2.0)
-    plot(distances, xlabel="Time", ylabel="Cross-immunity to SN98",
+    plot(t_vec, distances, xlabel="Time", ylabel="Max cross-immunity to SN98",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
-    plot!(size=(800, 700))
+    plot!(size=(1000, 600), margin=20mm)
     savefig("examples/flu/max_distances_antigenic.png")
     Plots.scalefontsizes(1 / font_scale)
 
+    ## HERE WE START GENETIC AND ANTIGENIC MAPS
+
+    # distances = []
+    seqs_list = Vector{String}(undef, 0)
+    times_dict = Dict()
+    times_first = Vector{Float64}(undef, 0)
+    occurrences = Dict()
+
+    for t in t_vec
+        if length(his_dat[(his_dat.Time.==t).&(his_dat.Pathogen_sequence.!=""), "Pathogen_sequence"]) > 0
+            for seqs in his_dat[(his_dat.Time.==t).&(his_dat.Pathogen_sequence.!=""), "Pathogen_sequence"]
+                for s in split(seqs, jOpqua.WITHIN_HOST_SEPARATOR)
+                    if !haskey(times_dict, s)
+                        times_dict[s] = [t]
+                        push!(seqs_list, s)
+                        push!(times_first, t)
+                        occurrences[s] = 1
+                    else
+                        occurrences[s] += 1
+                    end
+                end
+            end
+        end
+    end
+
+    ancestors = jOpqua.ancestors(output, "pop", seqs_list)
+    seqs_list = ancestors.sequence
+    times_first = ancestors.time
+
+    dist_mat_ant = zeros((length(seqs_list), length(seqs_list)))
+    dist_mat_gen = zeros((length(seqs_list), length(seqs_list)))
+    for i in 1:length(seqs_list)
+        for j in 1:length(seqs_list)
+            dist_mat_ant[i, j] = crossImmunity(seqs_list[i], seqs_list[j])
+            dist_mat_gen[i, j] = hamming(seqs_list[i], seqs_list[j])
+        end
+    end
+
+    pca_ant = fit(PCA, dist_mat_ant; maxoutdim=2)
+    pca_gen = fit(PCA, dist_mat_gen; maxoutdim=2)
+
+    pca_proj_ant = projection(pca_ant)
+    pca_proj_gen = projection(pca_gen)
+
+    occurrences_list = Vector{Int64}(undef, 0)
+    for s in seqs_list
+        if haskey(occurrences, s)
+            push!(occurrences_list, occurrences[s])
+        else
+            push!(occurrences_list, 0)
+        end
+    end
+
+    # occurrences_list_sizes = 10.0 * occurrences_list / maximum(occurrences_list)
+    occurrences_list_sizes = 20.0 * min.(5.0, (occurrences_list .+ 0) / 10)
+    # occurrences_list_sizes = 20.0 * (occurrences_list .+ 0) / 10
+
+    ant = DataFrame(pca_proj_ant, ["PC1", "PC2"])
+    ant[:, "Time"] = times_first
+    ant[:, "Occurrences"] = occurrences_list
+    ant[:, "Occurrences_mod"] = occurrences_list_sizes
+    ant[:, "Alpha"] = ones(length(seqs_list))
+    ant[:, "Linewidth"] = ones(length(seqs_list))
+    ant = sort(ant, ("Occurrences_mod"), rev=true)
+
+    gen = DataFrame(pca_proj_gen, ["PC1", "PC2"])
+    gen[:, "Time"] = times_first
+    gen[:, "Occurrences"] = occurrences_list
+    gen[:, "Occurrences_mod"] = occurrences_list_sizes
+    gen[:, "Alpha"] = ones(length(seqs_list))
+    gen[:, "Linewidth"] = ones(length(seqs_list))
+    gen = sort(gen, ("Occurrences_mod"), rev=true)
+
+    ant[(ant[:, "Occurrences"].==0), "Alpha"] .= 0.4
+    gen[(gen[:, "Occurrences"].==0), "Alpha"] .= 0.4
+    ant[(ant[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
+    gen[(gen[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
+    ant[(ant[:, "Occurrences"].==0), "Linewidth"] .= 0
+    gen[(gen[:, "Occurrences"].==0), "Linewidth"] .= 0
+
+    Plots.scalefontsizes(font_scale)
+    scatter(
+        ant[:, "PC1"], ant[:, "PC2"], zcolor=ant[:, "Time"], ms=ant[:, "Occurrences_mod"], c=:viridis,
+        xlabel="Principal component 1", ylabel="Principal component 2",
+        alpha=ant[:, "Alpha"],
+        legend=false, colorbar=true,
+        markerstrokewidth=ant[:, "Linewidth"],
+        linewidth=3.0, thickness_scaling=1.0,
+        grid=false,
+        colorbar_title="Time",
+    )
+    plot!(size=(1000, 800), margin=20mm)
+    savefig("examples/flu/pca_antigenic.png")
+
+    scatter(
+        gen[:, "PC1"], gen[:, "PC2"], zcolor=gen[:, "Time"], ms=gen[:, "Occurrences_mod"], c=:viridis,
+        xlabel="Principal component 1", ylabel="Principal component 2",
+        alpha=gen[:, "Alpha"],
+        legend=false, colorbar=true,
+        markerstrokewidth=gen[:, "Linewidth"],
+        linewidth=3.0, thickness_scaling=1.0,
+        grid=false,
+        colorbar_title="Time",
+    )
+    plot!(size=(1000, 800), margin=20mm)
+    savefig("examples/flu/pca_genetic.png")
+    Plots.scalefontsizes(1 / font_scale)
 end
 
 run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:0.1:10.0))
+@time run(89, collect(0.0:0.5:60.0))

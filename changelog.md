@@ -3,7 +3,6 @@
 KNOWN ISSUES:
 - Garbage collection time is higher than expected for 100k host simulations, suspected type
 instabilities in weights/immunity changes
-- Steep (nonzero) Hill function does not behave as expected based on all-none immunity
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
@@ -17,6 +16,15 @@ Debug the following:
 - Birth
 - Death
 - Transition
+
+## 5 Jun 2025
+- Added `ancestors` function to data analysis package to pull out all ancestors from a list
+of `Pathogen` genomes in a `Population`
+- Multiple edits to flu example, code for genetic and antigenic maps might be cleaned up and
+standardized into a `plots` function
+
+I believe Hill function does now behave as expected based on all-none immunity (as of
+previous commit).
 
 ## 24 May 2025
 - Fixed bug in `weightedInteractionResponse` parameter types

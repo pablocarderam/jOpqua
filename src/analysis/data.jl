@@ -62,11 +62,39 @@ function saveHistory(output::Output, file_name::String)
     return DataFrame(CSV.File(file_name))
 end
 
+function ancestors(output::Output, population_id::String, sequences::Vector{String})
+    pats = [output.model.populations[output.model.population_dict[population_id]].pathogens[s] for s in sequences]
+    seqs = Vector{String}(undef, 0)
+    times = Vector{Float64}(undef, 0)
+
+    pat = pats[1]
+
+    function addPathogen!(p::Pathogen)
+        push!(seqs, p.sequence)
+        push!(times, p.birth_time)
+        if !(isnothing(p.parents[1])) && !(p.parents[1].sequence in seqs)
+            addPathogen!(p.parents[1])
+        end
+        if !(isnothing(p.parents[2])) && !(p.parents[2].sequence in seqs)
+            addPathogen!(p.parents[2])
+        end
+    end
+
+    for p in pats
+        pat = p
+        if !(isnothing(p)) && !(p.sequence in seqs)
+            addPathogen!(p)
+        end
+    end
+
+    return DataFrame(sequence=seqs, time=times)
+end
+
 function saveComposition(
     data::DataFrame, file_name::String;
-    populations::Vector{String}=Vector{String}(undef,0),
+    populations::Vector{String}=Vector{String}(undef, 0),
     type_of_composition::String="Pathogen_sequence", num_top_sequences::Int64=-1,
-    genomic_positions::Vector{Int64}=Vector{Int64}(undef,0), track_specific_sequences::Vector{String}=Vector{String}(undef,0),
+    genomic_positions::Vector{Int64}=Vector{Int64}(undef, 0), track_specific_sequences::Vector{String}=Vector{String}(undef, 0),
     top_host_sequence_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
 
     dat = coalesce.(data, "")
@@ -75,7 +103,7 @@ function saveComposition(
     end
 
     if length(genomic_positions) > 0
-        dat[:,type_of_composition] = [
+        dat[:, type_of_composition] = [
             join(
                 [
                     join(
@@ -84,29 +112,29 @@ function saveComposition(
                         ], ""
                     ) for s in split(host_seqs, WITHIN_HOST_SEPARATOR)
                 ], WITHIN_HOST_SEPARATOR
-            ) for host_seqs in dat[:,type_of_composition]
+            ) for host_seqs in dat[:, type_of_composition]
         ]
     end
 
     if !isnothing(top_host_sequence_function)
-        dat[:,"seqpop"] = string.(dat[:,type_of_composition], ":::", dat[:,"Population"])
-        unique_seqpop = unique(dat[:,"patpop"])
+        dat[:, "seqpop"] = string.(dat[:, type_of_composition], ":::", dat[:, "Population"])
+        unique_seqpop = unique(dat[:, "patpop"])
         for combination in unique_seqpop
             gen_str = split(combination, ":::")[1]
             if gen_str != ""
                 genomes = split(gen_str, WITHIN_HOST_SEPARATOR)
                 values = [top_host_sequence_function(p) for p in genomes]
                 top_pathogen = genomes[findmax(values)[2]]
-                dat[:,"patpop"] = replace(dat[:,"patpop"], combination => top_pathogen)
+                dat[:, "patpop"] = replace(dat[:, "patpop"], combination => top_pathogen)
             else
-                dat[:,"patpop"] = replace(dat[:,"patpop"], combination => "")
+                dat[:, "patpop"] = replace(dat[:, "patpop"], combination => "")
             end
         end
-        dat[:,type_of_composition] = dat[:,"patpop"]
+        dat[:, type_of_composition] = dat[:, "patpop"]
     end
 
     all_seqs = split(
-        join(dat[(dat[:,type_of_composition].!=""), type_of_composition], WITHIN_HOST_SEPARATOR),
+        join(dat[(dat[:, type_of_composition].!=""), type_of_composition], WITHIN_HOST_SEPARATOR),
         WITHIN_HOST_SEPARATOR
     )
     counts = countmap(all_seqs)
@@ -126,23 +154,23 @@ function saveComposition(
     end
 
     out = DataFrame(
-        zeros(Int64, length(unique(dat[:,"Time"])), length(seqs_to_track) + 1),
+        zeros(Int64, length(unique(dat[:, "Time"])), length(seqs_to_track) + 1),
         [seqs_to_track..., "Other"]
     )
-    out[:,"Time"] = unique(dat[:,"Time"])
-    out = out[:,["Time", seqs_to_track..., "Other"]]
+    out[:, "Time"] = unique(dat[:, "Time"])
+    out = out[:, ["Time", seqs_to_track..., "Other"]]
 
-    for i in 1:length(dat[:,"Time"])
-        for seq in split(dat[i,type_of_composition], WITHIN_HOST_SEPARATOR)
+    for i in 1:length(dat[:, "Time"])
+        for seq in split(dat[i, type_of_composition], WITHIN_HOST_SEPARATOR)
             if seq in seqs_to_track
-                out[(out[:,"Time"].==dat[i,"Time"]), seq] .+= 1
+                out[(out[:, "Time"].==dat[i, "Time"]), seq] .+= 1
             elseif seq != ""
-                out[(out[:,"Time"].==dat[i,"Time"]), "Other"] .+= 1
+                out[(out[:, "Time"].==dat[i, "Time"]), "Other"] .+= 1
             end
         end
     end
 
-    out[:,"Total"] = sum([out[:, c] for c in names(out)[2:end]])
+    out[:, "Total"] = sum([out[:, c] for c in names(out)[2:end]])
 
     CSV.write(file_name, out)
 
@@ -151,9 +179,9 @@ end
 
 function saveComposition(
     output::Output, file_name::String;
-    populations::Vector{String}=Vector{String}(undef,0),
+    populations::Vector{String}=Vector{String}(undef, 0),
     type_of_composition::String="Pathogen_sequence", num_top_sequences::Int64=-1,
-    genomic_positions::Vector{Int64}=Vector{Int64}(undef,0), track_specific_sequences::Vector{String}=Vector{String}(undef,0),
+    genomic_positions::Vector{Int64}=Vector{Int64}(undef, 0), track_specific_sequences::Vector{String}=Vector{String}(undef, 0),
     top_host_sequence_function::Union{Nothing,FunctionWrapper{Float64,Tuple{String}}}=nothing)
     return saveComposition(
         saveHistory(output, file_name * "_history.csv"), file_name,
@@ -165,8 +193,8 @@ function saveComposition(
 end
 
 function addToPhylogenyDicts!(
-        nodes_dict::Dict, node_info::Dict, pop::Population,
-        node::Union{Pathogen, Response, Host}, node_id::String, info_separator::String)
+    nodes_dict::Dict, node_info::Dict, pop::Population,
+    node::Union{Pathogen,Response,Host}, node_id::String, info_separator::String)
     if !haskey(nodes_dict, node)
         nodes_dict[node] = []
     end
@@ -198,11 +226,11 @@ function saveNewick(
     node_info = Dict()
     for pop in model.populations
         if type == "Pathogens"
-            for (id,node) in pop.pathogens
+            for (id, node) in pop.pathogens
                 addToPhylogenyDicts!(nodes_dict, node_info, pop, node, id, info_separator)
             end
         elseif type == "Responses"
-            for (id,node) in pop.responses
+            for (id, node) in pop.responses
                 addToPhylogenyDicts!(nodes_dict, node_info, pop, node, join(id, info_separator), info_separator)
             end
         elseif type == "Host"
@@ -213,7 +241,7 @@ function saveNewick(
     end
 
     trees = Dict()
-    for (node,children) in nodes_dict
+    for (node, children) in nodes_dict
         node_str = ""
         if length(children) > 0
             for child in children
@@ -254,7 +282,7 @@ function saveNewick(
 
     out = []
 
-    for (root,stem) in trees
+    for (root, stem) in trees
         push!(out, stem * root * ":0.0;")
         open(file_name, "w") do file
             write(file, out[end])
