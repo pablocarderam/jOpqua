@@ -12,7 +12,7 @@ using Distances
 
 using Statistics
 using MultivariateStats
-using UMAP
+# using UMAP
 using DataFrames
 using Plots
 using Plots.PlotMeasures
@@ -36,6 +36,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
     # ha_sn89_mut = "*AAAAAAAAA"
     # rbs_residues = collect(range(1,10))
     # rbs_epitope_key_residues = [1,2,3,4]
+
+    max_immunity = 0.95
 
     function crossImmunity(
         seq1, seq2;
@@ -105,9 +107,9 @@ function run(seed::Int64, t_vec::Vector{Float64})
     res_type_spe = jOpqua.newResponseType(
         "Specific",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> crossImmunity(imp_g, pat_g),
-        transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0 - crossImmunity(imp_g, pat_g),
-        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0e3 * crossImmunity(imp_g, pat_g),
-        responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 0.0,
+        transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> max_immunity * (1.0 - crossImmunity(imp_g, pat_g)),
+        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0e4 * crossImmunity(imp_g, pat_g),
+        responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 0.005,
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
 
@@ -115,8 +117,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "Broad_temp",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 0.0,
-        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
-        responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 0.1,
+        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0e4 * 1.0,
+        responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 0.02,
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
 
@@ -125,11 +127,11 @@ function run(seed::Int64, t_vec::Vector{Float64})
     pop_type = jOpqua.newPopulationType(
         "pop_type",
         clearance_coefficient=1.0e-3,
-        contact_coefficient=1.05,
+        contact_coefficient=1.5,
         response_acquisition_coefficient=0.5,
         response_loss_coefficient=1.0,
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.5, # 0.0055715625 = 566 aa * 3 nt/codon * (21 aa/64 codons) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
+        mutations_upon_infection_coefficient=0.0, # 0.0055715625 = 566 aa * 3 nt/codon * (21 aa/64 codons) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type_spe.id => res_type_spe), (res_type_bro.id => res_type_bro)]),
@@ -139,10 +141,10 @@ function run(seed::Int64, t_vec::Vector{Float64})
             response_types::Dict{String,jOpqua.ResponseType},
             birth_time::Float64
         ) -> [
-                jOpqua.deNovoResponse(
-                    pathogen, host, existing_responses, response_types, birth_time;
-                    response_type_id="Specific"
-                ),
+                # jOpqua.deNovoResponse(
+                #     pathogen, host, existing_responses, response_types, birth_time;
+                #     response_type_id="Specific"
+                # ),
                 jOpqua.deNovoResponse(
                     pathogen, host, existing_responses, response_types, birth_time;
                     response_type_id="Broad_temp"
@@ -427,12 +429,12 @@ function run(seed::Int64, t_vec::Vector{Float64})
 
     CSV.write("examples/flu/components_antigenic.csv", ant)
     CSV.write("examples/flu/components_genetic.csv", gen)
-    CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
-    CSV.write("examples/flu/distances_genetic.csv", DataFrame(dist_mat_gen, :auto))
+    # CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
+    # CSV.write("examples/flu/distances_genetic.csv", DataFrame(dist_mat_gen, :auto))
     CSV.write("examples/flu/sequences.csv", DataFrame(Sequences=seqs_list))
 end
 
 println("Num threads: " * string(nthreads()))
 
 # run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:2.0:100.0))
+@time run(0, collect(0.0:2.0:200.0))

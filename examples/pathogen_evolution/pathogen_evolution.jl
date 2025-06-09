@@ -39,8 +39,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         receive_contact_coefficient=1.0,
         mutations_upon_infection_coefficient=0.001,
         inoculum_coefficient=1.0,
-        death_coefficient=0.001,
-        birth_coefficient=0.001,
+        # death_coefficient=0.001,
+        # birth_coefficient=0.001,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
     )
 

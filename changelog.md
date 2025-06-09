@@ -6,25 +6,30 @@ instabilities in weights/immunity changes
 - Float precision errors in rate calculation accumulate over time;
 might be worth adding a full rate recalculation method that runs every `N` events to reset
 error
+- Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
+host weight matrices, as well as garbage collection (probably associated to the former)
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
 events/nonsampling coefficients (and viceversa) or to `Host` events/nonsampling coefficients
+- Try explicitly declared max host population size in instance of population change,
+dynamically resize if max population exceeded
 
 Debug the following:
 - Mutant establishment
 - Recombinant establishment
 - Recombination upon contact
-- Diploid `Host` genomes
+- Diploid `Host` genomes/homologous chromosome separators
 - Inter-population contact
 - Transition
 
 ## 9 Jun 2025
 Births and deaths now work.
-- Bug fix in death handling within `removeHostFromPopulation!()`
-- Change `simulate()` to not crash when host population is zero
-- Change `saveHistory()` to not crash when host population is zero
-- Syntax errors and multiple other bug fixes and updates in `birth!()`
+- Bug fix in death handling within `removeHostFromPopulation!`
+- Change `simulate` to not crash when host population is zero
+- Change `saveHistory` to not crash when host population is zero
+- Syntax errors and multiple other bug fixes and updates in `birth!`
+- Removed `UMAP` requirement
 
 ## 7 Jun 2025
 - Small change in `developResponse` structure, returning a single `Response` instead of a
