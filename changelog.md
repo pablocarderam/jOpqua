@@ -3,6 +3,9 @@
 KNOWN ISSUES:
 - Garbage collection time is higher than expected for 100k host simulations, suspected type
 instabilities in weights/immunity changes
+- Float precision errors in rate calculation accumulate over time;
+might be worth adding a full rate recalculation method that runs every `N` events to reset
+error
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
@@ -12,10 +15,24 @@ Debug the following:
 - Mutant establishment
 - Recombinant establishment
 - Recombination upon contact
+- Diploid `Host` genomes
 - Inter-population contact
-- Birth
-- Death
 - Transition
+
+## 9 Jun 2025
+Births and deaths now work.
+- Bug fix in death handling within `removeHostFromPopulation!()`
+- Change `simulate()` to not crash when host population is zero
+- Change `saveHistory()` to not crash when host population is zero
+- Syntax errors and multiple other bug fixes and updates in `birth!()`
+
+## 7 Jun 2025
+- Small change in `developResponse` structure, returning a single `Response` instead of a
+vector
+
+## 6 Jun 2025
+- Small change in simulation algorithm to avoid running a final event if event time is over
+max simulation time
 
 ## 5 Jun 2025
 - Added `ancestors` function to data analysis package to pull out all ancestors from a list

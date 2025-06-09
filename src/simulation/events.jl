@@ -358,8 +358,8 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
     end
 
     for coef in EVENTS
-        if population.host_weights[host_idx, coef] != 0.0
-            change = -population.host_weights[host_idx, coef]
+        if population.host_weights[coef, host_idx] != 0.0
+            change = -population.host_weights[coef, host_idx]
             if coef == CONTACT
                 population.contact_sum += change
                 change = change * model.population_contact_weights_receive_sums[model.population_dict[population.id]]
@@ -373,9 +373,9 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
         end
     end
     for coef in CHOICE_MODIFIERS[begin:end-1]
-        if population.host_weights[host_idx, coef] != 0.0
+        if population.host_weights_receive[coef-CHOICE_MODIFIERS[1]+1, host_idx] != 0.0
             propagateWeightReceiveChanges!(
-                -population.host_weights[host_idx, coef] * population.parameters.base_coefficients[coef], population, coef, model
+                -population.host_weights_receive[coef-CHOICE_MODIFIERS[1]+1, host_idx] * population.parameters.base_coefficients[coef], population, coef, model
             )
         end
     end
@@ -409,10 +409,10 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
         )
     end
 
-    population.host_weights = population.host_weights[1:end.!=host_idx, 1:end.!=host_idx]
-    population.host_weights_receive = population.host_weights_receive[1:end.!=host_idx, 1:end.!=host_idx]
-    # population.host_weights_with_coefficient = population.host_weights_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
-    # population.host_weights_receive_with_coefficient = population.host_weights_receive_with_coefficient[1:end.!=host_idx, 1:end.!=host_idx]
+    population.host_weights = population.host_weights[1:end, 1:end.!=host_idx]
+    population.host_weights_receive = population.host_weights_receive[1:end, 1:end.!=host_idx]
+    # population.host_weights_with_coefficient = population.host_weights_with_coefficient[1:end, 1:end.!=host_idx]
+    # population.host_weights_receive_with_coefficient = population.host_weights_receive_with_coefficient[1:end, 1:end.!=host_idx]
     for evt in EVENTS
         deleteat!(population.host_weights_with_coefficient_sampler[evt], host_idx)
     end
@@ -657,62 +657,67 @@ end
 
 function birth!(model::Model, rand_n::Float64)
     host_idx, pop_idx, rand_n = chooseHost(BIRTH, model, rand_n)
-    parents = MVector{2,Union{Nothing,Host}}[model.populations[pop_idx].hosts[host_idx], nothing]
-    if model.populations[pop_idx].host_sexual_reproduction
+
+    parents = MVector{2,Union{Nothing,Host}}(model.populations[pop_idx].hosts[host_idx], nothing)
+    if model.populations[pop_idx].parameters.host_sexual_reproduction
         host_idx_2, pop_idx_2, rand_n = chooseHost(BIRTH, model, rand_n)
-        parents[2] = model.populations[pop_idx_2].hosts[host_idx_2]
-        if !model.populations[pop_idx].sexualCompatibility(parents[1], parents[2])
-            parents = MVector{2,Union{Nothing,Host}}[nothing, nothing]
+        if model.populations[pop_idx].parameters.hostSexualCompatibility(parents[1].sequence, model.populations[pop_idx_2].hosts[host_idx_2].sequence)
+            parents = MVector{2,Union{Nothing,Host}}(
+                model.populations[pop_idx].hosts[host_idx],
+                model.populations[pop_idx_2].hosts[host_idx_2]
+            )
+        else
+            parents = MVector{2,Union{Nothing,Host}}(nothing, nothing)
         end
     end
 
-    if !isnothing(parent[1])
+    if !isnothing(parents[1])
         child_sequence = ""
 
-        parent_gametes = MVector{2,Union{String,Nothing}}[
+        parent_gametes = MVector{2,Union{String,Nothing}}(
             generateGamete(
-                parent[1].sequence,
-                model.populations[pop_idx].host_num_loci,
-                model.populations[pop_idx].host_possible_alleles,
+                parents[1].sequence,
+                parents[1].type.num_loci,
+                parents[1].type.possible_alleles,
                 nonsamplingValue(
                     HOST_MUTATIONS_UPON_BIRTH,
                     parents[1],
                     model.populations[pop_idx]
                 )
             ), nothing
-        ]
+        )
 
-        if model.populations[pop_idx].diploid_host
+        if occursin(HOMOLOGOUS_CHROMOSOME_SEPARATOR, parent_gametes[1]) # if diploid, #model.populations[pop_idx].diploid_host
             parent_gametes[1] = recombinantSequences(
                 parent_gametes[1],
                 generateGamete(
-                    parent[1].sequence,
-                    model.populations[pop_idx].host_num_loci,
-                    model.populations[pop_idx].host_possible_alleles,
+                    parents[1].sequence,
+                    parents[1].type.num_loci,
+                    parents[1].type.possible_alleles,
                     nonsamplingValue(
                         HOST_MUTATIONS_UPON_BIRTH,
                         parents[1],
                         model.populations[pop_idx]
                     )
                 ),
-                model.populations[pop_idx].host_num_loci,
+                parents[1].type.num_loci,
                 parents[1].mean_recombination_crossovers,
                 parents[1].mean_recombination_crossovers
             )
-            if !isnothing(parent[2])
+            if !isnothing(parents[2])
                 parent_gametes[2] = recombinantSequences(
                     parent_gametes[2],
                     generateGamete(
-                        parent[2].sequence,
-                        model.populations[pop_idx_2].host_num_loci,
-                        model.populations[pop_idx_2].host_possible_alleles,
+                        parents[2].sequence,
+                        parents[2].type.num_loci,
+                        parents[2].type.possible_alleles,
                         nonsamplingValue(
                             HOST_MUTATIONS_UPON_BIRTH,
                             parents[2],
                             model.populations[pop_idx]
                         )
                     ),
-                    model.populations[pop_idx_2].host_num_loci,
+                    parents[2].type.num_loci,
                     parents[2].mean_recombination_crossovers,
                     parents[2].mean_recombination_crossovers
                 )
@@ -729,20 +734,20 @@ function birth!(model::Model, rand_n::Float64)
                 parents[2],
                 model.populations[pop_idx]
             )
-            if !isnothing(parent[2]) && rec_1 > 0.0 && rec_2 > 0.0
+            if !isnothing(parents[2]) && rec_1 > 0.0 && rec_2 > 0.0
                 child_sequence = recombinantSequences(
                     parent_gametes[1],
                     generateGamete(
-                        parent[2].sequence,
-                        model.populations[pop_idx].host_num_loci,
-                        model.populations[pop_idx].host_possible_alleles,
+                        parents[2].sequence,
+                        parents[2].type.num_loci,
+                        parents[2].type.possible_alleles,
                         nonsamplingValue(
                             HOST_MUTATIONS_UPON_BIRTH,
                             parents[2],
                             model.populations[pop_idx]
                         )
                     ),
-                    model.populations[pop_idx].host_num_loci,
+                    parents[2].type.num_loci,
                     rec_1, rec_2
                 )
             else

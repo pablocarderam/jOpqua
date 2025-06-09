@@ -113,11 +113,11 @@ function deNovoResponse(
     existing_responses::Dict{Tuple{String,String,String,String},Response},
     response_types::Dict{String,ResponseType}, birth_time::Float64; response_type_id::String="Default")
     if haskey(existing_responses, (host.sequence, pathogen.sequence, "", response_type_id))
-        return [existing_responses[(host.sequence, pathogen.sequence, "", response_type_id)]]
+        return existing_responses[(host.sequence, pathogen.sequence, "", response_type_id)]
     else
-        return [newResponse!(
+        return newResponse!(
             pathogen, nothing, host.sequence, existing_responses, response_types[response_type_id],
             parents=MVector{2,Union{Response,Nothing}}([nothing, nothing]), birth_time=birth_time
-        )]
+        )
     end
 end

@@ -55,21 +55,20 @@ function simulate!(
 
                 if model.time > time_vector[end]
                     model.time = time_vector[end]
+                else
+                    rand_n = rand()
+                    evt_idx, rand_n = randChoose(
+                        rand_n, model.event_rates,
+                        model.event_rates_sum, regenerate_rand=true
+                    )
+                    EVENT_FUNCTIONS[evt_idx](model, rand_n)
+
+                    # alternative sampling method:
+                    # evt_idx = sample(1:length(evt_funcs), Weights(model.event_rates))
+                    # EVENT_FUNCTIONS[evt_idx](model, rand_n)
+
+                    evt_count += 1
                 end
-
-                rand_n = rand()
-                evt_idx, rand_n = randChoose(
-                    rand_n, model.event_rates,
-                    model.event_rates_sum, regenerate_rand=true
-                )
-                # println((model.time, model.event_rates, evt_idx))
-                EVENT_FUNCTIONS[evt_idx](model, rand_n)
-
-                # alternative sampling method:
-                # evt_idx = sample(1:length(evt_funcs), Weights(model.event_rates))
-                # EVENT_FUNCTIONS[evt_idx](model, rand_n)
-
-                evt_count += 1
             end
         else
             if (intervention_tracker < length(interventions) &&
@@ -85,7 +84,7 @@ function simulate!(
         while his_tracker <= length(time_vector) && model.time >= time_vector[his_tracker]
             for p in model.populations
                 compartment_vars[p.id][:, his_tracker] = p.compartment_vars
-                if haskey(host_samples_idxs, p.id)
+                if haskey(host_samples_idxs, p.id) && length(p.hosts) > 0
                     if max_sample_idx[p.id] > length(p.hosts)
                         host_samples_idxs[p.id] = sort(
                             rand(1:length(p.hosts), length(host_samples_idxs[p.id]))
@@ -97,13 +96,13 @@ function simulate!(
                 end
             end
             his_tracker += 1
-            println((model.time, evt_idx))
+            # println((model.time, evt_idx))
             # println((evt_idx, model.event_rates, model.populations[1].compartment_vars, model.population_weights_receive, sum(model.populations[1].host_weights[CONTACT,:])))
             # println((model.event_rates, model.populations[1].compartment_vars, model.population_weights_receive, sum(model.populations[1].host_weights[CONTACT,:]), sum(model.populations[1].host_weights_with_coefficient[CONTACT,:]), model.population_contact_weights_receive_sums, model.populations[1].contact_sum, 1.05*model.population_contact_weights_receive_sums*model.populations[1].contact_sum))
         end
     end
 
-    println(evt_count)
+    println("Total events: " * string(evt_count))
 
     return model, Output(model, time_vector, compartment_vars, host_samples)
 end

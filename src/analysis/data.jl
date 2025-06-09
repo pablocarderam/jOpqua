@@ -24,32 +24,35 @@ function saveHistory(output::Output, file_name::String)
     out_strs = repeat([""], inner=[length(pop_ids)])
     for i in eachindex(pop_ids)
         for t in eachindex(output.time)
-            out_strs[i] = out_strs[i] * join(
-                              [
-                                  join(
-                                      [
-                                          string(output.time[t]), string(pop_ids[i]),
-                                          output.host_samples[pop_ids[i]][h, t].id,
-                                          output.host_samples[pop_ids[i]][h, t].sequence,
-                                          "\"" * join([p.type.id for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
-                                          "\"" * join([p.sequence for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
-                                          "\"" * join([
-                                                  join([isnothing(a) ? "None" : a.sequence for a in p.parents], PARENT_SEPARATOR)
-                                                  for p in output.host_samples[pop_ids[i]
-                                                  ][h, t].pathogens
-                                              ], WITHIN_HOST_SEPARATOR) * "\"",
-                                          "\"" * join([r.type.id for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
-                                          "\"" * join([r.imprinted_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
-                                          "\"" * join([isnothing(r.matured_pathogen) ? "None" : r.matured_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
-                                          "\"" * join([
-                                                  join([isnothing(a) ? "None" : a.id for a in r.parents], PARENT_SEPARATOR)
-                                                  for r in output.host_samples[pop_ids[i]][h, t].responses
-                                              ], WITHIN_HOST_SEPARATOR) * "\"",
-                                      ], ","
-                                  )
-                                  for h in 1:size(output.host_samples[pop_ids[i]])[1]
-                              ], "\n"
-                          ) * "\n"
+            if isassigned(output.host_samples[pop_ids[i]], 1, t)
+                # Check whether this pop at this timepoint has any sampled hosts by trying to access the StaticHost at position 1
+                out_strs[i] = out_strs[i] * join(
+                                [
+                                    join(
+                                        [
+                                            string(output.time[t]), string(pop_ids[i]),
+                                            output.host_samples[pop_ids[i]][h, t].id,
+                                            output.host_samples[pop_ids[i]][h, t].sequence,
+                                            "\"" * join([p.type.id for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
+                                            "\"" * join([p.sequence for p in output.host_samples[pop_ids[i]][h, t].pathogens], WITHIN_HOST_SEPARATOR) * "\"",
+                                            "\"" * join([
+                                                    join([isnothing(a) ? "None" : a.sequence for a in p.parents], PARENT_SEPARATOR)
+                                                    for p in output.host_samples[pop_ids[i]
+                                                    ][h, t].pathogens
+                                                ], WITHIN_HOST_SEPARATOR) * "\"",
+                                            "\"" * join([r.type.id for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
+                                            "\"" * join([r.imprinted_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
+                                            "\"" * join([isnothing(r.matured_pathogen) ? "None" : r.matured_pathogen.sequence for r in output.host_samples[pop_ids[i]][h, t].responses], WITHIN_HOST_SEPARATOR) * "\"",
+                                            "\"" * join([
+                                                    join([isnothing(a) ? "None" : a.id for a in r.parents], PARENT_SEPARATOR)
+                                                    for r in output.host_samples[pop_ids[i]][h, t].responses
+                                                ], WITHIN_HOST_SEPARATOR) * "\"",
+                                        ], ","
+                                    )
+                                    for h in 1:size(output.host_samples[pop_ids[i]])[1]
+                                ], "\n"
+                            ) * "\n"
+            end
         end
     end
 
