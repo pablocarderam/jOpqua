@@ -8,6 +8,7 @@ might be worth adding a full rate recalculation method that runs every `N` event
 error
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
+- Coinfections are not cleared correctly by responses, they persist indefinitely
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
