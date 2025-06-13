@@ -35,6 +35,10 @@ function approxZero(a::Float64; t::Float64=1e-9)
     return a < t
 end
 
+function becomesZero(a::Float64, change::Float64; t::Float64=1e-9)
+    return change != 0.0 && approxZero(a+change, t=t)
+end
+
 """
     FlexleSamplers(weights, number)
 

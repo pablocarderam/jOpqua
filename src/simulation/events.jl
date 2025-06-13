@@ -198,6 +198,8 @@ function removePathogenFromHost!(pathogen_idx::Int64, host_idx::Int64, populatio
             population.compartment_vars[INFECTED_IMMUNE] -= 1
             population.compartment_vars[UNINFECTED_IMMUNE] += 1
         end
+    else
+        println("HERE!")
     end
 
     hostWeights!(host_idx, population, model)

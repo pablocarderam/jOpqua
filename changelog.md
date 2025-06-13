@@ -23,6 +23,12 @@ Debug the following:
 - Inter-population contact
 - Transition
 
+## 12 Jun 2025
+- Added approximately zero check in `updatePopulationTransitionWeightReceiveMatrix!`
+- Added coefficient recalculation functions to `weights.jl`, triggered when a coefficient sum
+equals approximately zero (and didn't before)
+- Added `becomesZero` as a `utils.jl` function for the above purpose
+
 ## 9 Jun 2025
 Births and deaths now work.
 - Bug fix in death handling within `removeHostFromPopulation!`

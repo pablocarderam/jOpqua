@@ -61,6 +61,7 @@ function simulate!(
                         rand_n, model.event_rates,
                         model.event_rates_sum, regenerate_rand=true
                     )
+                    println((model.time, evt_idx, model.populations[1].compartment_vars, model.event_rates[CLEARANCE], sum(model.populations[1].host_weights[CLEARANCE, :]), maximum(model.populations[1].host_weights[CLEARANCE, :])))
                     EVENT_FUNCTIONS[evt_idx](model, rand_n)
 
                     # alternative sampling method:
@@ -96,9 +97,13 @@ function simulate!(
                 end
             end
             his_tracker += 1
-            println((model.time, evt_idx))
-            # println((evt_idx, model.event_rates, model.populations[1].compartment_vars, model.population_weights_receive, sum(model.populations[1].host_weights[CONTACT,:])))
-            # println((model.event_rates, model.populations[1].compartment_vars, model.population_weights_receive, sum(model.populations[1].host_weights[CONTACT,:]), sum(model.populations[1].host_weights_with_coefficient[CONTACT,:]), model.population_contact_weights_receive_sums, model.populations[1].contact_sum, 1.05*model.population_contact_weights_receive_sums*model.populations[1].contact_sum))
+            # println((model.time, evt_count, evt_idx))
+            # println((model.time, evt_count, evt_idx, model.event_rates, model.populations[1].compartment_vars, model.population_weights_receive, sum(model.populations[1].host_weights[CONTACT, :])))
+            # println((model.time, evt_count, model.event_rates, model.populations[1].compartment_vars, model.population_weights_receive, sum(model.populations[1].host_weights[CONTACT,:]), sum(model.populations[1].host_weights_with_coefficient[CONTACT,:]), model.population_contact_weights_receive_sums, model.populations[1].contact_sum, 1.05*model.population_contact_weights_receive_sums*model.populations[1].contact_sum))
+            println((model.time, evt_idx, model.populations[1].compartment_vars, model.event_rates[CLEARANCE], sum(model.populations[1].host_weights[CLEARANCE, :]), maximum(model.populations[1].host_weights[CLEARANCE, :])))
+            println(model.populations[1].host_weights[CLEARANCE, 1:10])
+            println((7, model.populations[1].host_weights[CLEARANCE, 7], length(model.populations[1].hosts[7].pathogens), length(model.populations[1].hosts[7].responses)))
+            println((8, model.populations[1].host_weights[CLEARANCE, 8], length(model.populations[1].hosts[8].pathogens), length(model.populations[1].hosts[8].responses)))
         end
     end
 

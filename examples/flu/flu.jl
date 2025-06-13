@@ -40,8 +40,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
     function crossImmunity(
         seq1, seq2;
         epitope_residues=rbs_epitope_key_residues,
-        distance_half_all_residues=length(ha_sn89) * 0.01, hill_coef_all_residues=2.0,
-        distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.5, hill_coef_epitope_residues=2.0)
+        distance_half_all_residues=length(ha_sn89) * 0.1, hill_coef_all_residues=3.0,
+        distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.1, hill_coef_epitope_residues=2.0)
 
         distance_key_residues = 0.0
         for p in epitope_residues
@@ -75,14 +75,14 @@ function run(seed::Int64, t_vec::Vector{Float64})
                 distance_key_residues += seq[p] != seq_wt[p]
             end
 
-            return (1.0 - jOpqua.hillFunction(
-                Float64(hamming(seq, seq_wt)),
-                distance_half_all_residues, hill_coef_all_residues
-            )) * (1.0 - jOpqua.hillFunction(
-                distance_key_residues,
-                distance_half_functional_site_residues, hill_coef_functional_site_residues
-            ))
-            # return 1.0
+            # return (1.0 - jOpqua.hillFunction(
+            #     Float64(hamming(seq, seq_wt)),
+            #     distance_half_all_residues, hill_coef_all_residues
+            # )) * (1.0 - jOpqua.hillFunction(
+            #     distance_key_residues,
+            #     distance_half_functional_site_residues, hill_coef_functional_site_residues
+            # ))
+            return 1.0
         end
     end
 
@@ -92,7 +92,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
     println(("TEST SAME hamm: ", hamming(ha_sn89, ha_sn89)))
     println(("TEST MUT hamm: ", hamming(ha_sn89, ha_sn89_mut)))
 
-    max_immunity = 0.95
+    max_immunity = 1.0
 
     pat_type = jOpqua.newPathogenType(
         "pat_type",
@@ -108,7 +108,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "Specific",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> crossImmunity(imp_g, pat_g),
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> (1.0 - max_immunity * crossImmunity(imp_g, pat_g)),
-        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 10.0 * crossImmunity(imp_g, pat_g),
+        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1000000.0 * 7.0e5 * crossImmunity(imp_g, pat_g) + 1.0,
         responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 1.0,
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
@@ -117,7 +117,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "Broad_temp",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0 - max_immunity,
-        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
+        clearanceInteractionHostwideCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1000000.0 * 7.0e5,
         responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 100.0, # total immunity for ~4 months
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
@@ -126,12 +126,12 @@ function run(seed::Int64, t_vec::Vector{Float64})
 
     pop_type = jOpqua.newPopulationType(
         "pop_type",
-        clearance_coefficient=7.0e-2, # 2 weeks
-        contact_coefficient=0.4, # R_0 of ~2.0
-        response_acquisition_coefficient=0.2, # ~5 days infectiousness
-        response_loss_coefficient=3.3e-5 * 3, # 3.3e-5 birth rate
+        clearance_coefficient=7.0e-5, # 2 weeks
+        contact_coefficient=0.125 * 5.0, # R_0 of ~5.0
+        response_acquisition_coefficient=0.125, # ~8 days infectiousness
+        response_loss_coefficient=0.0,#14e-3 / 365, # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.161 * 2, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
+        mutations_upon_infection_coefficient=0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type_spe.id => res_type_spe), (res_type_bro.id => res_type_bro)]),
@@ -153,15 +153,20 @@ function run(seed::Int64, t_vec::Vector{Float64})
     )
 
     num_hosts = 100000
-    num_infected = Int(num_hosts * 0.01)
+    num_infected = 5 #Int(num_hosts * 0.01)
     host_genome = ""
+
+    println("Creating model")
 
     # Setup
     model = jOpqua.newModel()
     pop = jOpqua.newPopulation!("pop", pop_type, model)
+    println("Adding hosts")
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop, model)
     pat = jOpqua.newPathogen!(ha_sn89, pop, pat_type)
     pat_mut = jOpqua.newPathogen!(ha_sn89_mut, pop, pat_type)
+
+    println("Adding pathogens")
 
     for h in 1:num_infected
         # println((h,num_hosts))
@@ -169,6 +174,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         # jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
         # jOpqua.acquireResponse!(1, h, 1, model, rand())
     end
+
+    println("Setup complete")
 
     # for h in 1:num_infected
     #     jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
@@ -437,4 +444,4 @@ end
 println("Num threads: " * string(nthreads()))
 
 # run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:2.0:365.0))
+@time run(1, collect(0.0:2.0:365.0))
