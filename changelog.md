@@ -8,7 +8,7 @@ might be worth adding a full rate recalculation method that runs every `N` event
 error
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
-- Coinfections are not cleared correctly by responses, they persist indefinitely
+- Immunity is slow
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
@@ -23,6 +23,18 @@ Debug the following:
 - Diploid `Host` genomes/homologous chromosome separators
 - Inter-population contact
 - Transition
+
+## 15 Jun 2025
+Finally tracked down a bug involving floating point errors in total sum calculation causing
+clearances to be attempted when there was nothing to clear, particularly in coinfections.
+To do this, I:
+- Changed the behavior of `becomesZero` to check for fractional change in value rather
+than absolute difference
+- Reset Flexle sampler sums to freshly calculated total whenever a recalculation is
+triggered by `becomesZero`
+
+This then begs the question on whether Flexle should internally be checking for large changes
+using `becomesZero` internally and recalculating on its own.
 
 ## 12 Jun 2025
 - Added approximately zero check in `updatePopulationTransitionWeightReceiveMatrix!`

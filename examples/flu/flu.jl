@@ -108,7 +108,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "Specific",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> crossImmunity(imp_g, pat_g),
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> (1.0 - max_immunity * crossImmunity(imp_g, pat_g)),
-        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1000000.0 * 7.0e5 * crossImmunity(imp_g, pat_g) + 1.0,
+        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0 * 7.0e5 * crossImmunity(imp_g, pat_g) + 1.0,
         responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 1.0,
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
@@ -117,10 +117,38 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "Broad_temp",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0 - max_immunity,
-        clearanceInteractionHostwideCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1000000.0 * 7.0e5,
+        clearanceInteractionHostwideCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0 * 7.0e5,
         responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 100.0, # total immunity for ~4 months
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
+
+    function developResponse(
+        pathogen::jOpqua.Pathogen, host::jOpqua.Host,
+        existing_responses::Dict{Tuple{String,String,String,String},jOpqua.Response},
+        response_types::Dict{String,jOpqua.ResponseType},
+        birth_time::Float64)
+
+        for response in host.responses
+            if response.type.id == "Broad_temp"
+                return [
+                    jOpqua.deNovoResponse(
+                        pathogen, host, existing_responses, response_types, birth_time;
+                        response_type_id="Specific"
+                    )
+                ]
+            end
+        end
+        return [
+            jOpqua.deNovoResponse(
+                pathogen, host, existing_responses, response_types, birth_time;
+                response_type_id="Specific"
+            ),
+            jOpqua.deNovoResponse(
+                pathogen, host, existing_responses, response_types, birth_time;
+                response_type_id="Broad_temp"
+            )
+        ]
+    end
 
     hos_type = jOpqua.newHostType("hos_type")
 
@@ -135,21 +163,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         inoculum_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type_spe.id => res_type_spe), (res_type_bro.id => res_type_bro)]),
-        developResponses=(
-            pathogen::jOpqua.Pathogen, host::jOpqua.Host,
-            existing_responses::Dict{Tuple{String,String,String,String},jOpqua.Response},
-            response_types::Dict{String,jOpqua.ResponseType},
-            birth_time::Float64
-        ) -> [
-            jOpqua.deNovoResponse(
-                pathogen, host, existing_responses, response_types, birth_time;
-                response_type_id="Specific"
-            ),
-            jOpqua.deNovoResponse(
-                pathogen, host, existing_responses, response_types, birth_time;
-                response_type_id="Broad_temp"
-            )
-        ],
+        developResponses=developResponse
     )
 
     num_hosts = 100000
