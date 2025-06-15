@@ -5,7 +5,7 @@ KNOWN ISSUES:
 instabilities in weights/immunity changes
 - Float precision errors in rate calculation accumulate over time;
 might be worth adding a full rate recalculation method that runs every `N` events to reset
-error
+error (including for the `.sum` field on Flexle samplers)
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
 - Immunity is slow
