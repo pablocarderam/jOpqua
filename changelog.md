@@ -5,10 +5,13 @@ KNOWN ISSUES:
 instabilities in weights/immunity changes
 - Float precision errors in rate calculation accumulate over time;
 might be worth adding a full rate recalculation method that runs every `N` events to reset
-error (including for the `.sum` field on Flexle samplers)
+error (including for the `.sum` field on Flexle samplers, the `contact_sum` and
+`transition_sum` fields in `Population` structs, and the sums in the `Model` struct)
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
-- Immunity is slow
+- Immunity is slow; main slowdown is Hamming distance calculation—maybe there is some
+optimization that can be done, an in-house Hamming calculation (unclear whether the slowdown
+is due to the user-defined code not being compiled as well)
 
 TODO:
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
@@ -23,6 +26,10 @@ Debug the following:
 - Diploid `Host` genomes/homologous chromosome separators
 - Inter-population contact
 - Transition
+
+## 16 Jun 2025
+- Changed weight propagation functions to check if change is zero and only do stuff if it
+isn't
 
 ## 15 Jun 2025
 Finally tracked down a bug involving floating point errors in total sum calculation causing

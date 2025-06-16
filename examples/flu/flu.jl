@@ -40,7 +40,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
     function crossImmunity(
         seq1, seq2;
         epitope_residues=rbs_epitope_key_residues,
-        distance_half_all_residues=length(ha_sn89) * 0.1, hill_coef_all_residues=3.0,
+        distance_half_all_residues=length(ha_sn89) * 0.005, hill_coef_all_residues=2.0,
         distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.1, hill_coef_epitope_residues=2.0)
 
         distance_key_residues = 0.0
@@ -108,7 +108,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "Specific",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> crossImmunity(imp_g, pat_g),
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> (1.0 - max_immunity * crossImmunity(imp_g, pat_g)),
-        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0 * 7.0e5 * crossImmunity(imp_g, pat_g) + 1.0,
+        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0 * crossImmunity(imp_g, pat_g) + 1.0,
         responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 1.0,
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
@@ -117,7 +117,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "Broad_temp",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0,
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 1.0 - max_immunity,
-        clearanceInteractionHostwideCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0 * 7.0e5,
+        clearanceInteractionHostwideCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0,
         responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 100.0, # total immunity for ~4 months
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
@@ -143,10 +143,10 @@ function run(seed::Int64, t_vec::Vector{Float64})
                 pathogen, host, existing_responses, response_types, birth_time;
                 response_type_id="Specific"
             ),
-            jOpqua.deNovoResponse(
-                pathogen, host, existing_responses, response_types, birth_time;
-                response_type_id="Broad_temp"
-            )
+            # jOpqua.deNovoResponse(
+            #     pathogen, host, existing_responses, response_types, birth_time;
+            #     response_type_id="Broad_temp"
+            # )
         ]
     end
 
@@ -154,10 +154,11 @@ function run(seed::Int64, t_vec::Vector{Float64})
 
     pop_type = jOpqua.newPopulationType(
         "pop_type",
-        clearance_coefficient=7.0e-5, # 2 weeks
+        clearance_coefficient=0.125, # ~8 days infectiousness
         contact_coefficient=0.125 * 5.0, # R_0 of ~5.0
-        response_acquisition_coefficient=0.125, # ~8 days infectiousness
-        response_loss_coefficient=0.0,#14e-3 / 365, # 3.3e-5 birth rate
+        # response_acquisition_coefficient=0.0,
+        response_acquisition_upon_clearance_coefficient=1.0,
+        response_loss_coefficient=14e-3 / 365, # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
         mutations_upon_infection_coefficient=0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
@@ -236,6 +237,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
     # end
 
 
+    his_dat = coalesce.(his_dat, "")
     distances = []
     for t in t_vec
         if length(his_dat[(his_dat.Time.==t).&(his_dat.Pathogen_sequence.!=""), "Pathogen_sequence"]) > 0
@@ -316,7 +318,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         end
     end
     # Plots.scalefontsizes(2.0)
-    plot(t_vec, distances, xlabel="Time", ylabel="Max cross-immunity to SN98",
+    plot(t_vec, distances, xlabel="Time", ylabel="Min cross-immunity to SN98",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
@@ -458,4 +460,5 @@ end
 println("Num threads: " * string(nthreads()))
 
 # run(1, collect(0.0:2.0:4.0)) # compile
-@time run(1, collect(0.0:2.0:365.0))
+@time run(1, collect(0.0:2.0:100.0))
+# @profview run(1, collect(0.0:2.0:100.0))
