@@ -3,10 +3,6 @@
 KNOWN ISSUES:
 - Garbage collection time is higher than expected for 100k host simulations, suspected type
 instabilities in weights/immunity changes
-- Float precision errors in rate calculation accumulate over time;
-might be worth adding a full rate recalculation method that runs every `N` events to reset
-error (including for the `.sum` field on Flexle samplers, the `contact_sum` and
-`transition_sum` fields in `Population` structs, and the sums in the `Model` struct)
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
 - Immunity is slow; main slowdown is Hamming distance calculation—maybe there is some
@@ -28,8 +24,21 @@ Debug the following:
 - Transition
 
 ## 16 Jun 2025
+Float precision errors in rate calculation accumulate over time. To solve this, I
+added a full rate recalculation procedure that runs every certain number of events
+to reset error (including for the `.sum` field on Flexle samplers, the `contact_sum` and
+`transition_sum` fields in `Population` structs, and the sums in the `Model` struct)
+
 - Changed weight propagation functions to check if change is zero and only do stuff if it
 isn't
+- Renamed Flexle sampler vector fields as plural samplers
+- Added a vector field in `Population` to track the number of events since the last
+weight sum recalculation
+- Changed weight propagation to recalculate weight sums at both `Population` and `Model`
+levels whenever a threshold is exceeded in the recalculation counter
+- Added said threshold as a constant, `RECALCULATION_EVENT_THRESHOLD`
+
+Beauutiful selective sweep succession in `pathogen_evolution` example.
 
 ## 15 Jun 2025
 Finally tracked down a bug involving floating point errors in total sum calculation causing

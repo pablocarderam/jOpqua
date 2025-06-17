@@ -125,3 +125,4 @@ const COMPARTMENT_LABELS = [
 
 # Simulation constants
 const ERROR_TOLERANCE = 1.0e-9
+const RECALCULATION_EVENT_THRESHOLD = 100000

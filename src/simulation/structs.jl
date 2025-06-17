@@ -154,8 +154,8 @@ mutable struct Population
     # host_weights_receive_with_coefficient::Matrix{Float64}
     # # size NUM_CHOICE_MODIFIERS x MAX_HOSTS
 
-    host_weights_with_coefficient_sampler::MVector{NUM_EVENTS,FlexleSampler} # size NUM_EVENTS
-    host_weights_receive_with_coefficient_sampler::MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}
+    host_weights_with_coefficient_samplers::MVector{NUM_EVENTS,FlexleSampler} # size NUM_EVENTS
+    host_weights_receive_with_coefficient_samplers::MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}
     # size NUM_CHOICE_MODIFIERS
 
     contact_sum::Float64
@@ -166,6 +166,9 @@ mutable struct Population
 
     compartment_vars::MVector{NUM_COMPARTMENTS,Int64}
     # uninfected naive, infected naive, uninfected immune, infected immune, dead
+
+    recalculation_counters::MVector{NUM_SAMPLING_COEFFICIENTS-1,Int64}
+    # counts how many events have happened since last recalculation
 end
 
 mutable struct Model

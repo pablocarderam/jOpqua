@@ -77,6 +77,7 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         zeros(Float64, length(model.populations)),
         zeros(Float64, length(model.populations)),
         zeros(Int64, NUM_COMPARTMENTS),
+        zeros(Int64, NUM_SAMPLING_COEFFICIENTS-1),
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))

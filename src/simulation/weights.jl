@@ -174,7 +174,7 @@ function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int6
     #     population.parameters.base_coefficients[evt]
     # )
     setindex!(
-        population.host_weights_with_coefficient_sampler[evt],
+        population.host_weights_with_coefficient_samplers[evt],
         population.host_weights[evt, host_idx] *
         population.parameters.base_coefficients[evt],
         host_idx
@@ -206,7 +206,7 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
     #     population.parameters.base_coefficients[evt]
     # )
     setindex!(
-        population.host_weights_with_coefficient_sampler[evt],
+        population.host_weights_with_coefficient_samplers[evt],
         population.host_weights[evt, host_idx] *
         population.parameters.base_coefficients[evt],
         host_idx
@@ -225,7 +225,7 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
     #     population.parameters.base_coefficients[evt]
     # )
     setindex!(
-        population.host_weights_with_coefficient_sampler[evt],
+        population.host_weights_with_coefficient_samplers[evt],
         population.host_weights[evt, h] *
         population.parameters.base_coefficients[evt],
         h
@@ -242,7 +242,7 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
     #     population.parameters.base_coefficients[evt]
     # )
     setindex!(
-        population.host_weights_receive_with_coefficient_sampler[evt-CHOICE_MODIFIERS[1]+1],
+        population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
         population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
         population.parameters.base_coefficients[evt],
         h
@@ -353,19 +353,28 @@ end
 # Intra-Event/Weight level:
 
 function calculateWeight!(population::Population, evt::Int64, model::Model)
-    model.population_weights[evt, model.population_dict[population.id]] = sum([
-        population.parameters.base_coefficients[evt] * population.host_weights[evt, h]
-        for h in 1:length(population.hosts)
-    ])
-    population.host_weights_with_coefficient_sampler[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+    if evt == CONTACT
+        population.contact_sum = sum(population.host_weights[CONTACT, :])
+        population.host_weights_with_coefficient_samplers[evt].sum = population.parameters.base_coefficients[evt] * population.contact_sum
+        model.population_weights[evt, model.population_dict[population.id]] = (
+            model.population_contact_weights_receive_sums[model.population_dict[population.id]]
+            * population.host_weights_with_coefficient_samplers[evt].sum
+        )
+    elseif evt == TRANSITION
+        population.transition_sum = sum(population.host_weights[TRANSITION, :])
+        model.population_weights[evt, model.population_dict[population.id]] = population.parameters.base_coefficients[evt] * population.transition_sum
+        population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+    else
+        model.population_weights[evt, model.population_dict[population.id]] = population.parameters.base_coefficients[evt] * sum(population.host_weights[evt, :])
+        population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+    end
+    population.recalculation_counters[evt] = 0
 end
 
 function calculateWeightReceive!(population::Population, weight::Int64, model::Model)
-    model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = sum([
-        population.parameters.base_coefficients[weight] * population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, h]
-        for h in 1:length(population.hosts)
-    ])
-    population.host_weights_receive_with_coefficient_sampler[weight-CHOICE_MODIFIERS[1]+1].sum = model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
+    model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = population.parameters.base_coefficients[weight] *  sum(population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :])
+    population.host_weights_receive_with_coefficient_samplers[weight-CHOICE_MODIFIERS[1]+1].sum = model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
+    population.recalculation_counters[weight] = 0
 end
 
 function calculatePopulationContactWeightReceiveMatrix!(pop_idx_i::Int64, model::Model)
@@ -457,14 +466,21 @@ end
 
 function propagateWeightChanges!(change::Float64, population::Population, evt::Int64, model::Model)
     if change != 0.0
-        if becomesZero(model.population_weights[evt, model.population_dict[population.id]], change)
-            prev = model.population_weights[evt, model.population_dict[population.id]]
-            calculateWeight!(population, evt, model)
-            change = model.population_weights[evt, model.population_dict[population.id]] - prev
+        population.recalculation_counters[evt] += 1
+        if population.recalculation_counters[evt] < RECALCULATION_EVENT_THRESHOLD
+            if becomesZero(model.population_weights[evt, model.population_dict[population.id]], change)
+                prev = model.population_weights[evt, model.population_dict[population.id]]
+                calculateWeight!(population, evt, model)
+                change = model.population_weights[evt, model.population_dict[population.id]] - prev
+            else
+                model.population_weights[evt, model.population_dict[population.id]] += change
+            end
+            propagateWeightChanges!(change, evt, model)
         else
-            model.population_weights[evt, model.population_dict[population.id]] += change
+            calculateWeight!(population, evt, model)
+            calculateRate!(evt, model)
+            population.recalculation_counters[evt] = 0
         end
-        propagateWeightChanges!(change, evt, model)
     end
 end
 
@@ -495,7 +511,7 @@ function propagateWeightChanges!(change::Float64, host_idx::Int64, population::P
             #     population.parameters.base_coefficients[evt]
             # )
             setindex!(
-                population.host_weights_with_coefficient_sampler[evt],
+                population.host_weights_with_coefficient_samplers[evt],
                 population.host_weights[evt, host_idx] *
                 population.parameters.base_coefficients[evt],
                 host_idx
@@ -508,57 +524,71 @@ end
 
 function propagateWeightReceiveChanges!(change::Float64, population::Population, evt::Int64, model::Model)
     if change != 0.0
-        if becomesZero(model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]], change)
-            prev = model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
-            calculateWeightReceive!(population, evt, model)
-            change = model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] - prev
-        else
-            model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] += change
-        end
-        if becomesZero(model.population_weights_receive_sums[evt-CHOICE_MODIFIERS[1]+1], change)
-            prev = model.population_weights_receive_sums[evt-CHOICE_MODIFIERS[1]+1]
-            calculateWeightReceive!(evt, model)
-            change = model.population_weights_receive_sums[evt-CHOICE_MODIFIERS[1]+1] - prev
-        else
-            model.population_weights_receive_sums[evt-CHOICE_MODIFIERS[1]+1] += change
-        end
+        population.recalculation_counters[evt] += 1
+        if population.recalculation_counters[evt] < RECALCULATION_EVENT_THRESHOLD
+            if becomesZero(model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]], change)
+                prev = model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
+                calculateWeightReceive!(population, evt, model)
+                change = model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] - prev
+            else
+                model.population_weights_receive[evt-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] += change
+            end
+            if becomesZero(model.population_weights_receive_sums[evt-CHOICE_MODIFIERS[1]+1], change)
+                calculateWeightReceive!(evt, model)
+            else
+                model.population_weights_receive_sums[evt-CHOICE_MODIFIERS[1]+1] += change
+            end
 
-        if evt == RECEIVE_CONTACT
-            for p in 1:length(model.populations)
-                change_p = (
-                    change * model.populations[p].population_contact_coefficients[model.population_dict[population.id]] /
-                    max(length(population.hosts) * population.parameters.constant_contact_density, 1.0)
-                )
-                # Contact rates assume scaling area if constant_contact_density is true:
-                # large populations are equally
-                # dense as small ones, so contact is constant (divide by total hosts).
-                # If you don't want this to happen, modify each population's
-                # receive contact coefficient accordingly.
-                model.population_contact_weights_receive[model.population_dict[population.id], p] += change_p
-                if approxZero(model.population_contact_weights_receive_sums[p] + change_p, t=ERROR_TOLERANCE)
-                    change_p = -model.population_contact_weights_receive_sums[p]
+            if evt == RECEIVE_CONTACT
+                for p in 1:length(model.populations)
+                    change_p = (
+                        change * model.populations[p].population_contact_coefficients[model.population_dict[population.id]] /
+                        max(length(population.hosts) * population.parameters.constant_contact_density, 1.0)
+                    )
+                    # Contact rates assume scaling area if constant_contact_density is true:
+                    # large populations are equally
+                    # dense as small ones, so contact is constant (divide by total hosts).
+                    # If you don't want this to happen, modify each population's
+                    # receive contact coefficient accordingly.
+                    model.population_contact_weights_receive[model.population_dict[population.id], p] += change_p
+                    model.population_contact_weights_receive_sums[p] += change_p
+                    propagateWeightChanges!(
+                        change_p * model.populations[p].parameters.base_coefficients[CONTACT] * model.populations[p].contact_sum,
+                        model.populations[p], CONTACT, model
+                    )
                 end
-                model.population_contact_weights_receive_sums[p] += change_p
-                propagateWeightChanges!(
-                    change_p * model.populations[p].parameters.base_coefficients[CONTACT] * model.populations[p].contact_sum,
-                    model.populations[p], CONTACT, model
-                )
+            elseif evt == RECEIVE_TRANSITION
+                for p in 1:length(model.populations)
+                    change_p = (
+                        change * model.populations[p].population_transition_coefficients[model.population_dict[population.id]] /
+                        max(length(population.hosts) * population.parameters.constant_transition_density, 1.0)
+                    )
+                    # Transition receive weights are assumed to be independent of population
+                    # (constant_transition_density=false), but can be modified if desired.
+                    model.population_transition_weights_receive[model.population_dict[population.id], p] += change_p
+                    model.population_transition_weights_receive_sums[p] += change_p
+                    propagateWeightChanges!(
+                        change_p * model.populations[p].parameters.base_coefficients[TRANSITION] * model.populations[p].transition_sum,
+                        model.populations[p], TRANSITION, model
+                    )
+                end
             end
-        elseif evt == RECEIVE_TRANSITION
-            for p in 1:length(model.populations)
-                change_p = (
-                    change * model.populations[p].population_transition_coefficients[model.population_dict[population.id]] /
-                    max(length(population.hosts) * population.parameters.constant_transition_density, 1.0)
-                )
-                # Transition receive weights are assumed to be independent of population
-                # (constant_transition_density=false), but can be modified if desired.
-                model.population_transition_weights_receive[model.population_dict[population.id], p] += change_p
-                model.population_transition_weights_receive_sums[p] += change_p
-                propagateWeightChanges!(
-                    change_p * model.populations[p].parameters.base_coefficients[TRANSITION] * model.populations[p].transition_sum,
-                    model.populations[p], TRANSITION, model
-                )
-            end
+        else
+            # calculateWeightReceive!(population, evt, model)
+            # calculateWeightReceive!(evt, model)
+
+            # if evt == RECEIVE_CONTACT
+            #     for p in 1:length(model.populations)
+            #         calculatePopulationContactWeightReceiveMatrix!(p, model)
+            #         calculateWeight!(population, CONTACT, model)
+            #     end
+            # elseif evt == RECEIVE_TRANSITION
+            #     for p in 1:length(model.populations)
+            #         calculatePopulationTransitionWeightReceiveMatrix!(p, model)
+            #         calculateWeight!(population, TRANSITION, model)
+            #     end
+            # end
+            population.recalculation_counters[evt] = 0
         end
     end
 end
@@ -571,7 +601,7 @@ function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, popula
         #     population.parameters.base_coefficients[evt]
         # )
         setindex!(
-            population.host_weights_receive_with_coefficient_sampler[evt-CHOICE_MODIFIERS[1]+1],
+            population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
             population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] *
             population.parameters.base_coefficients[evt],
             host_idx
