@@ -22,6 +22,7 @@ Debug the following:
 - Diploid `Host` genomes/homologous chromosome separators
 - Inter-population contact
 - Transition
+- Interventions
 
 ## 16 Jun 2025
 Float precision errors in rate calculation accumulate over time. To solve this, I

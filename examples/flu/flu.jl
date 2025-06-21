@@ -40,7 +40,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
     function crossImmunity(
         seq1, seq2;
         epitope_residues=rbs_epitope_key_residues,
-        distance_half_all_residues=length(ha_sn89) * 0.005, hill_coef_all_residues=2.0,
+        distance_half_all_residues=length(ha_sn89) * 0.002, hill_coef_all_residues=2.0,
         distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.1, hill_coef_epitope_residues=2.0)
 
         distance_key_residues = 0.0
@@ -56,6 +56,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
             distance_half_epitope_residues, hill_coef_epitope_residues
         ))
         # return seq1 == seq2
+        # return 1.0
     end
 
     println(("TEST SAME: ", 1.0 - crossImmunity(ha_sn89, ha_sn89)))
@@ -158,9 +159,9 @@ function run(seed::Int64, t_vec::Vector{Float64})
         contact_coefficient=0.125 * 5.0, # R_0 of ~5.0
         # response_acquisition_coefficient=0.0,
         response_acquisition_upon_clearance_coefficient=1.0,
-        response_loss_coefficient=14e-3 / 365, # 3.3e-5 birth rate
+        response_loss_coefficient=100 * 14e-3 / 365, # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
+        mutations_upon_infection_coefficient=0.161, #0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type_spe.id => res_type_spe), (res_type_bro.id => res_type_bro)]),
@@ -460,5 +461,5 @@ end
 println("Num threads: " * string(nthreads()))
 
 # run(1, collect(0.0:2.0:4.0)) # compile
-@time run(1, collect(0.0:2.0:100.0))
+@time run(0, collect(0.0:2.0:1000.0))
 # @profview run(1, collect(0.0:2.0:100.0))
