@@ -40,8 +40,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
     function crossImmunity(
         seq1, seq2;
         epitope_residues=rbs_epitope_key_residues,
-        distance_half_all_residues=length(ha_sn89) * 0.002, hill_coef_all_residues=2.0,
-        distance_half_epitope_residues=length(rbs_epitope_key_residues) * 0.1, hill_coef_epitope_residues=2.0)
+        distance_half_all_residues=length(ha_sn89) * 0.05, hill_coef_all_residues=2.0,
+        distance_half_epitope_residues=length(rbs_epitope_key_residues) * 4.4, hill_coef_epitope_residues=2.0)
 
         distance_key_residues = 0.0
         for p in epitope_residues
@@ -54,7 +54,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         )) * (1.0 - jOpqua.hillFunction(
             distance_key_residues,
             distance_half_epitope_residues, hill_coef_epitope_residues
-        ))
+        )) * 0.5 + 0.5
         # return seq1 == seq2
         # return 1.0
     end
@@ -170,6 +170,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
 
     num_hosts = 100000
     num_infected = 5 #Int(num_hosts * 0.01)
+    frac_immune = 0.9
     host_genome = ""
 
     println("Creating model")
@@ -182,9 +183,19 @@ function run(seed::Int64, t_vec::Vector{Float64})
     pat = jOpqua.newPathogen!(ha_sn89, pop, pat_type)
     pat_mut = jOpqua.newPathogen!(ha_sn89_mut, pop, pat_type)
 
+    println("Adding responses")
+
+    for h in 1:floor(Int64, frac_immune*num_hosts)
+        # println((h,num_hosts))
+        jOpqua.addPathogenToHost!(pat, h, pop, model)
+        # jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
+        jOpqua.acquireResponse!(1, h, 1, model, rand())
+        jOpqua.removePathogenFromHost!(1, h, pop, model)
+    end
+
     println("Adding pathogens")
 
-    for h in 1:num_infected
+    for h in floor(Int64, frac_immune*num_hosts) + 1:(floor(Int64, frac_immune*num_hosts) + 1 + num_infected)
         # println((h,num_hosts))
         jOpqua.addPathogenToHost!(pat, h, pop, model)
         # jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
@@ -232,12 +243,13 @@ function run(seed::Int64, t_vec::Vector{Float64})
         normalized=false, ylabel="Number", legend=false
     )
 
+    println("Plot phylogeny")
     # nwks = jOpqua.saveNewick(output, "examples/flu/pathogen_newick_flu.nwk")
     # for nwk in nwks
     #     jOpqua.plotPhylogeny(nwk, "examples/flu/pathogen_newick_flu.png")
     # end
 
-
+    println("Calculating distances")
     his_dat = coalesce.(his_dat, "")
     distances = []
     for t in t_vec
@@ -461,5 +473,5 @@ end
 println("Num threads: " * string(nthreads()))
 
 # run(1, collect(0.0:2.0:4.0)) # compile
-@time run(0, collect(0.0:2.0:1000.0))
+@time run(0, collect(0.0:10.0:10000.0))
 # @profview run(1, collect(0.0:2.0:100.0))
