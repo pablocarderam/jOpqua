@@ -37,13 +37,11 @@ function genomeRand(s::String)
     # does seem marginally faster than rand(Xoshiro(s))
     digest = sha1(s)
     bytes = digest[1:8]  # Use 8 bytes
-    n = reinterpret(UInt64, bytes)[1]
+    n = reinterpret(UInt64, bytes)
     return n / typemax(UInt64)
 
     # return rand(Xoshiro(s))
 end
-
-println(("genomeRand",genomeRand(ha_sn89)))
 
 function crossImmunity(
     seq1, seq2;
@@ -56,18 +54,15 @@ function crossImmunity(
         distance_key_residues += seq1[p] != seq2[p]
     end
 
-    return (1.0 - (1.0 -
-            (1.0 - jOpqua.hillFunction(
-                Float64(hamming(seq1, seq2)),
-                distance_half_all_residues, hill_coef_all_residues
-            )) * (1.0 - jOpqua.hillFunction(
-                distance_key_residues,
-                distance_half_epitope_residues, hill_coef_epitope_residues
-            ))
-           ) *
-           genomeRand(seq2)
-           ) *
-           1.0 + 0.0
+    return (1.0 - jOpqua.hillFunction(
+               Float64(hamming(seq1, seq2)),
+               distance_half_all_residues, hill_coef_all_residues
+           )) * (1.0 - jOpqua.hillFunction(
+               distance_key_residues,
+               distance_half_epitope_residues, hill_coef_epitope_residues
+           )) *
+           genomeRand(seq2) *
+           0.5 + 0.5
     # return seq1 == seq2
     # return 1.0
 end
