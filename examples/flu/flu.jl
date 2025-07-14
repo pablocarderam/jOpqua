@@ -43,7 +43,7 @@ function genomeRand(s::String)
     # return rand(Xoshiro(s))
 end
 
-println(("genomeRand",genomeRand(ha_sn89)))
+println(("genomeRand", genomeRand(ha_sn89)))
 
 function crossImmunity(
     seq1, seq2;
@@ -56,20 +56,23 @@ function crossImmunity(
         distance_key_residues += seq1[p] != seq2[p]
     end
 
-    return (1.0 - (1.0 -
-            (1.0 - jOpqua.hillFunction(
-                Float64(hamming(seq1, seq2)),
-                distance_half_all_residues, hill_coef_all_residues
-            )) * (1.0 - jOpqua.hillFunction(
-                distance_key_residues,
-                distance_half_epitope_residues, hill_coef_epitope_residues
-            ))
-           ) *
-           genomeRand(seq2)
-           ) *
-           1.0 + 0.0
+    return 1.0#(hamming(seq1, seq2) > 4) * 0.2 + 0.8
+
+    # return (1.0 - (1.0 -
+    #                (1.0 - jOpqua.hillFunction(
+    #     Float64(hamming(seq1, seq2)),
+    #     distance_half_all_residues, hill_coef_all_residues
+    # )) * (1.0 - jOpqua.hillFunction(
+    #     distance_key_residues,
+    #     distance_half_epitope_residues, hill_coef_epitope_residues
+    # ))
+    # ) *
+    #               1.0#genomeRand(seq2)
+    # ) *
+    #        0.45 + 0.5
     # return seq1 == seq2
     # return 1.0
+    # return 0.8
 end
 
 # println(("TEST SAME: ", 1.0 - crossImmunity(ha_sn89, ha_sn89)))
@@ -96,6 +99,7 @@ function proteinFitness(
         #     distance_key_residues,
         #     distance_half_functional_site_residues, hill_coef_functional_site_residues
         # ))
+        # return genomeRand(seq)
         return 1.0
     end
 end
@@ -164,7 +168,7 @@ function setup()
         "Specific",
         reactivityCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> crossImmunity(imp_g, pat_g),
         transmissionEfficiencyInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> (1.0 - max_immunity * crossImmunity(imp_g, pat_g)),
-        clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0 * crossImmunity(imp_g, pat_g) + 1.0,
+        # clearanceInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> 100.0 * crossImmunity(imp_g, pat_g) + 1.0,
         responseLossStaticSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String) -> 1.0,
         # responseAcquisitionInteractionSpecificCoefficient=(hos_g::String, imp_g::String, mat_g::String, pat_g::String) -> imp_g == pat_g ? 0.0 : 1.0,
     )
@@ -186,7 +190,7 @@ function setup()
         contact_coefficient=0.125 * 5.0, # R_0 of ~5.0
         # response_acquisition_coefficient=0.0,
         response_acquisition_upon_clearance_coefficient=1.0,
-        response_loss_coefficient=100 * 14e-3 / 365, # 3.3e-5 birth rate
+        response_loss_coefficient=1.0/(8*79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
         mutations_upon_infection_coefficient=0.161, #0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
@@ -195,9 +199,9 @@ function setup()
         developResponses=developResponse
     )
 
-    num_hosts = 100000
-    num_infected = 5 #Int(num_hosts * 0.01)
-    frac_immune = 0.9
+    num_hosts = 10000
+    num_infected = 100 #Int(num_hosts * 0.01)
+    frac_immune = 7900/10000#0.9
     host_genome = ""
 
     println("Creating model")
@@ -259,28 +263,29 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     jOpqua.plotCompartments(compartment_data, ["pop"], "examples/flu/compartment_flu.png")
 
     his_dat = jOpqua.saveHistory(output, "examples/flu/history_flu.csv")
-    composition_data = jOpqua.saveComposition(
-        his_dat, "examples/flu/composition_flu.csv",
-        num_top_sequences=7, track_specific_sequences=[ha_sn89]
-    )
-    jOpqua.plotComposition(
-        composition_data, "examples/flu/composition_flu.png",
-        # normalized=true, ylabel="Fraction",
-        normalized=false, ylabel="Number", legend=false
-    )
 
-    composition_data = jOpqua.saveComposition(
-        his_dat, "examples/flu/flu_responses.csv",
-        num_top_sequences=7, track_specific_sequences=[ha_sn89],
-        type_of_composition="Response_imprinted_sequence"
-    )
-    jOpqua.plotComposition(
-        composition_data, "examples/flu/flu_responses.png",
-        # normalized=true, ylabel="Fraction",
-        normalized=false, ylabel="Number", legend=false
-    )
+    # composition_data = jOpqua.saveComposition(
+    #     his_dat, "examples/flu/composition_flu.csv",
+    #     num_top_sequences=7, track_specific_sequences=[ha_sn89]
+    # )
+    # jOpqua.plotComposition(
+    #     composition_data, "examples/flu/composition_flu.png",
+    #     # normalized=true, ylabel="Fraction",
+    #     normalized=false, ylabel="Number", legend=false
+    # )
 
-    println("Plot phylogeny")
+    # composition_data = jOpqua.saveComposition(
+    #     his_dat, "examples/flu/flu_responses.csv",
+    #     num_top_sequences=7, track_specific_sequences=[ha_sn89],
+    #     type_of_composition="Response_imprinted_sequence"
+    # )
+    # jOpqua.plotComposition(
+    #     composition_data, "examples/flu/flu_responses.png",
+    #     # normalized=true, ylabel="Fraction",
+    #     normalized=false, ylabel="Number", legend=false
+    # )
+
+    # println("Plot phylogeny")
     # nwks = jOpqua.saveNewick(output, "examples/flu/pathogen_newick_flu.nwk")
     # for nwk in nwks
     #     jOpqua.plotPhylogeny(nwk, "examples/flu/pathogen_newick_flu.png")
@@ -404,9 +409,9 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
 
     println("Obtained sequences, " * string(length(seqs_list)))
 
-    ancestors = jOpqua.ancestors(output, "pop", seqs_list)
-    seqs_list = ancestors.sequence
-    times_first = ancestors.time
+    # ancestors = jOpqua.ancestors(output, "pop", seqs_list)
+    # seqs_list = ancestors.sequence
+    # times_first = ancestors.time
 
     println("Obtained ancestors, " * string(length(seqs_list)))
 
@@ -448,13 +453,35 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     occurrences_list_sizes = 20.0 * min.(2.0, (occurrences_list .+ 0) / 10)
     # occurrences_list_sizes = 20.0 * (occurrences_list .+ 0) / 10
 
-    ant = DataFrame(proj_ant, ["Component 1", "Component 2"])
-    ant[:, "Time"] = times_first
-    ant[:, "Occurrences"] = occurrences_list
-    ant[:, "Occurrences_mod"] = occurrences_list_sizes
-    ant[:, "Alpha"] = ones(length(seqs_list))
-    ant[:, "Linewidth"] = ones(length(seqs_list))
-    ant = sort(ant, ("Occurrences_mod"), rev=true)
+    # ant = DataFrame(proj_ant, ["Component 1", "Component 2"])
+    # ant[:, "Time"] = times_first
+    # ant[:, "Occurrences"] = occurrences_list
+    # ant[:, "Occurrences_mod"] = occurrences_list_sizes
+    # ant[:, "Alpha"] = ones(length(seqs_list))
+    # ant[:, "Linewidth"] = ones(length(seqs_list))
+    # ant = sort(ant, ("Occurrences_mod"), rev=true)
+    # ant[(ant[:, "Occurrences"].==0), "Alpha"] .= 0.4
+    # ant[(ant[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
+    # ant[(ant[:, "Occurrences"].==0), "Linewidth"] .= 0
+
+    # font_scale = 2.0
+    # Plots.scalefontsizes(font_scale)
+    # scatter(
+    #     ant[:, "Component 1"], ant[:, "Component 2"], zcolor=ant[:, "Time"], ms=ant[:, "Occurrences_mod"], c=:viridis,
+    #     xlabel="Component 1", ylabel="Component 2",
+    #     alpha=ant[:, "Alpha"],
+    #     legend=false, colorbar=true,
+    #     markerstrokewidth=ant[:, "Linewidth"],
+    #     linewidth=3.0, thickness_scaling=1.0,
+    #     grid=false,
+    #     colorbar_title="Time",
+    # )
+    # plot!(size=(1000, 800), margin=20mm)
+    # savefig("examples/flu/pca_antigenic.png")
+    # Plots.scalefontsizes(1 / font_scale)
+
+    # CSV.write("examples/flu/components_antigenic.csv", ant)
+    # CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
 
     gen = DataFrame(proj_gen, ["Component 1", "Component 2"])
     gen[:, "Time"] = times_first
@@ -464,28 +491,12 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     gen[:, "Linewidth"] = ones(length(seqs_list))
     gen = sort(gen, ("Occurrences_mod"), rev=true)
 
-    ant[(ant[:, "Occurrences"].==0), "Alpha"] .= 0.4
     gen[(gen[:, "Occurrences"].==0), "Alpha"] .= 0.4
-    ant[(ant[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
     gen[(gen[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
-    ant[(ant[:, "Occurrences"].==0), "Linewidth"] .= 0
     gen[(gen[:, "Occurrences"].==0), "Linewidth"] .= 0
 
     font_scale = 2.0
     Plots.scalefontsizes(font_scale)
-    scatter(
-        ant[:, "Component 1"], ant[:, "Component 2"], zcolor=ant[:, "Time"], ms=ant[:, "Occurrences_mod"], c=:viridis,
-        xlabel="Component 1", ylabel="Component 2",
-        alpha=ant[:, "Alpha"],
-        legend=false, colorbar=true,
-        markerstrokewidth=ant[:, "Linewidth"],
-        linewidth=3.0, thickness_scaling=1.0,
-        grid=false,
-        colorbar_title="Time",
-    )
-    plot!(size=(1000, 800), margin=20mm)
-    savefig("examples/flu/pca_antigenic.png")
-
     scatter(
         gen[:, "Component 1"], gen[:, "Component 2"], zcolor=gen[:, "Time"], ms=gen[:, "Occurrences_mod"], c=:viridis,
         xlabel="Component 1", ylabel="Component 2",
@@ -500,10 +511,9 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     savefig("examples/flu/pca_genetic.png")
     Plots.scalefontsizes(1 / font_scale)
 
-    CSV.write("examples/flu/components_antigenic.csv", ant)
     CSV.write("examples/flu/components_genetic.csv", gen)
-    # CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
-    # CSV.write("examples/flu/distances_genetic.csv", DataFrame(dist_mat_gen, :auto))
+    CSV.write("examples/flu/distances_genetic.csv", DataFrame(dist_mat_gen, :auto))
+
     CSV.write("examples/flu/sequences.csv", DataFrame(Sequences=seqs_list))
 end
 

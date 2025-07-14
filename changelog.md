@@ -10,6 +10,8 @@ optimization that can be done, an in-house Hamming calculation (unclear whether 
 is due to the user-defined code not being compiled as well)
 
 TODO:
+- Change ancestor search so that you can choose to get only a fraction of ancestors (improves
+the function's runtime for simulations with long timelines)
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
 events/nonsampling coefficients (and viceversa) or to `Host` events/nonsampling coefficients
 - Try explicitly declared max host population size in instance of population change,
@@ -23,6 +25,9 @@ Debug the following:
 - Inter-population contact
 - Transition
 - Interventions
+
+## 14 Jul 2025
+- Upgrade Flexle to `1.0.3`, fixes an uncommon bug when updating some weights
 
 ## 16 Jun 2025
 Float precision errors in rate calculation accumulate over time. To solve this, I

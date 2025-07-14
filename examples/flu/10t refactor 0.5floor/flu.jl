@@ -61,7 +61,7 @@ function crossImmunity(
                distance_key_residues,
                distance_half_epitope_residues, hill_coef_epitope_residues
            )) *
-           genomeRand(seq2) *
+           # genomeRand(seq2) *
            0.5 + 0.5
     # return seq1 == seq2
     # return 1.0
