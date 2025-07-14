@@ -43,7 +43,7 @@ function genomeRand(s::String)
     # return rand(Xoshiro(s))
 end
 
-println(("genomeRand", genomeRand(ha_sn89)))
+# println(("genomeRand", genomeRand(ha_sn89)))
 
 function crossImmunity(
     seq1, seq2;
@@ -56,7 +56,7 @@ function crossImmunity(
         distance_key_residues += seq1[p] != seq2[p]
     end
 
-    return 1.0#(hamming(seq1, seq2) > 4) * 0.2 + 0.8
+    return (hamming(seq1, seq2) > 4) * 0.2 + 0.8
 
     # return (1.0 - (1.0 -
     #                (1.0 - jOpqua.hillFunction(
@@ -190,7 +190,7 @@ function setup()
         contact_coefficient=0.125 * 5.0, # R_0 of ~5.0
         # response_acquisition_coefficient=0.0,
         response_acquisition_upon_clearance_coefficient=1.0,
-        response_loss_coefficient=1.0/(8*79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
+        response_loss_coefficient=1.0 / (8 * 79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
         mutations_upon_infection_coefficient=0.161, #0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
@@ -199,9 +199,9 @@ function setup()
         developResponses=developResponse
     )
 
-    num_hosts = 10000
-    num_infected = 100 #Int(num_hosts * 0.01)
-    frac_immune = 7900/10000#0.9
+    num_hosts = 100000
+    num_infected = 1000 #Int(num_hosts * 0.01)
+    frac_immune = 7900 / 10000#0.9
     host_genome = ""
 
     println("Creating model")
@@ -216,12 +216,30 @@ function setup()
 
     println("Adding responses")
 
+    responses = pop.parameters.developResponses(
+        pat,
+        pop.hosts[1],
+        pop.responses,
+        pop.parameters.response_types,
+        0.0
+    )
+
+    pct = 0
     for h in 1:floor(Int64, frac_immune * num_hosts)
-        # println((h,num_hosts))
-        jOpqua.addPathogenToHost!(pat, h, pop, model)
-        # jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
-        jOpqua.acquireResponse!(1, h, 1, model, rand())
-        jOpqua.removePathogenFromHost!(1, h, pop, model)
+        # println((h, num_hosts))
+        if h % (frac_immune * num_hosts / 100) == 0.0
+            pct += 1
+            println(string(pct) * "%")
+        end
+        # jOpqua.addPathogenToHost!(pat, h, pop, model)
+        # # jOpqua.addPathogenToHost!(pat_mut, h, pop, model)
+        # jOpqua.acquireResponse!(1, h, 1, model, 0.0)
+        # jOpqua.removePathogenFromHost!(1, h, pop, model)
+
+        jOpqua.addResponseToHost!(
+            responses[1], h,
+            pop, model
+        )
     end
 
     println("Adding pathogens")
@@ -453,35 +471,35 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     occurrences_list_sizes = 20.0 * min.(2.0, (occurrences_list .+ 0) / 10)
     # occurrences_list_sizes = 20.0 * (occurrences_list .+ 0) / 10
 
-    # ant = DataFrame(proj_ant, ["Component 1", "Component 2"])
-    # ant[:, "Time"] = times_first
-    # ant[:, "Occurrences"] = occurrences_list
-    # ant[:, "Occurrences_mod"] = occurrences_list_sizes
-    # ant[:, "Alpha"] = ones(length(seqs_list))
-    # ant[:, "Linewidth"] = ones(length(seqs_list))
-    # ant = sort(ant, ("Occurrences_mod"), rev=true)
-    # ant[(ant[:, "Occurrences"].==0), "Alpha"] .= 0.4
-    # ant[(ant[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
-    # ant[(ant[:, "Occurrences"].==0), "Linewidth"] .= 0
+    ant = DataFrame(proj_ant, ["Component 1", "Component 2"])
+    ant[:, "Time"] = times_first
+    ant[:, "Occurrences"] = occurrences_list
+    ant[:, "Occurrences_mod"] = occurrences_list_sizes
+    ant[:, "Alpha"] = ones(length(seqs_list))
+    ant[:, "Linewidth"] = ones(length(seqs_list))
+    ant = sort(ant, ("Occurrences_mod"), rev=true)
+    ant[(ant[:, "Occurrences"].==0), "Alpha"] .= 0.4
+    ant[(ant[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
+    ant[(ant[:, "Occurrences"].==0), "Linewidth"] .= 0
 
-    # font_scale = 2.0
-    # Plots.scalefontsizes(font_scale)
-    # scatter(
-    #     ant[:, "Component 1"], ant[:, "Component 2"], zcolor=ant[:, "Time"], ms=ant[:, "Occurrences_mod"], c=:viridis,
-    #     xlabel="Component 1", ylabel="Component 2",
-    #     alpha=ant[:, "Alpha"],
-    #     legend=false, colorbar=true,
-    #     markerstrokewidth=ant[:, "Linewidth"],
-    #     linewidth=3.0, thickness_scaling=1.0,
-    #     grid=false,
-    #     colorbar_title="Time",
-    # )
-    # plot!(size=(1000, 800), margin=20mm)
-    # savefig("examples/flu/pca_antigenic.png")
-    # Plots.scalefontsizes(1 / font_scale)
+    font_scale = 2.0
+    Plots.scalefontsizes(font_scale)
+    scatter(
+        ant[:, "Component 1"], ant[:, "Component 2"], zcolor=ant[:, "Time"], ms=ant[:, "Occurrences_mod"], c=:viridis,
+        xlabel="Component 1", ylabel="Component 2",
+        alpha=ant[:, "Alpha"],
+        legend=false, colorbar=true,
+        markerstrokewidth=ant[:, "Linewidth"],
+        linewidth=3.0, thickness_scaling=1.0,
+        grid=false,
+        colorbar_title="Time",
+    )
+    plot!(size=(1000, 800), margin=20mm)
+    savefig("examples/flu/pca_antigenic.png")
+    Plots.scalefontsizes(1 / font_scale)
 
-    # CSV.write("examples/flu/components_antigenic.csv", ant)
-    # CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
+    CSV.write("examples/flu/components_antigenic.csv", ant)
+    CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
 
     gen = DataFrame(proj_gen, ["Component 1", "Component 2"])
     gen[:, "Time"] = times_first
@@ -521,8 +539,8 @@ function main()
     println("Num threads: " * string(nthreads()))
 
     model::jOpqua.Model = setup()
-    run(model, 1, collect(0.0:2.0:4.0))
-    @time out::jOpqua.Output = run(model, 0, collect(0.0:10.0:10000.0))
+    # run(model, 1, collect(0.0:2.0:4.0))
+    @time out::jOpqua.Output = run(model, 1, collect(0.0:10.0:10000.0))
     analyze(out, collect(0.0:10.0:10000.0))
 end
 

@@ -8,8 +8,35 @@ host weight matrices, as well as garbage collection (probably associated to the 
 - Immunity is slow; main slowdown is Hamming distance calculation—maybe there is some
 optimization that can be done, an in-house Hamming calculation (unclear whether the slowdown
 is due to the user-defined code not being compiled as well)
+- Conceptual issue: Current way of handling intrahost pathogen populations as fractions causes
+clearance math to be off for complex infections (coinfections). Imagine two strains with equal
+fitness and 100% cross-immunity to each other coinfecting an individual. For starters, in the
+current model, coinfection clearance is now dependent on two independent Poisson processes,
+an incorrect assumptioin to begin with since the second clearance event is much more likely
+once the first occurs. This results in the clearance time of the coinfection in the model
+now following a Gamma distribution rather than an exponential one, which should not be the
+case, but might be difficult to work around. However, the issue is not only in the
+distribution of clearance times, but also in their mean. In the current model, the coinfected
+individual's clearance rate is twice that of that of the individual with the single infection.
+This is correct as far as the mean rate goes, since each strain has half the population it
+would have if it were infecting an individual with no other strains present. However, once the
+first strain is cleared, the clearance rate of the second strain stays the same, so the total
+clearance rate for that individual host is now half of what it was before the first clearance
+event. This results in a net increase in mean clearance rate for the coinfection with respect
+to the single infection--a clear mistake. To fix this, we can do the following two things:
+(1) Modify clearance weight calculation to be the maximum clearance weight of all pathogens
+within the host, accounting for responses, rather than the sum (this results in slightly lower
+net clearance rates of individual strains in coinfections with other distantly related
+strains, but that is a reasonable assumption representing "splitting the immune system's total
+resources")
+(2) Modify the clearance event to not only check whether it induces acquisition of a response,
+but if it does, to also to result in clearance of other coinfecting pathogens if they cannot
+escape the new immune responses (a probability determined by cross-immunity to those acquired
+responses)
 
 TODO:
+- Change clearance weight calculation as described above
+- Change clearance event as described above
 - Change ancestor search so that you can choose to get only a fraction of ancestors (improves
 the function's runtime for simulations with long timelines)
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
