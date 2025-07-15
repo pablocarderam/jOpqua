@@ -48,18 +48,28 @@ end
 
 # println(("genomeRand", genomeRand(ha_sn89)))
 
+StringOrSubString = Union{String, SubString{String}}
+
+function sequence_hamming(a::StringOrSubString, b::StringOrSubString; distance_function::Function=(x::Char,y::Char) -> x==y ? 0 : 1)
+    distance = 0
+    for i in eachindex(a)
+        distance += distance_function(a[i], b[i])
+    end
+    return distance
+end
+
 function crossImmunity(
-    seq1, seq2;
-    epitope_residues=evasion_residues,
-    distance_half_all_residues=length(ha_sn89) * 0.05, hill_coef_all_residues=2.0,
-    distance_half_epitope_residues=length(evasion_residues) * 4.4, hill_coef_epitope_residues=2.0)
+    seq1::StringOrSubString, seq2::StringOrSubString;
+    epitope_residues::Array{Int64}=evasion_residues,
+    distance_half_all_residues::Float64=length(ha_sn89) * 0.05, hill_coef_all_residues=2.0,
+    distance_half_epitope_residues::Float64=length(evasion_residues) * 4.4, hill_coef_epitope_residues=2.0)
 
     distance_key_residues = 0.0
     for p in epitope_residues
         distance_key_residues += seq1[p] != seq2[p]
     end
 
-    return (hamming(seq1, seq2) < 5) * 0.2 + 0.8
+    return (sequence_hamming(seq1, seq2) < 5) * 0.2 + 0.8
 
     # return (1.0 - (1.0 -
     #                (1.0 - jOpqua.hillFunction(
@@ -82,10 +92,10 @@ end
 # println(("TEST MUT: ", 1.0 - crossImmunity(ha_sn89, ha_sn89_mut)))
 
 function proteinFitness(
-    seq, seq_wt;
-    functional_site=necessary_residues,
-    distance_half_all_residues=length(ha_sn89) * 0.5, hill_coef_all_residues=3.0,
-    distance_half_functional_site_residues=length(necessary_residues) * 0.5, hill_coef_functional_site_residues=3.0)
+    seq::StringOrSubString, seq_wt::StringOrSubString;
+    functional_site::Array{Int64}=necessary_residues,
+    distance_half_all_residues::Float64=length(ha_sn89) * 0.5, hill_coef_all_residues=3.0,
+    distance_half_functional_site_residues::Float64=length(necessary_residues) * 0.5, hill_coef_functional_site_residues=3.0)
 
     if occursin("*", seq)
         return 0.0

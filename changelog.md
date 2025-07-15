@@ -5,9 +5,6 @@ KNOWN ISSUES:
 instabilities in weights/immunity changes
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
-- Immunity is slow; main slowdown is Hamming distance calculation—maybe there is some
-optimization that can be done, an in-house Hamming calculation (unclear whether the slowdown
-is due to the user-defined code not being compiled as well)
 - Conceptual issue: Current way of handling intrahost pathogen populations as fractions causes
 clearance math to be off for complex infections (coinfections). Imagine two strains with equal
 fitness and 100% cross-immunity to each other coinfecting an individual. For starters, in the
@@ -52,6 +49,11 @@ Debug the following:
 - Inter-population contact
 - Transition
 - Interventions
+
+## 15 Jul 2025
+- In-house Hamming distance function for both (1) performance and (2) generalizability (e.g.
+nucleotide/amino acid substitution matrix in place of simple pairwise inequality; not currently
+implemented)
 
 ## 14 Jul 2025
 - Upgrade Flexle to `1.0.3`, fixes an uncommon bug when updating some weights
