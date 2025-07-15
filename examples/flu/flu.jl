@@ -27,8 +27,11 @@ using ProfileView
 
 # model constants
 const ha_sn89::String = "MKAKLLVLLCAFTATDADTICIGYHANNSTDTVDTVLEKNVTVTHSVNLLEDSHNGKLCRLKGIAPLQLGNCSIAGWILGNPECESLFSKESWSYIAETPNSENGTCYPGYFADYEELREQLSSVSSFERFEIFPKESSWPNHTVTKGVTAACSHNGKSSFYRNLLWLTEKNGLYPNLSKSYVNNKEKEVLVLWGVHHPSNIGDQRAIYHTENAYVSVVSSHYSRRFTPEIAKRPKVRGQEGRINYYWTLLEPGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMDECDAKCQTPQGAINSSLPFQNVHPVTIGECPKYVRSTKLRMVTGLRNIPSVQSRGLFGAIAGFIEGGWTGMIDGWYGYHHQNEQGSGYAADQKSTQNAINGITNKVNSVIEKMNTQFTAVGKEFNKLERRMENLNKKVDDGFLDIWTYNAELLVLLENERTLDFHDSNVKNLYEKVKSQLKNNAKEIGNGCFEFYHKCNNECMESVKNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILAIYSTVASSLVLLVSLGAISFWMCSNGSLQCRICI"
-const rbs_residues = collect(range(140, 210))
-const rbs_epitope_key_residues = [144, 147, 159, 169, 170, 171, 172, 173, 203, 207]
+# const rbs_residues = collect(range(140, 210))
+# const rbs_epitope_key_residues = [144, 147, 159, 169, 170, 171, 172, 173, 203, 207]
+
+const necessary_residues = collect(range(1,length(ha_sn89)-25))
+const evasion_residues = collect(range(length(ha_sn89)-25+1, length(ha_sn89)))
 
 # model functions
 
@@ -47,16 +50,16 @@ end
 
 function crossImmunity(
     seq1, seq2;
-    epitope_residues=rbs_epitope_key_residues,
+    epitope_residues=evasion_residues,
     distance_half_all_residues=length(ha_sn89) * 0.05, hill_coef_all_residues=2.0,
-    distance_half_epitope_residues=length(rbs_epitope_key_residues) * 4.4, hill_coef_epitope_residues=2.0)
+    distance_half_epitope_residues=length(evasion_residues) * 4.4, hill_coef_epitope_residues=2.0)
 
     distance_key_residues = 0.0
     for p in epitope_residues
         distance_key_residues += seq1[p] != seq2[p]
     end
 
-    return (hamming(seq1, seq2) > 4) * 0.2 + 0.8
+    return (hamming(seq1, seq2) < 5) * 0.2 + 0.8
 
     # return (1.0 - (1.0 -
     #                (1.0 - jOpqua.hillFunction(
@@ -80,14 +83,14 @@ end
 
 function proteinFitness(
     seq, seq_wt;
-    functional_site=rbs_residues,
+    functional_site=necessary_residues,
     distance_half_all_residues=length(ha_sn89) * 0.5, hill_coef_all_residues=3.0,
-    distance_half_functional_site_residues=length(rbs_residues) * 0.5, hill_coef_functional_site_residues=3.0)
+    distance_half_functional_site_residues=length(necessary_residues) * 0.5, hill_coef_functional_site_residues=3.0)
 
     if occursin("*", seq)
         return 0.0
     else
-        distance_key_residues = 0.0
+        distance_key_residues = 0
         for p in functional_site
             distance_key_residues += seq[p] != seq_wt[p]
         end
@@ -100,7 +103,8 @@ function proteinFitness(
         #     distance_half_functional_site_residues, hill_coef_functional_site_residues
         # ))
         # return genomeRand(seq)
-        return 1.0
+        return distance_key_residues < 1
+        # return 1.0
     end
 end
 
@@ -190,7 +194,7 @@ function setup()
         contact_coefficient=0.125 * 5.0, # R_0 of ~5.0
         # response_acquisition_coefficient=0.0,
         response_acquisition_upon_clearance_coefficient=1.0,
-        response_loss_coefficient=1.0 / (8 * 79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
+        response_loss_coefficient=(14e-3 / 365.0) + (0.1 / 365.0),#1.0 / (8 * 79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
         mutations_upon_infection_coefficient=0.161, #0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
@@ -200,7 +204,7 @@ function setup()
     )
 
     num_hosts = 100000
-    num_infected = 1000 #Int(num_hosts * 0.01)
+    num_infected = 100 #Int(num_hosts * 0.01)
     frac_immune = 7900 / 10000#0.9
     host_genome = ""
 
@@ -227,7 +231,7 @@ function setup()
     pct = 0
     for h in 1:floor(Int64, frac_immune * num_hosts)
         # println((h, num_hosts))
-        if h % (frac_immune * num_hosts / 100) == 0.0
+        if h % (frac_immune * num_hosts / 10) == 0.0
             pct += 1
             println(string(pct) * "%")
         end
@@ -536,12 +540,14 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
 end
 
 function main()
+    max_time = 5000
+    t_steps = 500
     println("Num threads: " * string(nthreads()))
 
     model::jOpqua.Model = setup()
     # run(model, 1, collect(0.0:2.0:4.0))
-    @time out::jOpqua.Output = run(model, 1, collect(0.0:10.0:10000.0))
-    analyze(out, collect(0.0:10.0:10000.0))
+    @time out::jOpqua.Output = run(model, 1, collect(0.0:(max_time/t_steps):max_time))
+    analyze(out, collect(0.0:(max_time/t_steps):max_time))
 end
 
 main()
