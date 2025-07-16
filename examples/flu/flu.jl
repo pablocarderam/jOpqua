@@ -9,7 +9,7 @@ using StaticArrays
 using Random
 using SHA
 
-using Distances
+# using Distances
 
 using Statistics
 using MultivariateStats
@@ -30,8 +30,8 @@ const ha_sn89::String = "MKAKLLVLLCAFTATDADTICIGYHANNSTDTVDTVLEKNVTVTHSVNLLEDSHN
 # const rbs_residues = collect(range(140, 210))
 # const rbs_epitope_key_residues = [144, 147, 159, 169, 170, 171, 172, 173, 203, 207]
 
-const necessary_residues = collect(range(1,length(ha_sn89)-25))
-const evasion_residues = collect(range(length(ha_sn89)-25+1, length(ha_sn89)))
+const necessary_residues = collect(range(1, length(ha_sn89) - 25))
+const evasion_residues = collect(range(length(ha_sn89) - 25 + 1, length(ha_sn89)))
 
 # model functions
 
@@ -48,9 +48,9 @@ end
 
 # println(("genomeRand", genomeRand(ha_sn89)))
 
-StringOrSubString = Union{String, SubString{String}}
+StringOrSubString = Union{String,SubString{String}}
 
-function sequence_hamming(a::StringOrSubString, b::StringOrSubString; distance_function::Function=(x::Char,y::Char) -> x==y ? 0 : 1)
+function sequence_hamming(a::StringOrSubString, b::StringOrSubString; distance_function::Function=(x::Char, y::Char) -> x == y ? 0 : 1)
     distance = 0
     for i in eachindex(a)
         distance += distance_function(a[i], b[i])
@@ -69,11 +69,11 @@ function crossImmunity(
         distance_key_residues += seq1[p] != seq2[p]
     end
 
-    return (sequence_hamming(seq1, seq2) < 5) * 0.2 + 0.8
+    # return (sequence_hamming(seq1, seq2) < 5) * 0.2 + 0.8
 
     # return (1.0 - (1.0 -
     #                (1.0 - jOpqua.hillFunction(
-    #     Float64(hamming(seq1, seq2)),
+    #     Float64(sequence_hamming(seq1, seq2)),
     #     distance_half_all_residues, hill_coef_all_residues
     # )) * (1.0 - jOpqua.hillFunction(
     #     distance_key_residues,
@@ -84,7 +84,7 @@ function crossImmunity(
     # ) *
     #        0.45 + 0.5
     # return seq1 == seq2
-    # return 1.0
+    return 1.0
     # return 0.8
 end
 
@@ -106,7 +106,7 @@ function proteinFitness(
         end
 
         # return (1.0 - jOpqua.hillFunction(
-        #     Float64(hamming(seq, seq_wt)),
+        #     Float64(sequence_hamming(seq, seq_wt)),
         #     distance_half_all_residues, hill_coef_all_residues
         # )) * (1.0 - jOpqua.hillFunction(
         #     distance_key_residues,
@@ -121,8 +121,8 @@ end
 # println(("TEST SAME fit: ", proteinFitness(ha_sn89, ha_sn89)))
 # println(("TEST MUT fit: ", proteinFitness(ha_sn89, ha_sn89_mut)))
 
-# println(("TEST SAME hamm: ", hamming(ha_sn89, ha_sn89)))
-# println(("TEST MUT hamm: ", hamming(ha_sn89, ha_sn89_mut)))
+# println(("TEST SAME hamm: ", sequence_hamming(ha_sn89, ha_sn89)))
+# println(("TEST MUT hamm: ", sequence_hamming(ha_sn89, ha_sn89_mut)))
 
 function developResponse(
     pathogen::jOpqua.Pathogen, host::jOpqua.Host,
@@ -329,7 +329,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     for t in t_vec
         if length(his_dat[(his_dat.Time.==t).&(his_dat.Pathogen_sequence.!=""), "Pathogen_sequence"]) > 0
             push!(distances, mean([
-                hamming(s, ha_sn89)
+                sequence_hamming(s, ha_sn89)
                 for seqs in his_dat[(his_dat.Time.==t).&(his_dat.Pathogen_sequence.!=""), "Pathogen_sequence"]
                 # for seqs in subset(his_dat, :Time => ByRow(Time -> Time == t))[!, "Pathogen_sequence"]
                 for s in split(seqs, jOpqua.WITHIN_HOST_SEPARATOR)
@@ -351,7 +351,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     for t in t_vec
         if length(his_dat[(his_dat.Time.==t).&(his_dat.Pathogen_sequence.!=""), "Pathogen_sequence"]) > 0
             push!(distances, maximum([
-                hamming(s, ha_sn89)
+                sequence_hamming(s, ha_sn89)
                 for seqs in his_dat[(his_dat.Time.==t).&(his_dat.Pathogen_sequence.!=""), "Pathogen_sequence"]
                 # for seqs in subset(his_dat, :Time => ByRow(Time -> Time == t))[!, "Pathogen_sequence"]
                 for s in split(seqs, jOpqua.WITHIN_HOST_SEPARATOR)
@@ -453,7 +453,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     Threads.@threads for i in 1:length(seqs_list)
         for j in i:length(seqs_list)
             dist_mat_ant[i, j] = (1.0 / (crossImmunity(seqs_list[i], seqs_list[j]) + correction_number)) - (1.0 / (1.0 + correction_number))
-            dist_mat_gen[i, j] = hamming(seqs_list[i], seqs_list[j])
+            dist_mat_gen[i, j] = sequence_hamming(seqs_list[i], seqs_list[j])
             dist_mat_ant[j, i] = dist_mat_ant[i, j]
             dist_mat_gen[j, i] = dist_mat_gen[i, j]
         end
@@ -485,35 +485,35 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     occurrences_list_sizes = 20.0 * min.(2.0, (occurrences_list .+ 0) / 10)
     # occurrences_list_sizes = 20.0 * (occurrences_list .+ 0) / 10
 
-    ant = DataFrame(proj_ant, ["Component 1", "Component 2"])
-    ant[:, "Time"] = times_first
-    ant[:, "Occurrences"] = occurrences_list
-    ant[:, "Occurrences_mod"] = occurrences_list_sizes
-    ant[:, "Alpha"] = ones(length(seqs_list))
-    ant[:, "Linewidth"] = ones(length(seqs_list))
-    ant = sort(ant, ("Occurrences_mod"), rev=true)
-    ant[(ant[:, "Occurrences"].==0), "Alpha"] .= 0.4
-    ant[(ant[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
-    ant[(ant[:, "Occurrences"].==0), "Linewidth"] .= 0
+    # ant = DataFrame(proj_ant, ["Component 1", "Component 2"])
+    # ant[:, "Time"] = times_first
+    # ant[:, "Occurrences"] = occurrences_list
+    # ant[:, "Occurrences_mod"] = occurrences_list_sizes
+    # ant[:, "Alpha"] = ones(length(seqs_list))
+    # ant[:, "Linewidth"] = ones(length(seqs_list))
+    # ant = sort(ant, ("Occurrences_mod"), rev=true)
+    # ant[(ant[:, "Occurrences"].==0), "Alpha"] .= 0.4
+    # ant[(ant[:, "Occurrences"].==0), "Occurrences_mod"] .= 4
+    # ant[(ant[:, "Occurrences"].==0), "Linewidth"] .= 0
 
-    font_scale = 2.0
-    Plots.scalefontsizes(font_scale)
-    scatter(
-        ant[:, "Component 1"], ant[:, "Component 2"], zcolor=ant[:, "Time"], ms=ant[:, "Occurrences_mod"], c=:viridis,
-        xlabel="Component 1", ylabel="Component 2",
-        alpha=ant[:, "Alpha"],
-        legend=false, colorbar=true,
-        markerstrokewidth=ant[:, "Linewidth"],
-        linewidth=3.0, thickness_scaling=1.0,
-        grid=false,
-        colorbar_title="Time",
-    )
-    plot!(size=(1000, 800), margin=20mm)
-    savefig("examples/flu/pca_antigenic.png")
-    Plots.scalefontsizes(1 / font_scale)
+    # font_scale = 2.0
+    # Plots.scalefontsizes(font_scale)
+    # scatter(
+    #     ant[:, "Component 1"], ant[:, "Component 2"], zcolor=ant[:, "Time"], ms=ant[:, "Occurrences_mod"], c=:viridis,
+    #     xlabel="Component 1", ylabel="Component 2",
+    #     alpha=ant[:, "Alpha"],
+    #     legend=false, colorbar=true,
+    #     markerstrokewidth=ant[:, "Linewidth"],
+    #     linewidth=3.0, thickness_scaling=1.0,
+    #     grid=false,
+    #     colorbar_title="Time",
+    # )
+    # plot!(size=(1000, 800), margin=20mm)
+    # savefig("examples/flu/pca_antigenic.png")
+    # Plots.scalefontsizes(1 / font_scale)
 
-    CSV.write("examples/flu/components_antigenic.csv", ant)
-    CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
+    # CSV.write("examples/flu/components_antigenic.csv", ant)
+    # CSV.write("examples/flu/distances_antigenic.csv", DataFrame(dist_mat_ant, :auto))
 
     gen = DataFrame(proj_gen, ["Component 1", "Component 2"])
     gen[:, "Time"] = times_first

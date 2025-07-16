@@ -52,8 +52,7 @@ Debug the following:
 
 ## 15 Jul 2025
 - In-house Hamming distance function for both (1) performance and (2) generalizability (e.g.
-nucleotide/amino acid substitution matrix in place of simple pairwise inequality; not currently
-implemented)
+nucleotide/amino acid substitution matrix in place of simple pairwise inequality; not currently implemented) (CLM)
 
 ## 14 Jul 2025
 - Upgrade Flexle to `1.0.3`, fixes an uncommon bug when updating some weights
