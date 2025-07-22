@@ -355,25 +355,30 @@ end
 function calculateWeight!(population::Population, evt::Int64, model::Model)
     if evt == CONTACT
         population.contact_sum = sum(population.host_weights[CONTACT, :])
-        population.host_weights_with_coefficient_samplers[evt].sum = population.parameters.base_coefficients[evt] * population.contact_sum
+        # population.host_weights_with_coefficient_samplers[evt].sum = population.parameters.base_coefficients[evt] * population.contact_sum
+        # The latest version of Flexle performs the above error correction internally
         model.population_weights[evt, model.population_dict[population.id]] = (
             model.population_contact_weights_receive_sums[model.population_dict[population.id]]
-            * population.host_weights_with_coefficient_samplers[evt].sum
+            # * population.host_weights_with_coefficient_samplers[evt].sum
+            * population.parameters.base_coefficients[evt] * population.contact_sum
         )
     elseif evt == TRANSITION
         population.transition_sum = sum(population.host_weights[TRANSITION, :])
         model.population_weights[evt, model.population_dict[population.id]] = population.parameters.base_coefficients[evt] * population.transition_sum
-        population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+        # population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+        # The latest version of Flexle performs the above error correction internally
     else
         model.population_weights[evt, model.population_dict[population.id]] = population.parameters.base_coefficients[evt] * sum(population.host_weights[evt, :])
-        population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+        # population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+        # The latest version of Flexle performs the above error correction internally
     end
     population.recalculation_counters[evt] = 0
 end
 
 function calculateWeightReceive!(population::Population, weight::Int64, model::Model)
     model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = population.parameters.base_coefficients[weight] *  sum(population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :])
-    population.host_weights_receive_with_coefficient_samplers[weight-CHOICE_MODIFIERS[1]+1].sum = model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
+    # population.host_weights_receive_with_coefficient_samplers[weight-CHOICE_MODIFIERS[1]+1].sum = model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
+    # The latest version of Flexle performs the above error correction internally
     population.recalculation_counters[weight] = 0
 end
 

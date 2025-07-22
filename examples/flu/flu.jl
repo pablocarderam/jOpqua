@@ -48,7 +48,7 @@ end
 
 # println(("genomeRand", genomeRand(ha_sn89)))
 
-StringOrSubString = Union{String,SubString{String}}
+const StringOrSubString = Union{String,SubString{String}}
 
 function sequence_hamming(a::StringOrSubString, b::StringOrSubString; distance_function::Function=(x::Char, y::Char) -> x == y ? 0 : 1)
     distance = 0
@@ -61,7 +61,7 @@ end
 function crossImmunity(
     seq1::StringOrSubString, seq2::StringOrSubString;
     epitope_residues::Array{Int64}=evasion_residues,
-    distance_half_all_residues::Float64=length(ha_sn89) * 0.05, hill_coef_all_residues=2.0,
+    distance_half_all_residues::Float64=5.0, hill_coef_all_residues=2.0,
     distance_half_epitope_residues::Float64=length(evasion_residues) * 4.4, hill_coef_epitope_residues=2.0)
 
     distance_key_residues = 0.0
@@ -71,20 +71,20 @@ function crossImmunity(
 
     # return (sequence_hamming(seq1, seq2) < 5) * 0.2 + 0.8
 
-    # return (1.0 - (1.0 -
-    #                (1.0 - jOpqua.hillFunction(
-    #     Float64(sequence_hamming(seq1, seq2)),
-    #     distance_half_all_residues, hill_coef_all_residues
-    # )) * (1.0 - jOpqua.hillFunction(
-    #     distance_key_residues,
-    #     distance_half_epitope_residues, hill_coef_epitope_residues
-    # ))
-    # ) *
-    #               1.0#genomeRand(seq2)
-    # ) *
-    #        0.45 + 0.5
+    return (1.0 - (1.0 -
+                   (1.0 - jOpqua.hillFunction(
+        Float64(sequence_hamming(seq1, seq2)),
+        distance_half_all_residues, hill_coef_all_residues
+    )) * (1.0 - jOpqua.hillFunction(
+        distance_key_residues,
+        distance_half_epitope_residues, hill_coef_epitope_residues
+    ))
+    ) *
+                  1.0#genomeRand(seq2)
+    ) *
+           0.2 + 0.8
     # return seq1 == seq2
-    return 1.0
+    # return 1.0
     # return 0.8
 end
 
@@ -113,8 +113,8 @@ function proteinFitness(
         #     distance_half_functional_site_residues, hill_coef_functional_site_residues
         # ))
         # return genomeRand(seq)
-        return distance_key_residues < 1
-        # return 1.0
+        # return distance_key_residues < 1
+        return 1.0
     end
 end
 
@@ -204,7 +204,7 @@ function setup()
         contact_coefficient=0.125 * 5.0, # R_0 of ~5.0
         # response_acquisition_coefficient=0.0,
         response_acquisition_upon_clearance_coefficient=1.0,
-        response_loss_coefficient=(14e-3 / 365.0) + (0.1 / 365.0),#1.0 / (8 * 79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
+        response_loss_coefficient=(14e-3 / 365.0) + (0.1 / 365.0),#1/(8*79),#1.0 / (8 * 79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
         mutations_upon_infection_coefficient=0.161, #0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
@@ -214,7 +214,7 @@ function setup()
     )
 
     num_hosts = 100000
-    num_infected = 100 #Int(num_hosts * 0.01)
+    num_infected = Int(num_hosts * 0.01)
     frac_immune = 7900 / 10000#0.9
     host_genome = ""
 
@@ -281,7 +281,7 @@ function run(model::jOpqua.Model, seed::Int64, t_vec::Vector{Float64})
     # Simulate
     Random.seed!(seed)
     model, output = jOpqua.simulate!(
-        model, t_vec, population_host_samples=Dict("pop" => 200)
+        model, t_vec, population_host_samples=Dict("pop" => 100)
     )
     # println(("Host responses: ", [h.responses for h in pop.hosts]))
 
@@ -550,7 +550,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
 end
 
 function main()
-    max_time = 5000
+    max_time = 1000
     t_steps = 500
     println("Num threads: " * string(nthreads()))
 

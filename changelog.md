@@ -30,9 +30,15 @@ resources")
 but if it does, to also to result in clearance of other coinfecting pathogens if they cannot
 escape the new immune responses (a probability determined by cross-immunity to those acquired
 responses)
+- [New paper](https://www.biorxiv.org/content/10.1101/2023.11.19.567585v3) shows transmission bottlenecking is more complex than thought: an initial infection period captures a high
+diversity of genetic variability from the donor, and a subsequent intrahost bottleneck
+presumably due to overcoming first line host defenses results in a single lineage founder
+event for the infection. Intrahost selection can act at that bottleneck. We could build this
+into the transmission event function by sampling based on fitness within the new host.
 
 TODO:
 - Change clearance weight calculation as described above
+- Change transmission event function to add receiver-side bottleneck option
 - Change clearance event as described above
 - Change ancestor search so that you can choose to get only a fraction of ancestors (improves
 the function's runtime for simulations with long timelines)
@@ -49,6 +55,9 @@ Debug the following:
 - Inter-population contact
 - Transition
 - Interventions
+
+## 21 Jul 2025
+- Remove external setting of Flexle sums (reduntant with Flexle `1.0.3`)
 
 ## 15 Jul 2025
 - In-house Hamming distance function for both (1) performance and (2) generalizability (e.g.
