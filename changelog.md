@@ -9,7 +9,7 @@ host weight matrices, as well as garbage collection (probably associated to the 
 clearance math to be off for complex infections (coinfections). Imagine two strains with equal
 fitness and 100% cross-immunity to each other coinfecting an individual. For starters, in the
 current model, coinfection clearance is now dependent on two independent Poisson processes,
-an incorrect assumptioin to begin with since the second clearance event is much more likely
+an incorrect assumption to begin with since the second clearance event is much more likely
 once the first occurs. This results in the clearance time of the coinfection in the model
 now following a Gamma distribution rather than an exponential one, which should not be the
 case, but might be difficult to work around. However, the issue is not only in the
@@ -38,8 +38,8 @@ into the transmission event function by sampling based on fitness within the new
 
 TODO:
 - Change clearance weight calculation as described above
-- Change transmission event function to add receiver-side bottleneck option
 - Change clearance event as described above
+- Change transmission event function to add receiver-side bottleneck option
 - Change ancestor search so that you can choose to get only a fraction of ancestors (improves
 the function's runtime for simulations with long timelines)
 - Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
