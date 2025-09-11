@@ -1,6 +1,8 @@
 module jOpqua
 
 # Groundwork
+include("WeightVectors.jl/src/WeightVectors.jl")
+include("WeightVectors.jl/src/bulk_sampling.jl")
 include("utils.jl")
 
 # Structure

@@ -173,12 +173,17 @@ function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int6
     #     population.host_weights[evt, host_idx] *
     #     population.parameters.base_coefficients[evt]
     # )
-    setindex!(
-        population.host_weights_with_coefficient_samplers[evt],
+    # setindex!(
+    #     population.host_weights_with_coefficient_samplers[evt],
+    #     population.host_weights[evt, host_idx] *
+    #     population.parameters.base_coefficients[evt],
+    #     host_idx
+    # )
+    population.host_weights_with_coefficient_samplers[evt][host_idx] = (
         population.host_weights[evt, host_idx] *
-        population.parameters.base_coefficients[evt],
-        host_idx
+        population.parameters.base_coefficients[evt]
     )
+
 end
 
 function responseWeights!(re::Int64, host::Host, population::Population, evt::Int64)
@@ -205,11 +210,15 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
     #     population.host_weights[evt, host_idx] *
     #     population.parameters.base_coefficients[evt]
     # )
-    setindex!(
-        population.host_weights_with_coefficient_samplers[evt],
+    # setindex!(
+    #     population.host_weights_with_coefficient_samplers[evt],
+    #     population.host_weights[evt, host_idx] *
+    #     population.parameters.base_coefficients[evt],
+    #     host_idx
+    # )
+    population.host_weights_with_coefficient_samplers[evt][host_idx] = (
         population.host_weights[evt, host_idx] *
-        population.parameters.base_coefficients[evt],
-        host_idx
+        population.parameters.base_coefficients[evt]
     )
 end
 
@@ -224,11 +233,15 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
     #     population.host_weights[evt, h] *
     #     population.parameters.base_coefficients[evt]
     # )
-    setindex!(
-        population.host_weights_with_coefficient_samplers[evt],
+    # setindex!(
+    #     population.host_weights_with_coefficient_samplers[evt],
+    #     population.host_weights[evt, h] *
+    #     population.parameters.base_coefficients[evt],
+    #     h
+    # )
+    population.host_weights_with_coefficient_samplers[evt][h] = (
         population.host_weights[evt, h] *
-        population.parameters.base_coefficients[evt],
-        h
+        population.parameters.base_coefficients[evt]
     )
 end
 
@@ -241,11 +254,15 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
     #     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
     #     population.parameters.base_coefficients[evt]
     # )
-    setindex!(
-        population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
+    # setindex!(
+    #     population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
+    #     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
+    #     population.parameters.base_coefficients[evt],
+    #     h
+    # )
+    population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1][h] = (
         population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
-        population.parameters.base_coefficients[evt],
-        h
+        population.parameters.base_coefficients[evt]
     )
 end
 
@@ -376,7 +393,7 @@ function calculateWeight!(population::Population, evt::Int64, model::Model)
 end
 
 function calculateWeightReceive!(population::Population, weight::Int64, model::Model)
-    model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = population.parameters.base_coefficients[weight] *  sum(population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :])
+    model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = population.parameters.base_coefficients[weight] * sum(population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :])
     # population.host_weights_receive_with_coefficient_samplers[weight-CHOICE_MODIFIERS[1]+1].sum = model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
     # The latest version of Flexle performs the above error correction internally
     population.recalculation_counters[weight] = 0
@@ -515,11 +532,15 @@ function propagateWeightChanges!(change::Float64, host_idx::Int64, population::P
             #     change *
             #     population.parameters.base_coefficients[evt]
             # )
-            setindex!(
-                population.host_weights_with_coefficient_samplers[evt],
+            # setindex!(
+            #     population.host_weights_with_coefficient_samplers[evt],
+            #     population.host_weights[evt, host_idx] *
+            #     population.parameters.base_coefficients[evt],
+            #     host_idx
+            # )
+            population.host_weights_with_coefficient_samplers[evt][host_idx] = (
                 population.host_weights[evt, host_idx] *
-                population.parameters.base_coefficients[evt],
-                host_idx
+                population.parameters.base_coefficients[evt]
             )
 
             propagateWeightChanges!(population.parameters.base_coefficients[evt] * change, population, evt, model)
@@ -605,11 +626,15 @@ function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, popula
         #     change *
         #     population.parameters.base_coefficients[evt]
         # )
-        setindex!(
-            population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
+        # setindex!(
+        #     population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
+        #     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] *
+        #     population.parameters.base_coefficients[evt],
+        #     host_idx
+        # )
+        population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1][host_idx] = (
             population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] *
-            population.parameters.base_coefficients[evt],
-            host_idx
+            population.parameters.base_coefficients[evt]
         )
 
         if evt < INTRAHOST_FITNESS && population.parameters.base_coefficients[evt] != 0.0

@@ -1,5 +1,5 @@
 using StaticArrays
-using Flexle
+# using Flexle
 
 # Model entity initializers
 
@@ -70,14 +70,16 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
         # Matrix{Float64}(undef, NUM_EVENTS, 0),
         # Matrix{Float64}(undef, NUM_CHOICE_MODIFIERS, 0),
         # MVector{NUM_EVENTS,FlexleSampler}(repeat([FlexleSampler()], outer=NUM_EVENTS)),
-        MVector{NUM_EVENTS,FlexleSampler}(flexleSamplers(NUM_EVENTS)),
+        # MVector{NUM_EVENTS,FlexleSampler}(flexleSamplers(NUM_EVENTS)),
+        MVector{NUM_EVENTS,WeightVector}(weightVectors(NUM_EVENTS)),
         # MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}(repeat([FlexleSampler()], outer=NUM_CHOICE_MODIFIERS)),
-        MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}(flexleSamplers(NUM_CHOICE_MODIFIERS)),
+        # MVector{NUM_CHOICE_MODIFIERS,FlexleSampler}(flexleSamplers(NUM_CHOICE_MODIFIERS)),
+        MVector{NUM_CHOICE_MODIFIERS,WeightVector}(weightVectors(NUM_CHOICE_MODIFIERS)),
         0.0, 0.0,
         zeros(Float64, length(model.populations)),
         zeros(Float64, length(model.populations)),
         zeros(Int64, NUM_COMPARTMENTS),
-        zeros(Int64, NUM_SAMPLING_COEFFICIENTS-1),
+        zeros(Int64, NUM_SAMPLING_COEFFICIENTS - 1),
     ))
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))

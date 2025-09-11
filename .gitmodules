@@ -1,0 +1,3 @@
+[submodule "src/WeightVectors.jl"]
+	path = src/WeightVectors.jl
+	url = https://github.com/LilithHafner/WeightVectors.jl

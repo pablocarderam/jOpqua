@@ -1,5 +1,5 @@
 using PoissonRandom
-using Flexle
+# using Flexle
 
 catCol(a::AbstractMatrix{Float64}, b::AbstractVector{Float64}) = reshape(append!(vec(a), vec(b)), size(a)[1:end-1]..., :)
 # Simeon Schaub https://discourse.julialang.org/t/adding-rows-to-a-matrix-dynamically/52984
@@ -48,20 +48,28 @@ end
 
 Create a vector with separate `FlexleSampler` built from a `Vector` of `weights`.
 """
-function flexleSamplers(weights::AbstractVector{Float64}, number::Int64)
-    return [FlexleSampler(weights) for _ in 1:number]
+# function flexleSamplers(weights::AbstractVector{Float64}, number::Int64)
+#     return [FlexleSampler(weights) for _ in 1:number]
+# end
+
+# """
+#     FlexleSamplers(number)
+
+# Create a vector with separate, empty `FlexleSampler`.
+# """
+# function flexleSamplers(number::Int64)
+#     return [FlexleSampler() for _ in 1:number]
+# end
+
+# sample(sampler::FlexleSampler) = Flexle.sample(sampler)
+
+function weightVectors(weights::AbstractVector{Float64}, number::Int64)
+    return [WeightVector(weights) for _ in 1:number]
 end
 
-"""
-    FlexleSamplers(number)
-
-Create a vector with separate, empty `FlexleSampler`.
-"""
-function flexleSamplers(number::Int64)
-    return [FlexleSampler() for _ in 1:number]
+function weightVectors(number::Int64)
+    return [WeightVector() for _ in 1:number]
 end
-
-sample(sampler::FlexleSampler) = Flexle.sample(sampler)
 
 function hillFunction(x::Float64, K::Float64, h::Float64)
     return x == 0 ? 0.0 : 1.0 / (1.0 + (K / x)^h)
