@@ -42,8 +42,6 @@ TODO:
 - Change transmission event function to add receiver-side bottleneck option
 - Change ancestor search so that you can choose to get only a fraction of ancestors (improves
 the function's runtime for simulations with long timelines)
-- Remove redundant parameters: `Pathogen` coefficient functions that are specific to `Response`
-events/nonsampling coefficients (and viceversa) or to `Host` events/nonsampling coefficients
 - Try explicitly declared max host population size in instance of population change,
 dynamically resize if max population exceeded
 
@@ -56,12 +54,24 @@ Debug the following:
 - Transition
 - Interventions
 
+## 10 May 2026
+Back at it.
+- Removed redundant parameters: `PathogenType` coefficient functions that are 
+specific to `Response` events/nonsampling coefficients or to `Host` 
+events/nonsampling coefficients, as well as `ResponseType` coefficient functions 
+that are specific to `Pathogen`. Left function array structure intact by having the 
+setup function for `PathogenType` and `ResponseType` fill in the redundant 
+coefficient functions with functions that map to `1.0`.
+- Changed parameters of `pathogen_evolution` simulation to show sweeps and clonal 
+interference
+
 ## 21 Jul 2025
 - Remove external setting of Flexle sums (reduntant with Flexle `1.0.3`)
 
 ## 15 Jul 2025
-- In-house Hamming distance function for both (1) performance and (2) generalizability (e.g.
-nucleotide/amino acid substitution matrix in place of simple pairwise inequality; not currently implemented) (CLM)
+- In-house Hamming distance function for both (1) performance and (2) generalizability 
+(e.g. nucleotide/amino acid substitution matrix in place of simple pairwise inequality; 
+not currently implemented) (CLM)
 
 ## 14 Jul 2025
 - Upgrade Flexle to `1.0.3`, fixes an uncommon bug when updating some weights

@@ -2,7 +2,7 @@
 # julia --project=. examples/arenera.jl
 # unless viewing flamegraph, then run from console
 
-using Revise
+# using Revise
 using jOpqua
 
 using StaticArrays

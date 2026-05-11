@@ -2,7 +2,7 @@
 # julia --project=. examples/pathogen_evolution/pathogen_evolution.jl
 # unless viewing flamegraph, then run from console
 
-using Revise
+# using Revise
 using jOpqua
 
 using StaticArrays
@@ -37,7 +37,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         clearance_coefficient=1.0,
         contact_coefficient=1.05,
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.001,
+        mutations_upon_infection_coefficient=0.0003,
         inoculum_coefficient=1.0,
         # death_coefficient=0.001,
         # birth_coefficient=0.001,
@@ -86,4 +86,6 @@ end
 
 run(1, collect(0.0:2.0:4.0)) # compile
 @time run(0, collect(0.0:2.0:1500.0))
+# 6.019948 seconds (61.30 M allocations: 7.863 GiB, 18.43% gc time, 2.07% compilation time: <1% of which was recompilation)
+# 11 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
 # @profview run(2, collect(0.0:2.0:1500.0))
