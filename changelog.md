@@ -5,6 +5,43 @@ KNOWN ISSUES:
 instabilities in weights/immunity changes
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
+- [New paper](https://www.biorxiv.org/content/10.1101/2023.11.19.567585v3) shows transmission 
+bottlenecking is more complex than thought: an initial infection period captures a high
+diversity of genetic variability from the donor, and a subsequent intrahost bottleneck
+presumably due to overcoming first line host defenses results in a single lineage founder
+event for the infection. Intrahost selection can act at that bottleneck. We could build this
+into the transmission event function by sampling based on fitness within the new host.
+
+TODO:
+- Change transmission event function to add receiver-side bottleneck option
+- Change ancestor search so that you can choose to get only a fraction of ancestors (improves
+the function's runtime for simulations with long timelines)
+- Try explicitly declared max host population size in instance of population change,
+dynamically resize if max population exceeded
+
+Debug the following:
+- Mutant establishment
+- Recombinant establishment
+- Recombination upon contact
+- Diploid `Host` genomes/homologous chromosome separators
+- Inter-population contact
+- Transition
+- Interventions
+
+## 14 May 2026
+- Modified clearance weight calculation to be the maximum clearance weight of all pathogens
+within the host, accounting for responses, rather than the sum. This solves the issue where
+coinfections of antigenically similar strains have overestimated clearance rates. 
+- Choosing not to implement a system that checks for cross-immunity when acquiring immunity 
+upon clearance; this would imply lots of random number generation to evaluate each present 
+strain as well as some mapping of cross-immunity to probability. We can just let the 
+simulation figure it out based on the recomputed clearance rates.
+
+Together, this results in slightly lower net clearance rates of individual strains in 
+coinfections with other distantly related strains, but that is a reasonable assumption 
+representing "splitting the immune system's total resources".
+
+Original issue description:
 - Conceptual issue: Current way of handling intrahost pathogen populations as fractions causes
 clearance math to be off for complex infections (coinfections). Imagine two strains with equal
 fitness and 100% cross-immunity to each other coinfecting an individual. For starters, in the
@@ -29,30 +66,7 @@ resources")
 (2) Modify the clearance event to not only check whether it induces acquisition of a response,
 but if it does, to also to result in clearance of other coinfecting pathogens if they cannot
 escape the new immune responses (a probability determined by cross-immunity to those acquired
-responses)
-- [New paper](https://www.biorxiv.org/content/10.1101/2023.11.19.567585v3) shows transmission bottlenecking is more complex than thought: an initial infection period captures a high
-diversity of genetic variability from the donor, and a subsequent intrahost bottleneck
-presumably due to overcoming first line host defenses results in a single lineage founder
-event for the infection. Intrahost selection can act at that bottleneck. We could build this
-into the transmission event function by sampling based on fitness within the new host.
-
-TODO:
-- Change clearance weight calculation as described above
-- Change clearance event as described above
-- Change transmission event function to add receiver-side bottleneck option
-- Change ancestor search so that you can choose to get only a fraction of ancestors (improves
-the function's runtime for simulations with long timelines)
-- Try explicitly declared max host population size in instance of population change,
-dynamically resize if max population exceeded
-
-Debug the following:
-- Mutant establishment
-- Recombinant establishment
-- Recombination upon contact
-- Diploid `Host` genomes/homologous chromosome separators
-- Inter-population contact
-- Transition
-- Interventions
+responses)... Maybe unnecessary, let subsequent clearances happen based on new clearance rates
 
 ## 10 May 2026
 Back at it.

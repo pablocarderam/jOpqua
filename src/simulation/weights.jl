@@ -157,11 +157,21 @@ end
 
 function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int64)
     population.host_weights[evt, host_idx] = 0.0
-    for p in 1:length(population.hosts[host_idx].pathogens)
-        pathogenWeights!(p, population.hosts[host_idx], population, evt)
-        population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
-        # we sum here because we have already weighted by fraction
-        # (for everything except clearance, see above)
+    if evt == CLEARANCE
+        for p in 1:length(population.hosts[host_idx].pathogens)
+            pathogenWeights!(p, population.hosts[host_idx], population, evt)
+            if population.hosts[host_idx].pathogen_weights[evt, p] > population.host_weights[evt, host_idx]
+                population.host_weights[evt, host_idx] = population.hosts[host_idx].pathogen_weights[evt, p]
+            end
+            # For clearance, we take the maximum rate
+        end
+    else
+        for p in 1:length(population.hosts[host_idx].pathogens)
+            pathogenWeights!(p, population.hosts[host_idx], population, evt)
+            population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
+            # we sum here because we have already weighted by fraction
+            # (for everything except clearance, see above)
+        end
     end
 
     population.host_weights[evt, host_idx] = (
