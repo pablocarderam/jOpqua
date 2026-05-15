@@ -28,6 +28,9 @@ Debug the following:
 - Transition
 - Interventions
 
+## 15 May 2026
+- Modified parameters of `pathogen_evolution.jl` example to get nice selective sweeps again
+
 ## 14 May 2026
 - Modified clearance weight calculation to be the maximum clearance weight of all pathogens
 within the host, accounting for responses, rather than the sum. This solves the issue where
