@@ -95,7 +95,7 @@ const NUM_COEFFICIENTS = length(COEFFICIENTS)
 
 # Starter coefficients
 const START_COEFFICIENTS = SVector{NUM_COEFFICIENTS,Float64}([
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0,
     1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
     ])
 

@@ -45,10 +45,12 @@ function run(seed::Int64, t_vec::Vector{Float64})
     model = jOpqua.newModel()
     pop1 = jOpqua.newPopulation!("pop1", pop_type, model)
     pop2 = jOpqua.newPopulation!("pop2", pop_type, model)
+    # jOpqua.setPopulationTransitionCoefficient!(pop1, pop2, 1.0, model)
+    println(model.population_transition_weights_receive,model.population_weights_receive)
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop1, model)
-    jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop2, model)
+    # jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop2, model)
+    println(model.population_transition_weights_receive,model.population_weights_receive)
     pat = jOpqua.newPathogen!(start_genome, pop1, pat_type)
-
 
     for h in 1:num_infected
         jOpqua.addPathogenToHost!(pat, h, pop1, model)
@@ -63,7 +65,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
     # Data output and plots
     compartment_data = jOpqua.saveCompartments(output, "examples/metapopulations/compartment_pathogen_evolution.csv")
     jOpqua.plotCompartments(compartment_data, ["pop1"], "examples/metapopulations/compartment_pathogen_evolution_pop1.png")
-    jOpqua.plotCompartments(compartment_data, ["pop2"], "examples/metapopulations/compartment_pathogen_evolution_pop2.png")
+    # jOpqua.plotCompartments(compartment_data, ["pop2"], "examples/metapopulations/compartment_pathogen_evolution_pop2.png")
 end
 
 # run(1, collect(0.0:2.0:4.0)) # compile

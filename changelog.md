@@ -41,6 +41,13 @@ multiple populations)
 - Fixed bug in `propagateWeightsOnAddHost!()` which miscalculated the change in 
 `population_contact_weights_receive_sums` when multiple populations are present
 
+Transition and contact:
+- Changed syntax of `setPopulationTransitionCoefficient!()` and 
+`setPopulationContactCoefficient!()` to use population objects rather than population IDs,
+aiming to make the API consistently use objects directly rather than IDs
+- Changed default starting coefficient for receiving transitions to be `1.0`
+- Fixed bug in `simulate!()` to be able to deal with empty populations 
+
 ## 14 May 2026
 - Modified clearance weight calculation to be the maximum clearance weight of all pathogens
 within the host, accounting for responses, rather than the sum. This solves the issue where

@@ -24,12 +24,19 @@ function simulate!(
     host_samples = Dict{String,Matrix{StaticHost}}() # this stores history
     for p in model.populations
         if haskey(population_host_samples, p.id)
-            if isa(population_host_samples[p.id], Number)
-                host_samples_idxs[p.id] = sort(rand(1:length(p.hosts), population_host_samples[p.id]))
+            if length(p.hosts) > 0
+                if isa(population_host_samples[p.id], Number)
+                        # If sampling a number of hosts, sample randomly from the population
+                    host_samples_idxs[p.id] = sort(rand(1:length(p.hosts), population_host_samples[p.id]))
+                else
+                        # If sampling a specific set of hosts, use the provided indices
+                    host_samples_idxs[p.id] = population_host_samples[p.id]
+                end
+                max_sample_idx[p.id] = maximum(host_samples_idxs[p.id])
             else
-                host_samples_idxs[p.id] = population_host_samples[p.id]
+                host_samples_idxs[p.id] = Int64[] # initialize empty list of indices of sample hosts
+                max_sample_idx[p.id] = 0
             end
-            max_sample_idx[p.id] = maximum(host_samples_idxs[p.id])
             host_samples[p.id] = Matrix{StaticHost}(
                 undef, length(host_samples_idxs[p.id]), length(time_vector)
             )

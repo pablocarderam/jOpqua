@@ -104,7 +104,9 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
     push!(model.population_transition_weights_receive_sums, 0.0)
 
     # By default, self contact is set to 1.0
-    setPopulationContactCoefficient!(length(model.populations), length(model.populations), 1.0, model)
+    setPopulationContactCoefficient!(
+        model.populations[length(model.populations)], model.populations[length(model.populations)], 1.0, model
+    )
 
     return model.populations[end]
 end
