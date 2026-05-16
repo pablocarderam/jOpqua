@@ -8,14 +8,16 @@ function plotCompartments(
     dimensions=(800, 800), palette=:tab10, font_scale=2.0, grid=false,
     legend_location=:outerbottom, linewidth=3.0, thickness_scaling=1.0)
 
-    compartment_vars = zeros(Float64, length(output[:, "Time"]), NUM_COMPARTMENTS)
+    t_vec = unique(output[:, "Time"])
+
+    compartment_vars = zeros( Float64, length(t_vec), NUM_COMPARTMENTS )
     for id in population_ids
         compartment_vars .+= output[(output[:, "Population"].==id), 3:end]
     end
 
     Plots.scalefontsizes(font_scale)
     plot(
-        output[:, "Time"], compartment_vars,
+        t_vec, compartment_vars,
         labels=reshape([
                 "Uninfected naive", "Uninfected immune",
                 "Infected naive", "Infected immune", "Dead"

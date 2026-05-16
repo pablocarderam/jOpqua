@@ -28,8 +28,18 @@ Debug the following:
 - Transition
 - Interventions
 
-## 15 May 2026
+## 16 May 2026
 - Modified parameters of `pathogen_evolution.jl` example to get nice selective sweeps again
+
+Multiple bug fixes for multi-population simulations:
+- Fixed bug in `newPopulation!()` when expanding population contact and transition matrix 
+while adding new populations
+- Fixed bug in `saveCompartments()` when constructing compartment matrix without assigning
+times to all populations
+- Fixed bug in `plotCompartments()` where time vector was wrong size (deleted repeats from
+multiple populations)
+- Fixed bug in `propagateWeightsOnAddHost!()` which miscalculated the change in 
+`population_contact_weights_receive_sums` when multiple populations are present
 
 ## 14 May 2026
 - Modified clearance weight calculation to be the maximum clearance weight of all pathogens

@@ -10,7 +10,7 @@ function saveCompartments(output::Output, file_name::String)
         COMPARTMENT_LABELS
     )
     df[:, "Population"] = repeat(pop_ids, inner=[length(output.time)])
-    df[:, "Time"] = output.time
+    df[:, "Time"] = repeat(output.time, outer=[length(pop_ids)])
 
     df = df[:, ["Time", "Population", COMPARTMENT_LABELS...]]
 

@@ -189,9 +189,11 @@ mutable struct Model
     # size POPULATIONS x POPULATIONS; receiver is on row, emitter is on column
 
     population_contact_weights_receive_sums::Vector{Float64}
-    # size POPULATIONS
+    # size POPULATIONS;
+    # Sums across all rows for each column to allow sampling of a receiver for a given emitter
     population_transition_weights_receive_sums::Vector{Float64}
-    # size POPULATIONS
+    # size POPULATIONS;
+    # Sums across all rows for each column to allow sampling of a receiver for a given emitter
 
     event_rates::MVector{NUM_EVENTS,Float64}
     event_rates_sum::Float64

@@ -89,12 +89,12 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
     end
 
     if length(model.populations) > 1 # if more than just this population we just added
-        model.population_contact_weights_receive = catCol(
-            model.population_contact_weights_receive, zeros(Float64, length(model.populations))
-        )
-        model.population_transition_weights_receive = catCol(
-            model.population_transition_weights_receive, zeros(Float64, length(model.populations))
-        )
+        new_weights = zeros( Float64, length(model.populations), length(model.populations) )
+        new_weights[1:length(model.populations)-1, 1:length(model.populations)-1] = model.population_contact_weights_receive
+        model.population_contact_weights_receive = copy(new_weights)
+
+        new_weights[1:length(model.populations)-1, 1:length(model.populations)-1] = model.population_transition_weights_receive
+        model.population_transition_weights_receive = copy(new_weights)
     else
         model.population_contact_weights_receive = Matrix{Float64}(undef, 1, 1)
         model.population_transition_weights_receive = Matrix{Float64}(undef, 1, 1)
