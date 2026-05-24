@@ -11,7 +11,7 @@ models, hosts types in multi-host/vector systems, geographically separate
 groups of hosts, sympatric groups of hosts with different epidemiological
 characteristics, etc., and all combinations of the above
 - **Explicit host genetics** that affect model behavior in the same way that pathogen 
-genomes do
+genomes do, allowing for simulations of host evolution 
 - **An overhauled system for modeling host acquired immunity** with flexibility and 
 nuance enough to even model other conditions acquired as a result of infection that
 might not confer immunity
