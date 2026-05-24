@@ -444,7 +444,6 @@ function propagateWeightChanges!(change::Float64, population::Population, evt::I
         else
             calculateWeight!(population, evt, model)
             calculateRate!(evt, model)
-            population.recalculation_counters[evt] = 0
         end
     end
 end
@@ -535,22 +534,20 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
                 end
             end
         else
-            #TODO: Are the recalculation_counters doing anything?
-            # calculateWeightReceive!(population, evt, model)
-            # calculateWeightReceive!(evt, model)
+            calculateWeightReceive!(population, evt, model)
+            calculateWeightReceive!(evt, model)
 
-            # if evt == RECEIVE_CONTACT
-            #     for p in 1:length(model.populations)
-            #         calculatePopulationContactWeightReceiveMatrix!(p, model)
-            #         calculateWeight!(population, CONTACT, model)
-            #     end
-            # elseif evt == RECEIVE_TRANSITION
-            #     for p in 1:length(model.populations)
-            #         calculatePopulationTransitionWeightReceiveMatrix!(p, model)
-            #         calculateWeight!(population, TRANSITION, model)
-            #     end
-            # end
-            population.recalculation_counters[evt] = 0
+            if evt == RECEIVE_CONTACT
+                for p in 1:length(model.populations)
+                    calculatePopulationContactWeightReceiveMatrix!(p, model)
+                    calculateWeight!(population, CONTACT, model)
+                end
+            elseif evt == RECEIVE_TRANSITION
+                for p in 1:length(model.populations)
+                    calculatePopulationTransitionWeightReceiveMatrix!(p, model)
+                    calculateWeight!(population, TRANSITION, model)
+                end
+            end
         end
     end
 end

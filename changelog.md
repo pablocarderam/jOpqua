@@ -96,6 +96,13 @@ for all added hosts
 - Changed `removeHostFromPopulation!()` to use `propagateWeightsOnRemoveHost!()` to 
 update population weights
 
+Later:
+- Added back recalculation counters for receive weights
+- Removed redundant resetting of recalculation counters in `propagateWeightChanges!()` and 
+`propagateWeightReceiveChanges!()`
+- Changed parameters of `pathogen_evolution.jl` example to get nice selective sweeps again,
+this time there's some interesting clonal interference too
+
 ### 16 May 2026
 - Modified parameters of `pathogen_evolution.jl` example to get nice selective sweeps again
 

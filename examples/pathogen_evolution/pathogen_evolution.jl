@@ -37,7 +37,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         clearance_coefficient=1.0,
         contact_coefficient=1.05,
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.0005,
+        mutations_upon_infection_coefficient=0.0004,
         inoculum_coefficient=1.0,
         # death_coefficient=0.001,
         # birth_coefficient=0.001,
@@ -86,7 +86,7 @@ end
 
 run(1, collect(0.0:2.0:4.0)) # compile
 @time run(0, collect(0.0:2.0:1500.0))
-# 7.064128 seconds (73.15 M allocations: 9.044 GiB, 16.74% gc time, 8.11% compilation time: <1% of which was recompilation)
-# 15 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
+# 5.787028 seconds (58.44 M allocations: 7.414 GiB, 18.69% gc time, 9.27% compilation time: <1% of which was recompilation)
+# 24 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
 
 # @profview run(2, collect(0.0:2.0:1500.0))
