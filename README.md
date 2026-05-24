@@ -1,14 +1,20 @@
 # jOpqua
 This is work in progress.
 
-Julia implementation of [Opqua](https://github.com/pablocarderam/opqua), with
-two particular improvements:
-- streamlined system for groups of hosts with different parameters
-(`Population`), can be used for compartments in traditional epidemiological
+A Julia language implementation of [Opqua](https://github.com/pablocarderam/opqua), 
+with three particular improvements:
+- a streamlined, versatile system for groups of hosts with different parameters
+("`Population`") that can be used for compartments in traditional epidemiological
 models, hosts types in multi-host/vector systems, geographically separate
 groups of hosts, sympatric groups of hosts with different epidemiological
 characteristics, etc., and all combinations of the above
+- Explicit host genetics that affect model behavior in the same way that pathogen 
+genomes do
 - an overhauled, flexible, and nuanced handling of host acquired immunity
+
+Furthermore, the user now has access to a much greater number of parameters 
+that may be (optionally) tinkered with to influence model behavior across 
+scales.
 
 ## Here's a rundown of the model.
 The model is built on the following hierarchy of entities,
@@ -123,6 +129,3 @@ not sure how to go about distinguishing imprinted vs. affinity matured immunity
 using this structure—I think there's a way to code it entirely through the
 user-defined functions, or maybe just with some light changes. But I'll worry
 about that later.
-
-I haven't started debugging so it's probably full of issues. I'm waiting to have
-a working prototype.

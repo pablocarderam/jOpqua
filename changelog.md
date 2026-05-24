@@ -1,22 +1,34 @@
 # jOpqua Changelog
 
-KNOWN ISSUES:
+## Known Issues:
+
+### Known bugs:
+None at the moment.
+
+### Known performance issues:
 - Garbage collection time is higher than expected for 100k host simulations, suspected type
 instabilities in weights/immunity changes
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
+
+### Mechanistic/biological limitations:
 - [New paper](https://www.biorxiv.org/content/10.1101/2023.11.19.567585v3) shows transmission 
 bottlenecking is more complex than thought: an initial infection period captures a high
 diversity of genetic variability from the donor, and a subsequent intrahost bottleneck
 presumably due to overcoming first line host defenses results in a single lineage founder
 event for the infection. Intrahost selection can act at that bottleneck. We could build this
 into the transmission event function by sampling based on fitness within the new host.
+- Within-host dynamics are currently modeled as stochastic processes with events depending on 
+rates or through the use of compartment models (e.g. Exposed and Infected compartments in an
+SEIR-type model) by using separate `Population` entities for each compartment and setting 
+transition rates between them. However, detailed `Pathogen` and `Response` population changes 
+within individual hosts are not currently captured.
 
-TODO:
+### TODO:
 - Change transmission event function to add receiver-side bottleneck option
 - Change ancestor search so that you can choose to get only a fraction of ancestors (improves
 the function's runtime for simulations with long timelines)
-- Try explicitly declared max host population size in instance of population change,
+- Try explicitly-declared max host population size in instance of population change,
 dynamically resize if max population exceeded
 
 Debug the following:
@@ -26,7 +38,9 @@ Debug the following:
 - Diploid `Host` genomes/homologous chromosome separators
 - Interventions
 
-## 24 May 2026
+## Changelog:
+
+### 24 May 2026
 Major update solving multiple important bugs related to transitions and contacts. 
 
 Inter-population contacts and transitions considered debugged!
@@ -61,9 +75,9 @@ propagating weights with the correct factors in those cases, temporarily adjusti
 the transition rates to zero if an empty population is getting a new host, and using 
 `host_weights` instead of directly calculating and triggering weight propagations
 from within the function (this was incorrect because it wasn't accounting for host
-coefficients modified by host genome, pathogens, or responses).
+coefficients modified by host genome, pathogens, or responses)
 - Changed `metapopulation.jl` to illustrate inter-population contact and transition 
-behavior.
+behavior
 
 Remember that `population_weights_receive` doesn't divide by population size using the 
 `constant_transition_density` parameter, that is only included in the 
@@ -82,7 +96,7 @@ for all added hosts
 - Changed `removeHostFromPopulation!()` to use `propagateWeightsOnRemoveHost!()` to 
 update population weights
 
-## 16 May 2026
+### 16 May 2026
 - Modified parameters of `pathogen_evolution.jl` example to get nice selective sweeps again
 
 Multiple bug fixes for multi-population simulations:
@@ -103,7 +117,7 @@ aiming to make the API consistently use objects directly rather than IDs
 `START_COEFFICIENTS`
 - Fixed bug in `simulate!()` to be able to deal with empty populations 
 
-## 14 May 2026
+### 14 May 2026
 - Modified clearance weight calculation to be the maximum clearance weight of all pathogens
 within the host, accounting for responses, rather than the sum. This solves the issue where
 coinfections of antigenically similar strains have overestimated clearance rates. 
@@ -143,7 +157,7 @@ but if it does, to also to result in clearance of other coinfecting pathogens if
 escape the new immune responses (a probability determined by cross-immunity to those acquired
 responses)... Maybe unnecessary, let subsequent clearances happen based on new clearance rates
 
-## 10 May 2026
+### 10 May 2026
 Back at it.
 - Removed redundant parameters: `PathogenType` coefficient functions that are 
 specific to `Response` events/nonsampling coefficients or to `Host` 
@@ -154,18 +168,18 @@ coefficient functions with functions that map to `1.0`.
 - Changed parameters of `pathogen_evolution` simulation to show sweeps and clonal 
 interference
 
-## 21 Jul 2025
+### 21 Jul 2025
 - Remove external setting of Flexle sums (reduntant with Flexle `1.0.3`)
 
-## 15 Jul 2025
+### 15 Jul 2025
 - In-house Hamming distance function for both (1) performance and (2) generalizability 
 (e.g. nucleotide/amino acid substitution matrix in place of simple pairwise inequality; 
 not currently implemented) (CLM)
 
-## 14 Jul 2025
+### 14 Jul 2025
 - Upgrade Flexle to `1.0.3`, fixes an uncommon bug when updating some weights
 
-## 16 Jun 2025
+### 16 Jun 2025
 Float precision errors in rate calculation accumulate over time. To solve this, I
 added a full rate recalculation procedure that runs every certain number of events
 to reset error (including for the `.sum` field on Flexle samplers, the `contact_sum` and
@@ -182,7 +196,7 @@ levels whenever a threshold is exceeded in the recalculation counter
 
 Beauutiful selective sweep succession in `pathogen_evolution` example.
 
-## 15 Jun 2025
+### 15 Jun 2025
 Finally tracked down a bug involving floating point errors in total sum calculation causing
 clearances to be attempted when there was nothing to clear, particularly in coinfections.
 To do this, I:
@@ -194,13 +208,13 @@ triggered by `becomesZero`
 This then begs the question on whether Flexle should internally be checking for large changes
 using `becomesZero` internally and recalculating on its own.
 
-## 12 Jun 2025
+### 12 Jun 2025
 - Added approximately zero check in `updatePopulationTransitionWeightReceiveMatrix!`
 - Added coefficient recalculation functions to `weights.jl`, triggered when a coefficient sum
 equals approximately zero (and didn't before)
 - Added `becomesZero` as a `utils.jl` function for the above purpose
 
-## 9 Jun 2025
+### 9 Jun 2025
 Births and deaths now work.
 - Bug fix in death handling within `removeHostFromPopulation!`
 - Change `simulate` to not crash when host population is zero
@@ -208,15 +222,15 @@ Births and deaths now work.
 - Syntax errors and multiple other bug fixes and updates in `birth!`
 - Removed `UMAP` requirement
 
-## 7 Jun 2025
+### 7 Jun 2025
 - Small change in `developResponse` structure, returning a single `Response` instead of a
 vector
 
-## 6 Jun 2025
+### 6 Jun 2025
 - Small change in simulation algorithm to avoid running a final event if event time is over
 max simulation time
 
-## 5 Jun 2025
+### 5 Jun 2025
 - Added `ancestors` function to data analysis package to pull out all ancestors from a list
 of `Pathogen` genomes in a `Population`
 - Multiple edits to flu example, code for genetic and antigenic maps might be cleaned up and
@@ -225,21 +239,21 @@ standardized into a `plots` function
 I believe Hill function does now behave as expected based on all-none immunity (as of
 previous commit).
 
-## 24 May 2025
+### 24 May 2025
 - Fixed bug in `weightedInteractionResponse` parameter types
 - Fixed bug in `weightedInteractionHostwideProduct`, called the wrong function (specific
 instead of hostwide)
 
-## 15 May 2025
+### 15 May 2025
 - Changed parameter in `pathogen_evolution.jl` example to the new correct hostwide parameter
 - Removed type instabilities in `immunity.jl` functions
 
-## 14 May 2025
+### 14 May 2025
 - Changed order of loading files to avoid import conflicts
 This is actually crucial for performance! Without it, the new immunity changes led to a ~3.8X
 slowdown for the `pathogen_evolution.jl` with 10000 hosts
 
-## 13 May 2025
+### 13 May 2025
 - Continued changing nomenclature of specific/hostwide and static/interaction coefficients
 - Changed weight computation to correctly account for all kinds of coefficients
 - Added new parameters for functions controlling `Pathogen`-`Response` interaction weighting
@@ -247,7 +261,7 @@ for a specific `Pathogen`, a specific `Response`, and a hostwide function
 (`weightedInteractionPathogen`, `weightedInteractionResponse`, and `weightedInteractionHostwide`,
 respectively)
 
-## 11 May 2025
+### 11 May 2025
 - Corrected bug in `weightedInteractionWinnerTakesAll`
 - Renamed "specific" (interaction-specific) coefficients as "interaction" coefficients
 - Renamed "normal" coefficients are "specific" coefficients (specific to a pathogen or
@@ -264,64 +278,64 @@ There are now clearly seven types of coefficients modifying `Population`-level p
 All parameters and coefficients are specified in the respective "type" structs:
 `PathogenType`, `ResponseType`, `HostType`, `PopulationType`.
 
-## 8 May 2025
+### 8 May 2025
 - Added legend omission to plots
 - Added Hill function to utils
 
-## 25 April 2025
+### 25 April 2025
 - Add `Flexle.sample` alias to resolve `sample` function name conflict with `StatsBase`
 
-## 16 April 2025
+### 16 April 2025
 - Removed local Flexle files
 - Moved Flexle examples to outer directory
 - Updated Flexle requirement to `1.0.2`
 - Added code to use imported Flexle package (including `Flexle.sample` to resolve function
 naming conflicts with `sample`)
 
-## 12 April 2025
+### 12 April 2025
 - Incorporated Flexle fixes implemented by CLM, results in 63.6% improvement in runtime
 over `randChoose` linear search for `pathogen_evolution.jl` with 10,000 hosts; was even
 able to run that simulation with 10^6 (!!!) hosts in 1034 seconds!
 
-## 11 April 2025
+### 11 April 2025
 - Moved `flexleSamplers` methods from `Flexle` into `utils.jl`
 
-## 10 April 2025
+### 10 April 2025
 - `Flexle` sampling has been incorporated into `Host` sampling within a `Population`;
 `Flexle` results in performance decrease compared to `randChoose` due to possible
 inefficiencies in the calling of `maxLevelWeight` (PCR)
 
-## 29 March 2025
+### 29 March 2025
 - Remove `Flexle` source code, now in [separate package](https://github.com/connormurphy798/Flexle.jl)
 included in `jOpqua` dependencies (CLM)
 
-## 27 March 2025
+### 27 March 2025
 - Minor bug fix (`Flexle.index_positions` not updating when 0-weight element pushed) (CLM)
 
-## 26 March 2025
+### 26 March 2025
 - Precompute log2 of `Flexle` max level upper bound for faster indexing (CLM)
 
-## 25 March 2025
+### 25 March 2025
 - `Flexle.setindex!` avoid adding to/removing from level when new and old weights belong
 in same level (CLM)
 
-## 22 March 2025
+### 22 March 2025
 - Reorganize `Flexle` into its own module (CLM)
 - Refactor API to be more idiomatically "Julia", i.e. rename functions where appropriate
 to be methods of existing functions like `push!` or `deleteat!` (CLM)
 - Write `Flexle` API doc (CLM)
 
-## 21 March 2025
+### 21 March 2025
 - New strategy for recording `index_positions` as `Vector` at `FlexleSampler` level
 (as opposed to `Dict` at `FlexLevel` level), ~30-50x speedup to addition/removal of
 new weights (CLM)
 - Revert to old `rejectionSample` technique; yet-unidentified bug in previous
 strategy caused sample distribution to be wrong
 
-## 19 March 2025
+### 19 March 2025
 - Added (+clarified existing) docstrings for most `flexle.jl` functions (CLM)
 
-## 7 March 2025
+### 7 March 2025
 - Incorporated static and interaction hostwide coefficients of `Pathogen` and
 `Response` entities into weight and coefficient propagation from the
 `Pathogen` and `Response` level to the `Host` level
@@ -329,7 +343,7 @@ strategy caused sample distribution to be wrong
 - Harnessed calculated coefficients ratehr than functions in `pathogenWeights!`
 - Fixed bugs regarding multiple mutations in `mutantSequence!`
 
-## 6 March 2025
+### 6 March 2025
 - Rename `weightedResponse` to `weightedInteraction`
 - Fixed some bugs in `birth!`, changed host contact function to determine inoculum
 from `INOCULUM` coeefficient by default but from `VERTICAL_TRANSMISSION`
@@ -338,7 +352,7 @@ coefficient during vertical transmission instead
 - Futher improvements to `removeFromFlexleSampler!` dict update via streamlined
 algorithm and fast hashing keys (CLM)
 
-## 5 March 2025
+### 5 March 2025
 - Add response acquisition upon clearance as preferred alternative to response
 acquisition during infection (as in mutations upon infection vs. mutation
 establishment)
@@ -349,14 +363,14 @@ recombination to nonsampling variable/coefficient/function vectors
 - Remove unnecessary comments, correct long description in README from last
 weekend
 
-## 4 March 2025
+### 4 March 2025
 - Renamed `infectionProbability` to `transmissionEfficiency`
 - Transfer transmission efficiency and infection probability to nonsampling
 variable/coefficient/function vectors
 - Fix `Flexle` bug where `index_positions` was not updated on element removal; current
 fix disastrously slow, needs speedup (CLM)
 
-## 3 March 2025
+### 3 March 2025
 - Added nonsampling coefficient vector to `Host` and some machinery to update it
 - Create `HostType` struct to house `Host`-specific parameters
 - Changed `birth!` to carry out a contact event if vertical transmission happens
@@ -365,13 +379,13 @@ to nonsampling variable/coefficient/function vectors
 - Additional x2 weight update performance improvement via: `Float64` bit manipulation
 to calculate log bounds + floor log2; and iterative approach to `levelIndex` (CLM)
 
-## 2 March 2025
+### 2 March 2025
 - Corrected a couple references from to `NUM_COEFFICIENTS` for
 `INTRAHOST_FITNESS`
 - Added new coefficients to hierarchy matrices in preparation of overhaul to
 non-sampling variables and sub-events
 
-## 1 March 2025
+### 1 March 2025
 Some conceptual simulation structure advances:
 
 An integral part of jOpqua simulations are the myriad of variables that affect
@@ -461,7 +475,7 @@ random variable)
 - `TRANSMISSION_EFFICIENCY` (modifies a probability)
 - `VERTICAL_TRANSMISSION` (modifies a probability)
 
-## 28 February 2025
+### 28 February 2025
 - Added missing `vertical_transmission_coefficient` to `PopulationType`, changed
 vertical transmission names and parameter structure to conform with other
 parameters
@@ -477,7 +491,7 @@ functions we need to have in `immunity.jl` handling each one
 local variables); new `Dict` field in `FlexLevel` storing positions of items
 in `indices` vector; and new `maxLevelWeight` function (CLM)
 
-## 27 February 2025
+### 27 February 2025
 - Added `model.time`
 - Added parents to `Host`
 - Added `birth_time` to `Host`, `Response`, and `Pathogen`
@@ -489,7 +503,7 @@ I thought that individuals with immunity against a strain were not being
 protected from coinfections with that strain, but that was only because we
 weren't specifying an adequate `reactivityCoefficient` function.
 
-## 26 February 2025
+### 26 February 2025
 - Fixed bug where changes in contact receive weights were not correctly
 propagating into contact rates (missing base population coefficient
 multiplication) (PCR)
@@ -506,7 +520,7 @@ functions (PCR)
 - Added error tolerance checking at model rate level (PCR)
 - Moved `generateGamete` and `generateZygote` functions up in file (PCR)
 
-## 25 February 2025
+### 25 February 2025
 - Removed intrahost fitness coefficient from `PopulationType` since it was
 never used (PCR)
 - Changed default parameters to be all zeros for base coefficient/rates and
@@ -525,7 +539,7 @@ entities associated, or just `nothing` (PCR)
 KNOWN ISSUE: runtime didn't finish when I tried with
 `response_acquisition_coefficient=1.0,`!!!
 
-## 24 February 2025
+### 24 February 2025
 - Added proportional fitness function for pathogen fractions (PCR)
 - Debugged problems with complex weight calculation (contact, transition,
 receive contact, receive transition), particularly (1) when adding hosts in
@@ -534,7 +548,7 @@ bulk, (2) when removing hosts, (3) in the main `hostWeights!` function (PCR)
 - Fix `flexle.jl` bugs mostly involving improper handling of zero-weight entries,
 plus undeclared variable in `addToFlexleSampler!` as noted by PCR (CLM)
 
-## 23 February 2025
+### 23 February 2025
 - Remove function that plots compartments from output object to standardize
 all plotting functions as working with `DataFrames` (PCR)
 - Fix bugs in `compartmentPlot` function so that it works with `DataFrame`
@@ -553,7 +567,7 @@ because they can't handle passing functions as arguments apparently... hopefully
 the type definitions at the struct level keep performance okay; the flamegraph
 still doesn't show any non-compiled code at least (PCR)
 
-## 22 February 2025
+### 22 February 2025
 - Moved `logbounds` to `flexle.jl` (PCR)
 - Type-defined `zeroTruncatedPoisson` and `catcol` (PCR)
 - Fixed small bug in host weight calculation from adding host genomes (PCR)
@@ -565,14 +579,14 @@ still doesn't show any non-compiled code at least (PCR)
 
 Note: I think flexle's `addToFlexleSampler!` has an undeclared variable `i`
 
-## 21 February 2025
+### 21 February 2025
 - decided on `flexle.jl` API, functions written but not yet fully tested (CLM)
 - Added genome sequence to `Host` (PCR)
 - Made `Response` entities store the `Host` genome sequence they were derived in
 (PCR)
 - Made functions in `ResponseType` take host genome sequences into account (PCR)
 
-## 20 February 2025
+### 20 February 2025
 - `flexle.jl` additions including sampling; updating sampler `weights`; and
 sample testing (CLM)
 - Removed commented code for harmonic means and alternate algorithms in
@@ -614,11 +628,11 @@ TODO:
 - Add `Host` sexual reproduction, with second parent selection and
 recombination during `Host` birth events
 
-## 19 February 2025
+### 19 February 2025
 - Finished composition dataframe (PCR)
 - Bug fix on history dataframe saving (PCR)
 
-## 18 February 2025
+### 18 February 2025
 - Added data csv export of compartments data (PCR)
 - Added csv plotting of compartments data (PCR)
 - Added option of `nothing` for `Response.matured.pathogen` (PCR)
@@ -629,7 +643,7 @@ time (PCR)
 
 Next: composition dataframe and plot, then immunity
 
-## 17 February 2025
+### 17 February 2025
 - Small bug fix: `mean_recombination_crossovers` type corrected (PCR)
 - Changed argument order in Type structs to put coefficients last within
 their section (PCR)
@@ -649,7 +663,7 @@ will be able to spot performance problems and `MVector` will be better) (PCR)
 
 At this point, the flamegraph shows no runtime (red) calls!
 
-## 16 February 2025
+### 16 February 2025
 - Bug fix in compartment variable handling (PCR)
 - New `Output` struct for simulation output (PCR)
 - Population compartment plot (PCR)
@@ -661,7 +675,7 @@ Next:
 - Finish model setup functions
 - Immunity draft
 
-## 15 February 2025
+### 15 February 2025
 - Moved FlexLev/Flexle code into a new file for modularization of the technique
 (PCR)
 - Added `StaticHost` for more lightweight storage of host info in simulation
@@ -672,7 +686,7 @@ hosts) in each population at each indicated time point, and a sample of hosts
 (each stored as `StaticHost`) from each population at each time point (PCR)
 - Reworked `Flexle` sampling to use arrays as described below (CLM)
 
-## 14 February 2025
+### 14 February 2025
 - Added references to actual parent entities in `Pathogen` and `Response` using
 CLM's `Union{X, Nothing}` trick (PCR)
 - Implemented flexible level + rejection sampling (current working titles "FlexLev
@@ -695,7 +709,7 @@ constant-time indexing.) All of that is to say that
 CLM will rework the implementation to use arrays instead. Nevertheless, this iteration
 of flexle sampling is being committed for posterity. (CLM)
 
-## 13 February 2025
+### 13 February 2025
 No changes yet, but based on (unnecessarily, sorry) lengthy discussion, we conclude
 that the optimal implementation of random weighted sampling of `Host` entities is
 a modified version of the binary level rejection sampling technique described by
@@ -741,12 +755,12 @@ sampling becomes faster than linear search is closer to 5 than 10? This makes me
 confident that linear search is preferrable now; perhaps testing binary level
 rejection sampling for events and even pathogens and responses is actually worth it.
 
-## 12 February 2025
+### 12 February 2025
 - Removed `total_hosts`, replaced with instances of `length(population.hosts)` (PCR)
 - Optimized `Host` initialization at startup (CLM)
 - Made `event_functions` into constant `EVENT_FUNCTIONS` (PCR)
 
-## 11 February 2025
+### 11 February 2025
 - Added interventions (PCR)
 - Added flamegraphs to sandbox file (PCR)
 - Defined a couple of static array types within `events.jl` (PCR)
@@ -766,10 +780,10 @@ the intervention framework to save whatever is needed whenever needed, but might
 result in performance issues given the type instability of interventions, so maybe
 a standalone implementation of sampling and saving might be best?
 
-## 9 February 2025
+### 9 February 2025
 - Small bug fix in `transition!` (PCR)
 
-## 5 February 2025
+### 5 February 2025
 - Added pathogen fraction to calculation of vertical transmission probability (PCR)
 - Moved code to add a `Host` to a `Population` into a separate function (PCR)
 - Optimizations including: add types to global variables; match literal types to
@@ -796,7 +810,7 @@ Dev roadmap:
 - output data + plotting
 - immunity DLC
 
-## 4 February 2025
+### 4 February 2025
 - Added `constant_contact_density` as a parameter of `PopulationType` to specify
 whether or not to normalize by host population size in calculation of
 receive contact weights, equivalently, added `constant_transition_density`
@@ -806,7 +820,7 @@ default be `true`; can't imagine otherwise)
 - Add birth event, along with response inheritance and vertical transmission
 parameters (not debugged)
 
-## 3 February 2025
+### 3 February 2025
 Significant overhaul of weights calculations in order to accommodate correct
 inter- and self-population contact
 
@@ -819,7 +833,7 @@ population level if the number of hosts is zero, and if they are zero, the
 corresponding population weight is set to zero and propagated
 - Implement contacts as inter- or intra-population contacts
 
-## 31 January 2025
+### 31 January 2025
 - Moved `hostContact!` down to section with events
 - Renamed `MIGRATION` to `TRANSITION` and `migration_fractions` to
 `transition_rates`
@@ -843,11 +857,11 @@ weights should be handled like contact weights, one per possible population
 contact relationship
 
 
-## 29 January 2025
+### 29 January 2025
 - Removed `Class` and everything associated to it
 - Made a single `CONTACT` event
 
-## 23 January 2025
+### 23 January 2025
 - Small bug fix in `newHost!`
 - Track `intra_population_contact_sum` within `Population`
 - Made intra-population contact rate at the `Population` level account for
@@ -868,7 +882,7 @@ model anything a `Class` does, and (2) getting rid of the distinction between
 intra- and inter-population contacts entirely, since an inter-population contact
 with the same population achieves the same objective.
 
-## 22 January 2025
+### 22 January 2025
 - Make `Class`, `Population`, and `Model` receive weight matrices include weights
 for all coefficients except for fitness
 - Change `intraPopulationContact!` such that host 2 is sampled using receive
@@ -908,7 +922,7 @@ rate as a parameter, but also the simultaneous change in receive rate.
 `newHost!` to change both `total_hosts` and contact weights at the `Population`
 level correspondingly
 
-## 21 January 2025
+### 21 January 2025
 - Some simple syntax debugging in events functions
 - Important debugging in hostWeights computation, some weight matrix indexes were
 missing and weight changes for propagation were not computed correctly for pathogen
@@ -948,7 +962,7 @@ actual pathogen-specific strength/influence on events is captured by other funct
 KNOWN ISSUES: infection events still don't seem to result in infection. This is a
 problem for tomorrow. First time simulation runs though!
 
-## 20 January 2025
+### 20 January 2025
 - Rename `acquireResponse` to `developResponse` to avoid ambiguity about when a
 `Response` is actually added to a `Host`
 - Added a quasi zero-truncated Poisson distribution function as used in Python Opqua;
@@ -973,7 +987,7 @@ coefficient `RECOMBINATION_PER_REPLICATION`
 acquisition, recombinant establishment, and intra-population contact--debugging
 needed for these
 
-## 19 January 2025
+### 19 January 2025
 - Changed `pathogens` and `responses` vectors in `Class` to be dictionaries instead,
 with keys corresponding to the assigned `Pathogen` integer code in the case of
 `pathogens` and a tuple with the codes for imprinted and matured pathogens
@@ -988,7 +1002,7 @@ the moment), so we may remove it
 you iterate through the current level
 - Added `Choice.jl` with functions to sample different entities based on their weights
 
-## 18 January 2025
+### 18 January 2025
 - Changed language such that all concepts relating to "immunity" now use "response"
 - Renamed functions to add and remove pathogens and immunities from hosts
 - Added new event, `RESPONSE_ACQUISITION`
@@ -997,24 +1011,24 @@ user-defined functions specifying how `Response` elements are acquired during
 an `RESPONSE_ACQUISITION` event
 - Added `PathogenType` to store `Pathogen`-specific parameters
 
-## 17 Jan 2025
+### 17 Jan 2025
 - Change `type` field within `Immunity` to be a reference to the `ImmunityType`,
 not an index
 
-## 12 Jan 2025
+### 12 Jan 2025
 - Fixed many weight computation bugs
 
-## 8 Jan 2025
+### 8 Jan 2025
 - Added infection, immunization, clearance, deimmunization functions
 - Changed all `Pathogen`, `Immunity`, and `ImmuneType` arrays to be arrays of
 (references to) the entities, rather than arrays of their integer indexes
 TODO: revise coefficient/weight/event nomenclature, clean up `weights.jl` in particular
 
-## 5 Jan 2025
+### 5 Jan 2025
 - Debugged `Host` weight initialization
 TODO: Adding infection and immunization functions
 
-## 4 Jan 2025
+### 4 Jan 2025
 - Reorganized functions into new file structure
 - Add and first debug struct creation methods
 - Change `Pathogen` and `Immunity` entity storage within `Class` to use a simple vector
@@ -1023,7 +1037,7 @@ of entities, rather than a dictionary with their associated ID
 (references to them), rather than their indexes in another matrix
 To do: Code to sample events and entities based on rates and weights
 
-## 31 Dec 2024
+### 31 Dec 2024
 Central change here is implementing a system for handling immunity through
 `Immunity` entities that store references to the `Pathogen` sequences that were
 imprinted and affinity matured to generate them and a reference to an `ImmunityType`
@@ -1054,12 +1068,12 @@ this logic, imprinted immunity would have an imprinted pathogen sequence, but no
 matured one
 
 
-## 16 Dec 2024
+### 16 Dec 2024
 - Some quick bug fixes
 - Added quick rundown of model structure to README
 To do: `Immunity` is currently just a sequence, can be just a reference to the corresponding pathogen.
 
-## 15 Dec 2024
+### 15 Dec 2024
 - Made fitness into a pathogen-level coefficient
 - Renamed "transmission" language to "contact"
 - Distinguished between `INTRA_POPULATION_CONTACT` and `INTER_POPULATION_CONTACT`
@@ -1074,12 +1088,12 @@ First draft of the following three:
 Next: Code `Model` vector for sampling total event rates with correct rate computation,
 add code for sampling class change and migration destination using corresponding rates in class.
 
-## 13 Dec 2024
+### 13 Dec 2024
 First draft of `Pathogen`, `Immunity`, and `Host` coefficients, fractions, and weights.
 Next up are `Class` and real rates.
 
-## 10 Dec 2024
+### 10 Dec 2024
 First attempt at structs and event vector structure.
 
-## 9 Dec 2024
+### 9 Dec 2024
 Created directory and file structure.
