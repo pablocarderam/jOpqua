@@ -2,15 +2,19 @@
 This is work in progress.
 
 A Julia language implementation of [Opqua](https://github.com/pablocarderam/opqua), 
-with three particular improvements:
-- a streamlined, versatile system for groups of hosts with different parameters
+with four considerable improvements:
+- *Significantly better performance*, able to simulate host populations
+on the order of millions of hosts
+- *A streamlined, versatile system for groups of hosts* with different parameters
 ("`Population`") that can be used for compartments in traditional epidemiological
 models, hosts types in multi-host/vector systems, geographically separate
 groups of hosts, sympatric groups of hosts with different epidemiological
 characteristics, etc., and all combinations of the above
-- Explicit host genetics that affect model behavior in the same way that pathogen 
+- *Explicit host genetics* that affect model behavior in the same way that pathogen 
 genomes do
-- an overhauled, flexible, and nuanced handling of host acquired immunity
+- *An overhauled system for modeling host acquired immunity* with flexibility and 
+nuance enough to even model other conditions acquired as a result of infection that
+might not confer immunity
 
 Furthermore, the user now has access to a much greater number of parameters 
 that may be (optionally) tinkered with to influence model behavior across 
