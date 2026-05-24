@@ -17,6 +17,9 @@ that may be (optionally) tinkered with to influence model behavior across
 scales.
 
 ## Here's a rundown of the model.
+
+_This text needs updating!_
+
 The model is built on the following hierarchy of entities,
 which are represented as structs:
 `Pathogen` and `Immunity` << `Host` << `Population` << `Model`
@@ -37,6 +40,8 @@ in the simulation (which will have their own independent rates) and 5 referring
 to "choice modifiers", which are used to choose additional entities or events
 that are needed when certain events happen.
 
+_#TODO: explain various other types of coefficients_
+
 The simulation works by randomly choosing which event type happens using
 `event_rates` that are stored at the `Model` level and updated based on changes
 to the model (currently working on that part). With an event chosen, now we need
@@ -55,16 +60,21 @@ entities. Some events involve `Host` entities but not specific `Pathogen` or
 `Immunity` entities, those events are handled at the level of `Population` and
 are not represented within `Host` entities.
 
+_#TODO: explain what a `Response` is and why it's not necessarily immunity._
+
 Now, in addition to these weight matrices that allow us to sample entities from
 their parents, we also have similar weight matrices that we use to sample
 entities when they are "receiving" an event. Examples of this are contact
-(formerly transmission, I think contact is more accurate depending on how
+(formerly "transmission"; I think contact is more accurate depending on how
 immunity is handled but I might revisit this nomenclature) events, in which a
 `Pathogen` within a `Host` within a `Population` (all sampled using their
 respective weight matrices along the `CONTACT` row) attempts to infect a
 different `Host` within the same `Population` or a different one
 (the `Population` and `Host` sampled using their respective `weight_receive`
 matrices along the `CONTACT` row).
+
+_#TODO: talk about different matrices at `Population` level, particularly 
+for contact and transition rate calculations._
 
 At the bottom-most level, sampling of `Pathogen` entities within a `Host` is
 computed based on the coefficients of that `Pathogen` genome, which are
@@ -75,6 +85,9 @@ simulation. `Immunity` also modifies `Pathogen` sampling at the bottom layer
 through user-defined functions (`immunity_coefficient_effect_functions`) that
 describe the effect of an existing `Immunity` sequence within a host on a given
 `Pathogen` sequence for the corresponding coefficient type.
+
+_#TODO: talk about different types of coefficient functions: Specific vs. 
+Hostwide, Static vs. Interaction._
 
 However, sampling of `Pathogen` entities also depends on the fraction of the total
 intrahost population that each `Pathogen` occupies. Calculating this fraction is
@@ -89,6 +102,8 @@ population fraction is the event of clearance (formerly recovery): the likelihoo
 of pathogen clearance is not necessarily proportional to the pathogen's population
 fraction, in fact it may be the opposite. Since it'll depend on many things, I
 leave it as equal weighting for all pathogens, regardless of representation.
+
+_#TODO: explain `Response` complex computations._
 
 Similarly, each `Immunity`'s contribution to `Pathogen` sampling weights depends
 on the fraction of activity of that `Immunity` within the `Host`. That fraction is
