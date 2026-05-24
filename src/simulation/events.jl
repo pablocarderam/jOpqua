@@ -251,8 +251,6 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
     push!(population.hosts, new_host)
     population.host_weights = catCol(population.host_weights, zeros(Float64, NUM_EVENTS))
     population.host_weights_receive = catCol(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS))
-    # population.host_weights_with_coefficient = catCol(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS))
-    # population.host_weights_receive_with_coefficient = catCol(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS))
     for evt in EVENTS
         push!(population.host_weights_with_coefficient_samplers[evt], 0.0)
     end
@@ -260,50 +258,7 @@ function addHostToPopulation!(new_host::Host, population::Population, model::Mod
         push!(population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1], 0.0)
     end
 
-    # TODO: make compatible with `propagateWeightsOnAddHost!`
-    for p in 1:length(model.populations)
-        model.population_contact_weights_receive[model.population_dict[population.id], p] -= (
-            model.population_contact_weights_receive[model.population_dict[population.id], p] /
-            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
-        )
-        model.population_contact_weights_receive_sums[p] -= (
-            model.population_contact_weights_receive_sums[p] /
-            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
-        )
-        propagateWeightChanges!(
-            -model.population_weights[CONTACT, p] /
-            max(length(population.hosts) * population.parameters.constant_contact_density, 1),
-            model.populations[p], CONTACT, model
-        )
-        model.population_transition_weights_receive[model.population_dict[population.id], p] -= (
-            model.population_transition_weights_receive[model.population_dict[population.id], p] /
-            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
-        )
-        model.population_transition_weights_receive_sums[p] -= (
-            model.population_transition_weights_receive_sums[p] /
-            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
-        )
-        propagateWeightChanges!(
-            -model.population_weights[TRANSITION, p] /
-            max(length(population.hosts) * population.parameters.constant_transition_density, 1),
-            model.populations[p], TRANSITION, model
-        )
-    end
-
-    for coef in EVENTS
-        if START_COEFFICIENTS[coef] != 0.0
-            propagateWeightChanges!(
-                START_COEFFICIENTS[coef], length(population.hosts), population, coef, model
-            )
-        end
-    end
-    for coef in CHOICE_MODIFIERS[begin:end-1]
-        if START_COEFFICIENTS[coef] != 0.0
-            propagateWeightReceiveChanges!(
-                START_COEFFICIENTS[coef], length(population.hosts), population, coef, model
-            )
-        end
-    end
+    propagateWeightsOnAddHost!(length(population.hosts), population, model)
 end
 
 function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::HostType, population::Population, model::Model)
@@ -312,8 +267,6 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
     # update matrices
     population.host_weights = hcat(population.host_weights, zeros(Float64, NUM_EVENTS, num_hosts))
     population.host_weights_receive = hcat(population.host_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS, num_hosts))
-    # population.host_weights_with_coefficient = hcat(population.host_weights_with_coefficient, zeros(Float64, NUM_EVENTS, num_hosts))
-    # population.host_weights_receive_with_coefficient = hcat(population.host_weights_receive_with_coefficient, zeros(Float64, NUM_CHOICE_MODIFIERS, num_hosts))
     for _ in 1:num_hosts
         for evt in EVENTS
             push!(population.host_weights_with_coefficient_samplers[evt], 0.0)
@@ -324,6 +277,7 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
     end
 
     num_starting_hosts = length(population.hosts)
+    host_coefficients = hostSequenceCoefficients(host_sequence, type)
     for i in 1:num_hosts
         push!(population.hosts, Host(
             length(population.hosts) + 1,
@@ -334,7 +288,7 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
             Vector{Float64}(undef, 0),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
-            hostSequenceCoefficients(host_sequence, type),
+            host_coefficients,
             type,
         ))
 
@@ -357,62 +311,10 @@ function removeHostFromPopulation!(host_idx::Int64, population::Population, mode
         end
     end
 
-    for coef in EVENTS
-        if population.host_weights[coef, host_idx] != 0.0
-            change = -population.host_weights[coef, host_idx]
-            if coef == CONTACT
-                population.contact_sum += change
-                change = change * model.population_contact_weights_receive_sums[model.population_dict[population.id]]
-            elseif coef == TRANSITION
-                population.transition_sum += change
-                change = change * model.population_transition_weights_receive_sums[model.population_dict[population.id]]
-            end
-            propagateWeightChanges!(
-                change * population.parameters.base_coefficients[coef], population, coef, model
-            )
-        end
-    end
-    for coef in CHOICE_MODIFIERS[begin:end-1]
-        if population.host_weights_receive[coef-CHOICE_MODIFIERS[1]+1, host_idx] != 0.0
-            propagateWeightReceiveChanges!(
-                -population.host_weights_receive[coef-CHOICE_MODIFIERS[1]+1, host_idx] * population.parameters.base_coefficients[coef], population, coef, model
-            )
-        end
-    end
+    propagateWeightsOnRemoveHost!(host_idx, population, model)
 
-    for p in 1:length(model.populations)
-        model.population_contact_weights_receive[model.population_dict[population.id], p] += (
-            model.population_contact_weights_receive[model.population_dict[population.id], p] /
-            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
-        )
-        model.population_contact_weights_receive_sums[p] += (
-            model.population_contact_weights_receive_sums[p] /
-            max(length(population.hosts) * population.parameters.constant_contact_density, 1)
-        )
-        propagateWeightChanges!(
-            model.population_weights[CONTACT, p] /
-            max(length(population.hosts) * population.parameters.constant_contact_density, 1),
-            model.populations[p], CONTACT, model
-        )
-        model.population_transition_weights_receive[model.population_dict[population.id], p] += (
-            model.population_transition_weights_receive[model.population_dict[population.id], p] /
-            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
-        )
-        model.population_transition_weights_receive_sums[p] += (
-            model.population_transition_weights_receive_sums[p] /
-            max(length(population.hosts) * population.parameters.constant_transition_density, 1)
-        )
-        propagateWeightChanges!(
-            model.population_weights[TRANSITION, p] /
-            max(length(population.hosts) * population.parameters.constant_transition_density, 1),
-            model.populations[p], TRANSITION, model
-        )
-    end
-
-    population.host_weights = population.host_weights[1:end, 1:end.!=host_idx]
-    population.host_weights_receive = population.host_weights_receive[1:end, 1:end.!=host_idx]
-    # population.host_weights_with_coefficient = population.host_weights_with_coefficient[1:end, 1:end.!=host_idx]
-    # population.host_weights_receive_with_coefficient = population.host_weights_receive_with_coefficient[1:end, 1:end.!=host_idx]
+    population.host_weights = @views(population.host_weights[1:end, 1:end.!=host_idx])
+    population.host_weights_receive = @views(population.host_weights_receive[1:end, 1:end.!=host_idx])
     for evt in EVENTS
         deleteat!(population.host_weights_with_coefficient_samplers[evt], host_idx)
     end
@@ -446,7 +348,6 @@ function setPopulationTransitionCoefficient!(pop_1::Population, pop_2::Populatio
             pop_2.parameters.constant_transition_density,
             1.0
         )) - model.population_transition_weights_receive[ model.population_dict[pop_2.id], model.population_dict[pop_1.id] ]
-    println(change)
     updatePopulationTransitionWeightReceiveMatrix!(model.population_dict[pop_1.id], model.population_dict[pop_2.id], change, model)
 end
 

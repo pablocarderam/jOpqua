@@ -99,14 +99,14 @@ const DEFAULT_HOST_TYPE = HostType(
 const DEFAULT_POPULATION_TYPE = PopulationType(
     "Default",
     true,
-    false,
+    true,
     true,
     (h_1::String, h_2::String) -> true,
     SA[ # order defined in COEFFICIENTS
         0.0, 0.0, 0.0,
         0.0, 0.0, 0.0,
         0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
         0.0, 0.0, 1.0,
         1.0, 0.0, 0.0,
         0.0, 0.0, 0.0,

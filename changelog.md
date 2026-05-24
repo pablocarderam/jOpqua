@@ -24,9 +24,63 @@ Debug the following:
 - Recombinant establishment
 - Recombination upon contact
 - Diploid `Host` genomes/homologous chromosome separators
-- Inter-population contact
-- Transition
 - Interventions
+
+## 24 May 2026
+Major update solving multiple important bugs related to transitions and contacts. 
+
+Inter-population contacts and transitions considered debugged!
+
+Changed calculation of `RECEIVE_TRANSITION` weight in `population_weights_receive` to use 
+mean of host weights instead of sum, given that receiving transitions doesn't scale with 
+the number of hosts. This requires changes:
+- Change in `newPopulation!()` to set the starting receive transition weight of a new 
+empty population to base coefficient value
+- Changed `calculateWeightReceive!()` to set the receive transition weight of an empty
+population to the base coefficient value
+- Changed `calculateWeight!()` to include `population_contact_weights_receive_sums` in 
+`population_weights` calculation for `TRANSITION`
+- Changed `Host`-level `propagateWeightChanges!()` to update `host_weights` with 
+the `change` value before `change` is itself changed by more factors in cases of 
+contact or transition events to modify `host_weights` without including 
+`population_transition_weights_receive_sums` (also 
+`population_contact_weights_receive_sums`)
+- Changed default starting coefficient for receiving transitions to be `1.0` in 
+`DEFAULT_POPULATION_TYPE`
+- Changed default value of `constant_transition_density` to `true` in 
+`DEFAULT_POPULATION_TYPE`; I'm not sure why it was `false` to begin with
+- Changed `updatePopulationTransitionWeightReceiveMatrix!()` to not update 
+`population_transition_weights_receive_sums`, since that is handled in the internal
+`calculatePopulationTransitionWeightReceiveMatrix!()` call
+- Changed `updatePopulationContactWeightReceiveMatrix!()` to not update 
+`population_contact_weights_receive_sums`, since that is handled in the internal
+`calculatePopulationContactWeightReceiveMatrix!()` call
+- Overhauled `propagateWeightsOnAddHost!()` to check for constant density in `if` 
+statements when deciding to adjust for transition and contact event denominators,
+propagating weights with the correct factors in those cases, temporarily adjusting 
+the transition rates to zero if an empty population is getting a new host, and using 
+`host_weights` instead of directly calculating and triggering weight propagations
+from within the function (this was incorrect because it wasn't accounting for host
+coefficients modified by host genome, pathogens, or responses).
+- Changed `metapopulation.jl` to illustrate inter-population contact and transition 
+behavior.
+
+Remember that `population_weights_receive` doesn't divide by population size using the 
+`constant_transition_density` parameter, that is only included in the 
+`population_contact_weights_receive` matrix.
+
+Also:
+- Added `@views` to `host_weights` and `host_weights_receive` slice accessors in 
+`removeHostFromPopulation!()` and `calculateWeight!()`
+- Removed `START_COEFFICIENT` and the two references to it (they were messing up rate 
+calculations)
+- Changed `addHostToPopulation!()` to use `propagateWeightsOnAddHost!()` to update 
+population weights
+- Changed `addHostsToPopulation!()` to calculate new `Host` weights once and use them 
+for all added hosts
+- Created `propagateWeightsOnRemoveHost!()` to update weights when a host is removed
+- Changed `removeHostFromPopulation!()` to use `propagateWeightsOnRemoveHost!()` to 
+update population weights
 
 ## 16 May 2026
 - Modified parameters of `pathogen_evolution.jl` example to get nice selective sweeps again
@@ -45,7 +99,8 @@ Transition and contact:
 - Changed syntax of `setPopulationTransitionCoefficient!()` and 
 `setPopulationContactCoefficient!()` to use population objects rather than population IDs,
 aiming to make the API consistently use objects directly rather than IDs
-- Changed default starting coefficient for receiving transitions to be `1.0`
+- Changed default starting coefficient for receiving transitions to be `1.0` in 
+`START_COEFFICIENTS`
 - Fixed bug in `simulate!()` to be able to deal with empty populations 
 
 ## 14 May 2026

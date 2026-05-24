@@ -82,6 +82,7 @@ function newPopulation!(id::String, parameters::PopulationType, model::Model)
     model.population_dict[id] = length(model.populations)
     model.population_weights = catCol(model.population_weights, zeros(Float64, NUM_EVENTS))
     model.population_weights_receive = catCol(model.population_weights_receive, zeros(Float64, NUM_CHOICE_MODIFIERS))
+    model.population_weights_receive[ RECEIVE_TRANSITION-CHOICE_MODIFIERS[1]+1, model.population_dict[id] ] = parameters.base_coefficients[RECEIVE_TRANSITION]
 
     for pop in model.populations
         push!(pop.population_contact_coefficients, 0.0)

@@ -179,10 +179,6 @@ function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int6
         hostwideNetCoefficient(population.hosts[host_idx], population, evt)
     )
 
-    # population.host_weights_with_coefficient[evt, host_idx] = (
-    #     population.host_weights[evt, host_idx] *
-    #     population.parameters.base_coefficients[evt]
-    # )
     setindex!(
         population.host_weights_with_coefficient_samplers[evt],
         population.host_weights[evt, host_idx] *
@@ -211,10 +207,6 @@ function hostWeightsResponse!(host_idx::Int64, population::Population, evt::Int6
         hostwideNetCoefficient(population.hosts[host_idx], population, evt)
     )
 
-    # population.host_weights_with_coefficient[evt, host_idx] = (
-    #     population.host_weights[evt, host_idx] *
-    #     population.parameters.base_coefficients[evt]
-    # )
     setindex!(
         population.host_weights_with_coefficient_samplers[evt],
         population.host_weights[evt, host_idx] *
@@ -230,10 +222,6 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
     # I think it might be okay here, but then we need to remove redundant user parameters that are
     # "host hostwide coefficients" in pathogens and responses
     population.host_weights[evt, h] = 1.0 * hostwideNetCoefficient(population.hosts[h], population, evt)
-    # population.host_weights_with_coefficient[evt, h] = (
-    #     population.host_weights[evt, h] *
-    #     population.parameters.base_coefficients[evt]
-    # )
     setindex!(
         population.host_weights_with_coefficient_samplers[evt],
         population.host_weights[evt, h] *
@@ -247,10 +235,6 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
     # I think it might be okay here, but then we need to remove redundant user parameters that are
     # "host hostwide coefficients" in pathogens and responses
     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] = 1.0 * hostwideNetCoefficient(population.hosts[h], population, evt)
-    # population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, h] = (
-    #     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
-    #     population.parameters.base_coefficients[evt]
-    # )
     setindex!(
         population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
         population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] *
@@ -258,32 +242,6 @@ function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
         h
     )
 end
-
-# #TODO:
-# # I think it might be okay here, but then we need to remove redundant user parameters that are
-# # "host hostwide coefficients" in pathogens and responses
-# function hostWeightsNonsamplingPathogen!(host_idx::Int64, population::Population, evt::Int64)
-#     for p in 1:length(population.hosts[host_idx].pathogens)
-#         if length(host.responses) > 0
-#             host.pathogen_weights[evt, p] =
-#                 host.pathogen_weights[evt, p] * population.parameters.weightedInteractionPathogen(
-#                     host.pathogens[p], host, evt
-#                 )
-#         end
-#     end
-#     population.hosts[host_idx].coefficients[evt] = hostwideNetCoefficient(population.hosts[host_idx], population, evt)
-# end
-
-# function hostWeightsNonsamplingResponse!(host_idx::Int64, population::Population, evt::Int64)
-#     for re in 1:length(population.hosts[host_idx].responses)
-#         responseWeights!(re, population.hosts[host_idx], population, evt)
-#     end
-#     population.hosts[host_idx].coefficients[evt] = hostwideNetCoefficient(population.hosts[host_idx], population, evt)
-# end
-
-# function hostWeightsNonsamplingHost!(host_idx::Int64, population::Population, evt::Int64)
-#     population.hosts[host_idx].coefficients[evt] = hostwideNetCoefficient(population.hosts[host_idx], population, evt)
-# end
 
 function hostWeights!(host_idx::Int64, population::Population, model::Model)
     population.hosts[host_idx].pathogen_fractions = population.parameters.pathogenFractions(
@@ -341,7 +299,6 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
             population.parameters.base_coefficients[weight] != 0.0 &&
             weight < INTRAHOST_FITNESS
         )
-
             propagateWeightReceiveChanges!(
                 population.parameters.base_coefficients[weight] *
                 (population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, host_idx] - prev),
@@ -349,46 +306,39 @@ function hostWeights!(host_idx::Int64, population::Population, model::Model)
             )
         end
     end
-    # for coef in PATHOGEN_NONSAMPLING_COEFFICIENTS
-    #     hostWeightsNonsamplingPathogen!(host_idx, population, coef)
-    # end
-    # for coef in RESPONSE_NONSAMPLING_COEFFICIENTS
-    #     hostWeightsNonsamplingResponse!(host_idx, population, coef)
-    # end
-    # for coef in HOST_NONSAMPLING_COEFFICIENTS
-    #     hostWeightsNonsamplingHost!(host_idx, population, coef)
-    # end
 end
 
 # Intra-Event/Weight level:
 
 function calculateWeight!(population::Population, evt::Int64, model::Model)
     if evt == CONTACT
-        population.contact_sum = sum(population.host_weights[CONTACT, :])
-        # population.host_weights_with_coefficient_samplers[evt].sum = population.parameters.base_coefficients[evt] * population.contact_sum
+        population.contact_sum = sum(@views(population.host_weights[evt, :]))
         # The latest version of Flexle performs the above error correction internally
         model.population_weights[evt, model.population_dict[population.id]] = (
-            model.population_contact_weights_receive_sums[model.population_dict[population.id]]
-            # * population.host_weights_with_coefficient_samplers[evt].sum
-            * population.parameters.base_coefficients[evt] * population.contact_sum
+            model.population_contact_weights_receive_sums[model.population_dict[population.id]] *
+            population.parameters.base_coefficients[evt] * population.contact_sum
         )
     elseif evt == TRANSITION
-        population.transition_sum = sum(population.host_weights[TRANSITION, :])
-        model.population_weights[evt, model.population_dict[population.id]] = population.parameters.base_coefficients[evt] * population.transition_sum
-        # population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+        population.transition_sum = sum(@views(population.host_weights[evt, :]))
+        model.population_weights[evt, model.population_dict[population.id]] = (
+            model.population_transition_weights_receive_sums[model.population_dict[population.id]] *
+            population.parameters.base_coefficients[evt] * population.transition_sum
+        )
         # The latest version of Flexle performs the above error correction internally
     else
-        model.population_weights[evt, model.population_dict[population.id]] = population.parameters.base_coefficients[evt] * sum(population.host_weights[evt, :])
-        # population.host_weights_with_coefficient_samplers[evt].sum = model.population_weights[evt, model.population_dict[population.id]]
+        model.population_weights[evt, model.population_dict[population.id]] = population.parameters.base_coefficients[evt] * sum(@views(population.host_weights[evt, :]))
         # The latest version of Flexle performs the above error correction internally
     end
     population.recalculation_counters[evt] = 0
 end
 
 function calculateWeightReceive!(population::Population, weight::Int64, model::Model)
-    model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = population.parameters.base_coefficients[weight] *  sum(population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :])
-    # population.host_weights_receive_with_coefficient_samplers[weight-CHOICE_MODIFIERS[1]+1].sum = model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]]
-    # The latest version of Flexle performs the above error correction internally
+    if length(population.hosts) == 0 && weight == RECEIVE_TRANSITION
+        model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = population.parameters.base_coefficients[weight]
+        # receiving transitions doesn't stop happening with an empty population
+    else
+        model.population_weights_receive[weight-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = population.parameters.base_coefficients[weight] * sum(@views(population.host_weights_receive[weight-CHOICE_MODIFIERS[1]+1, :]))
+    end
     population.recalculation_counters[weight] = 0
 end
 
@@ -402,7 +352,8 @@ function calculatePopulationContactWeightReceiveMatrix!(pop_idx_i::Int64, model:
                 length(model.populations[pop_idx_j].hosts) *
                 model.populations[pop_idx_j].parameters.constant_contact_density,
                 1.0
-            ))
+            )
+        )
         model.population_contact_weights_receive_sums[pop_idx_i] += model.population_contact_weights_receive[pop_idx_j, pop_idx_i]
     end
 end
@@ -417,7 +368,8 @@ function calculatePopulationTransitionWeightReceiveMatrix!(pop_idx_i::Int64, mod
                 length(model.populations[pop_idx_j].hosts) *
                 model.populations[pop_idx_j].parameters.constant_transition_density,
                 1.0
-            ))
+            )
+        )
         model.population_transition_weights_receive_sums[pop_idx_i] += model.population_transition_weights_receive[pop_idx_j, pop_idx_i]
     end
 end
@@ -429,7 +381,7 @@ function updatePopulationContactWeightReceiveMatrix!(pop_idx_1::Int64, pop_idx_2
         calculatePopulationContactWeightReceiveMatrix!(pop_idx_1, model)
         change = model.population_contact_weights_receive_sums[pop_idx_1] - prev
     end
-    model.population_contact_weights_receive_sums[pop_idx_1] += change
+
     propagateWeightChanges!(
         model.populations[pop_idx_1].parameters.base_coefficients[CONTACT] *
         model.populations[pop_idx_1].contact_sum * change,
@@ -444,7 +396,7 @@ function updatePopulationTransitionWeightReceiveMatrix!(pop_idx_1::Int64, pop_id
         calculatePopulationTransitionWeightReceiveMatrix!(pop_idx_1, model)
         change = model.population_transition_weights_receive_sums[pop_idx_1] - prev
     end
-    model.population_transition_weights_receive_sums[pop_idx_1] += change
+
     propagateWeightChanges!(
         model.populations[pop_idx_1].parameters.base_coefficients[TRANSITION] *
         model.populations[pop_idx_1].transition_sum * change,
@@ -475,8 +427,6 @@ function propagateWeightChanges!(change::Float64, evt::Int64, model::Model)
         model.event_rates[evt] += change
     end
     model.event_rates_sum = sum(model.event_rates) # this single line is all the "super-model level" calculation code haha
-    # model.event_rates[evt] += change
-    # model.event_rates_sum += change
 end
 
 function propagateWeightChanges!(change::Float64, population::Population, evt::Int64, model::Model)
@@ -501,6 +451,8 @@ end
 
 function propagateWeightChanges!(change::Float64, host_idx::Int64, population::Population, evt::Int64, model::Model)
     if change != 0
+        population.host_weights[evt, host_idx] += change
+
         if length(population.hosts) > 0
             if evt == CONTACT
                 population.contact_sum += change
@@ -518,13 +470,7 @@ function propagateWeightChanges!(change::Float64, host_idx::Int64, population::P
             change = -model.population_weights[evt, model.population_dict[population.id]]
         end
 
-        population.host_weights[evt, host_idx] += change
-
         if population.parameters.base_coefficients[evt] != 0
-            # population.host_weights_with_coefficient[evt, host_idx] += (
-            #     change *
-            #     population.parameters.base_coefficients[evt]
-            # )
             setindex!(
                 population.host_weights_with_coefficient_samplers[evt],
                 population.host_weights[evt, host_idx] *
@@ -579,7 +525,7 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
                         max(length(population.hosts) * population.parameters.constant_transition_density, 1.0)
                     )
                     # Transition receive weights are assumed to be independent of population
-                    # (constant_transition_density=false), but can be modified if desired.
+                    # (constant_transition_density=true), but can be modified if desired.
                     model.population_transition_weights_receive[model.population_dict[population.id], p] += change_p
                     model.population_transition_weights_receive_sums[p] += change_p
                     propagateWeightChanges!(
@@ -589,6 +535,7 @@ function propagateWeightReceiveChanges!(change::Float64, population::Population,
                 end
             end
         else
+            #TODO: Are the recalculation_counters doing anything?
             # calculateWeightReceive!(population, evt, model)
             # calculateWeightReceive!(evt, model)
 
@@ -611,10 +558,6 @@ end
 function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, population::Population, evt::Int64, model::Model)
     if change != 0.0
         population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] += change
-        # population.host_weights_receive_with_coefficient[evt-CHOICE_MODIFIERS[1]+1, host_idx] += (
-        #     change *
-        #     population.parameters.base_coefficients[evt]
-        # )
         setindex!(
             population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],
             population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, host_idx] *
@@ -628,45 +571,91 @@ function propagateWeightReceiveChanges!(change::Float64, host_idx::Int64, popula
     end
 end
 
-function propagateWeightsOnAddHost!(host_num::Int64, population::Population, model::Model)
+function propagateWeightsOnAddHost!(host_idx::Int64, population::Population, model::Model)
     for p in 1:length(model.populations)
-        change = (
-            model.population_contact_weights_receive[model.population_dict[population.id], p] /
-            max(host_num * population.parameters.constant_contact_density, 1.0)
-        )
-        model.population_contact_weights_receive[model.population_dict[population.id], p] -= change
-        model.population_contact_weights_receive_sums[p] -= change
-        propagateWeightChanges!(
-            -model.population_weights[CONTACT, p] /
-            max(host_num * population.parameters.constant_contact_density, 1.0),
-            model.populations[p], CONTACT, model
-        )
+        # First change denominator of contact and transition rate, if necessary
+        if population.parameters.constant_contact_density
+            change = model.population_contact_weights_receive[model.population_dict[population.id], p] / max(host_idx, 1.0)
+            model.population_contact_weights_receive[model.population_dict[population.id], p] -= change
+            model.population_contact_weights_receive_sums[p] -= change
+            propagateWeightChanges!(
+                -change * model.populations[p].parameters.base_coefficients[CONTACT] * model.populations[p].contact_sum,
+                model.populations[p], CONTACT, model
+            )
+        end
+        if population.parameters.constant_transition_density || length(population.hosts) == 1
+                # if population was empty, receiving transitions are still possible,
+                # so make everything zero first before adding new weight later below
+            if length(population.hosts) == 1
+                model.population_weights_receive[RECEIVE_TRANSITION-CHOICE_MODIFIERS[1]+1, model.population_dict[population.id]] = 0.0
+            end
+            change = model.population_transition_weights_receive[model.population_dict[population.id], p] / max(host_idx, 1.0)
+            model.population_transition_weights_receive[model.population_dict[population.id], p] -= change
+            model.population_transition_weights_receive_sums[p] -= change
 
-        change = (
-            model.population_transition_weights_receive[model.population_dict[population.id], p] /
-            max(host_num * population.parameters.constant_transition_density, 1.0)
-        )
-        model.population_transition_weights_receive[model.population_dict[population.id], p] -= change
-        model.population_transition_weights_receive_sums[p] -= change
-
-        propagateWeightChanges!(
-            -model.population_weights[TRANSITION, p] /
-            max(host_num * population.parameters.constant_transition_density, 1.0),
-            model.populations[p], TRANSITION, model
-        )
+            propagateWeightChanges!(
+                -change * model.populations[p].parameters.base_coefficients[TRANSITION] * model.populations[p].transition_sum,
+                model.populations[p], TRANSITION, model
+            )
+        end
     end
 
+    # Then update the numerator of the rates as if it were a change in the weight of a preexisting host
+    hostWeights!(length(population.hosts), population, model)
+end
+
+function propagateWeightsOnRemoveHost!(host_idx::Int, population::Population, model::Model)
+    # First update the numerator of the rates as if it were a change in the weight of a normal, existing host
     for coef in EVENTS
-        if START_COEFFICIENTS[coef] != 0.0
+        if population.host_weights[coef, host_idx] != 0.0
+            change = -population.host_weights[coef, host_idx]
+            if coef == CONTACT
+                population.contact_sum += change
+                change = change * model.population_contact_weights_receive_sums[model.population_dict[population.id]]
+            elseif coef == TRANSITION
+                population.transition_sum += change
+                change = change * model.population_transition_weights_receive_sums[model.population_dict[population.id]]
+            end
             propagateWeightChanges!(
-                START_COEFFICIENTS[coef], host_num, population, coef, model
+                change * population.parameters.base_coefficients[coef], population, coef, model
             )
         end
     end
     for coef in CHOICE_MODIFIERS[begin:end-1]
-        if START_COEFFICIENTS[coef] != 0.0
+        if population.host_weights_receive[coef-CHOICE_MODIFIERS[1]+1, host_idx] != 0.0
             propagateWeightReceiveChanges!(
-                START_COEFFICIENTS[coef], host_num, population, coef, model
+                -population.host_weights_receive[coef-CHOICE_MODIFIERS[1]+1, host_idx] * population.parameters.base_coefficients[coef],
+                population, coef, model
+            )
+        end
+    end
+
+    # If population is going to be empty, the population receive transition rate must be set to the base receive transition rate
+    if length(population.hosts) == 1
+        propagateWeightReceiveChanges!(
+            model.population.parameters.base_coefficients[RECEIVE_TRANSITION], population, RECEIVE_TRANSITION, model
+        )
+    end
+
+    # Then change denominator of contact and transition rate, if necessary
+    for p in 1:length(model.populations)
+        if population.parameters.constant_contact_density
+            change = model.population_contact_weights_receive[model.population_dict[population.id], p] / max(length(population.hosts), 1)
+            model.population_contact_weights_receive[model.population_dict[population.id], p] += change
+            model.population_contact_weights_receive_sums[p] += change
+            propagateWeightChanges!(
+                change * model.populations[p].parameters.base_coefficients[CONTACT] * model.populations[p].contact_sum,
+                model.populations[p], CONTACT, model
+            )
+        end
+        if population.parameters.constant_transition_density && length(population.hosts) > 1
+                # if population is going to be empty, no adjustment of denominator is needed
+            change = model.population_transition_weights_receive[model.population_dict[population.id], p] / max(length(population.hosts), 1)
+            model.population_transition_weights_receive[model.population_dict[population.id], p] += change
+            model.population_transition_weights_receive_sums[p] += change
+            propagateWeightChanges!(
+                change * model.populations[p].parameters.base_coefficients[TRANSITION] * model.populations[p].transition_sum,
+                model.populations[p], TRANSITION, model
             )
         end
     end
