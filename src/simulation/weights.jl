@@ -218,9 +218,6 @@ end
 # Intra-Population level
 
 function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
-    #TODO:
-    # I think it might be okay here, but then we need to remove redundant user parameters that are
-    # "host hostwide coefficients" in pathogens and responses
     population.host_weights[evt, h] = 1.0 * hostwideNetCoefficient(population.hosts[h], population, evt)
     setindex!(
         population.host_weights_with_coefficient_samplers[evt],
@@ -231,9 +228,6 @@ function hostWeightsHost!(h::Int64, population::Population, evt::Int64)
 end
 
 function hostWeightsReceive!(h::Int64, population::Population, evt::Int64)
-    #TODO:
-    # I think it might be okay here, but then we need to remove redundant user parameters that are
-    # "host hostwide coefficients" in pathogens and responses
     population.host_weights_receive[evt-CHOICE_MODIFIERS[1]+1, h] = 1.0 * hostwideNetCoefficient(population.hosts[h], population, evt)
     setindex!(
         population.host_weights_receive_with_coefficient_samplers[evt-CHOICE_MODIFIERS[1]+1],

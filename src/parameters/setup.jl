@@ -14,12 +14,6 @@ function newPathogenType(
     responseAcquisitionSpecificCoefficient::Union{Nothing,Function}=nothing,
     recombinantEstablishmentSpecificCoefficient::Union{Nothing,Function}=nothing,
     contactSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # responseLossSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # birthSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # deathSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # transitionSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # receiveTransitionSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # receiveContactSpecificCoefficient::Union{Nothing,Function}=nothing,
     intrahostFitnessSpecificCoefficient::Union{Nothing,Function}=nothing,
     mutationsUponInfectionSpecificCoefficient::Union{Nothing,Function}=nothing,
     recombinationsUponInfectionSpecificCoefficient::Union{Nothing,Function}=nothing,
@@ -27,9 +21,6 @@ function newPathogenType(
     transmissionEfficiencySpecificCoefficient::Union{Nothing,Function}=nothing,
     verticalTransmissionSpecificCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionUponClearanceSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # responseInheritanceSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # hostMutationsUponBirthSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # hostRecombinationsUponBirthSpecificCoefficient::Union{Nothing,Function}=nothing,
 
     # Each element takes seq argument, returns Float64
     mutantEstablishmentHostwideCoefficient::Union{Nothing,Function}=nothing,
@@ -63,12 +54,6 @@ function newPathogenType(
     isnothing(responseAcquisitionSpecificCoefficient) ? responseAcquisitionSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionSpecificCoefficient = responseAcquisitionSpecificCoefficient
     isnothing(recombinantEstablishmentSpecificCoefficient) ? recombinantEstablishmentSpecificCoefficient = template.specific_coefficient_functions[RECOMBINANT_ESTABLISHMENT] : recombinantEstablishmentSpecificCoefficient = recombinantEstablishmentSpecificCoefficient
     isnothing(contactSpecificCoefficient) ? contactSpecificCoefficient = template.specific_coefficient_functions[CONTACT] : contactSpecificCoefficient = contactSpecificCoefficient
-    # isnothing(responseLossSpecificCoefficient) ? responseLossSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_LOSS] : responseLossSpecificCoefficient = responseLossSpecificCoefficient
-    # isnothing(birthSpecificCoefficient) ? birthSpecificCoefficient = template.specific_coefficient_functions[BIRTH] : birthSpecificCoefficient = birthSpecificCoefficient
-    # isnothing(deathSpecificCoefficient) ? deathSpecificCoefficient = template.specific_coefficient_functions[DEATH] : deathSpecificCoefficient = deathSpecificCoefficient
-    # isnothing(transitionSpecificCoefficient) ? transitionSpecificCoefficient = template.specific_coefficient_functions[TRANSITION] : transitionSpecificCoefficient = transitionSpecificCoefficient
-    # isnothing(receiveTransitionSpecificCoefficient) ? receiveTransitionSpecificCoefficient = template.specific_coefficient_functions[RECEIVE_TRANSITION] : receiveTransitionSpecificCoefficient = receiveTransitionSpecificCoefficient
-    # isnothing(receiveContactSpecificCoefficient) ? receiveContactSpecificCoefficient = template.specific_coefficient_functions[RECEIVE_CONTACT] : receiveContactSpecificCoefficient = receiveContactSpecificCoefficient
     isnothing(intrahostFitnessSpecificCoefficient) ? intrahostFitnessSpecificCoefficient = template.specific_coefficient_functions[INTRAHOST_FITNESS] : intrahostFitnessSpecificCoefficient = intrahostFitnessSpecificCoefficient
     isnothing(mutationsUponInfectionSpecificCoefficient) ? mutationsUponInfectionSpecificCoefficient = template.specific_coefficient_functions[MUTATIONS_UPON_INFECTION] : mutationsUponInfectionSpecificCoefficient = mutationsUponInfectionSpecificCoefficient
     isnothing(recombinationsUponInfectionSpecificCoefficient) ? recombinationsUponInfectionSpecificCoefficient = template.specific_coefficient_functions[RECOMBINATIONS_UPON_INFECTION] : recombinationsUponInfectionSpecificCoefficient = recombinationsUponInfectionSpecificCoefficient
@@ -76,9 +61,6 @@ function newPathogenType(
     isnothing(transmissionEfficiencySpecificCoefficient) ? transmissionEfficiencySpecificCoefficient = template.specific_coefficient_functions[TRANSMISSION_EFFICIENCY] : transmissionEfficiencySpecificCoefficient = transmissionEfficiencySpecificCoefficient
     isnothing(verticalTransmissionSpecificCoefficient) ? verticalTransmissionSpecificCoefficient = template.specific_coefficient_functions[VERTICAL_TRANSMISSION] : verticalTransmissionSpecificCoefficient = verticalTransmissionSpecificCoefficient
     isnothing(responseAcquisitionUponClearanceSpecificCoefficient) ? responseAcquisitionUponClearanceSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceSpecificCoefficient = responseAcquisitionUponClearanceSpecificCoefficient
-    # isnothing(responseInheritanceSpecificCoefficient) ? responseInheritanceSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceSpecificCoefficient = responseInheritanceSpecificCoefficient
-    # isnothing(hostMutationsUponBirthSpecificCoefficient) ? hostMutationsUponBirthSpecificCoefficient = template.specific_coefficient_functions[HOST_MUTATIONS_UPON_BIRTH] : hostMutationsUponBirthSpecificCoefficient = hostMutationsUponBirthSpecificCoefficient
-    # isnothing(hostRecombinationsUponBirthSpecificCoefficient) ? hostRecombinationsUponBirthSpecificCoefficient = template.specific_coefficient_functions[HOST_RECOMBINATIONS_UPON_BIRTH] : hostRecombinationsUponBirthSpecificCoefficient = hostRecombinationsUponBirthSpecificCoefficient
 
     isnothing(mutantEstablishmentHostwideCoefficient) ? mutantEstablishmentHostwideCoefficient = template.hostwide_coefficient_functions[MUTANT_ESTABLISHMENT] : mutantEstablishmentHostwideCoefficient = mutantEstablishmentHostwideCoefficient
     isnothing(clearanceHostwideCoefficient) ? clearanceHostwideCoefficient = template.hostwide_coefficient_functions[CLEARANCE] : clearanceHostwideCoefficient = clearanceHostwideCoefficient
@@ -110,14 +92,10 @@ function newPathogenType(
         SA[ # order defined in COEFFICIENTS
             mutantEstablishmentSpecificCoefficient, clearanceSpecificCoefficient, responseAcquisitionSpecificCoefficient,
             recombinantEstablishmentSpecificCoefficient, contactSpecificCoefficient,
-            # responseLossSpecificCoefficient,
-            # birthSpecificCoefficient, deathSpecificCoefficient, transitionSpecificCoefficient,
-            # receiveTransitionSpecificCoefficient, receiveContactSpecificCoefficient,
             g::String->1.0, g::String->1.0, g::String->1.0, g::String->1.0, g::String->1.0, g::String->1.0,
             intrahostFitnessSpecificCoefficient,
             mutationsUponInfectionSpecificCoefficient, recombinationsUponInfectionSpecificCoefficient, inoculumSpecificCoefficient,
             transmissionEfficiencySpecificCoefficient, verticalTransmissionSpecificCoefficient, responseAcquisitionUponClearanceSpecificCoefficient,
-            # responseInheritanceSpecificCoefficient, hostMutationsUponBirthSpecificCoefficient, hostRecombinationsUponBirthSpecificCoefficient,
             g::String->1.0, g::String->1.0, g::String->1.0,
         ],
         SA[ # order defined in COEFFICIENTS
@@ -139,27 +117,8 @@ function newResponseType(
     # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
 
     # Each takes host, imprinted, matured sequences and returns Float64 coefficient
-    # mutantEstablishmentStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # clearanceStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # responseAcquisitionStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # recombinantEstablishmentStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # contactStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
     responseLossStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # birthStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # deathStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # transitionStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # receiveTransitionStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # receiveContactStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # intrahostFitnessStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # mutationsUponInfectionStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # recombinationsUponInfectionStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # inoculumStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # transmissionEfficiencyStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # verticalTransmissionStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # responseAcquisitionUponClearanceStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
     responseInheritanceStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # hostMutationsUponBirthStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # hostRecombinationsUponBirthStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
 
     # Each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
     mutantEstablishmentInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
@@ -181,8 +140,6 @@ function newResponseType(
     verticalTransmissionInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionUponClearanceInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
     responseInheritanceInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # hostMutationsUponBirthInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
-    # hostRecombinationsUponBirthInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
 
     # Each takes host, imprinted, matured sequences and returns Float64 coefficient
     mutantEstablishmentStaticHostwideCoefficient::Union{Nothing,Function}=nothing,
@@ -233,27 +190,8 @@ function newResponseType(
 
     isnothing(reactivityCoefficient) ? reactivityCoefficient = template.reactivityCoefficient : reactivityCoefficient = reactivityCoefficient
 
-    # isnothing(mutantEstablishmentStaticSpecificCoefficient) ? mutantEstablishmentStaticSpecificCoefficient = template.static_specific_coefficient_functions[MUTANT_ESTABLISHMENT] : mutantEstablishmentStaticSpecificCoefficient = mutantEstablishmentStaticSpecificCoefficient
-    # isnothing(clearanceStaticSpecificCoefficient) ? clearanceStaticSpecificCoefficient = template.static_specific_coefficient_functions[CLEARANCE] : clearanceStaticSpecificCoefficient = clearanceStaticSpecificCoefficient
-    # isnothing(responseAcquisitionStaticSpecificCoefficient) ? responseAcquisitionStaticSpecificCoefficient = template.static_specific_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionStaticSpecificCoefficient = responseAcquisitionStaticSpecificCoefficient
-    # isnothing(recombinantEstablishmentStaticSpecificCoefficient) ? recombinantEstablishmentStaticSpecificCoefficient = template.static_specific_coefficient_functions[RECOMBINANT_ESTABLISHMENT] : recombinantEstablishmentStaticSpecificCoefficient = recombinantEstablishmentStaticSpecificCoefficient
-    # isnothing(contactStaticSpecificCoefficient) ? contactStaticSpecificCoefficient = template.static_specific_coefficient_functions[CONTACT] : contactStaticSpecificCoefficient = contactStaticSpecificCoefficient
     isnothing(responseLossStaticSpecificCoefficient) ? responseLossStaticSpecificCoefficient = template.static_specific_coefficient_functions[RESPONSE_LOSS] : responseLossStaticSpecificCoefficient = responseLossStaticSpecificCoefficient
-    # isnothing(birthStaticSpecificCoefficient) ? birthStaticSpecificCoefficient = template.static_specific_coefficient_functions[BIRTH] : birthStaticSpecificCoefficient = birthStaticSpecificCoefficient
-    # isnothing(deathStaticSpecificCoefficient) ? deathStaticSpecificCoefficient = template.static_specific_coefficient_functions[DEATH] : deathStaticSpecificCoefficient = deathStaticSpecificCoefficient
-    # isnothing(transitionStaticSpecificCoefficient) ? transitionStaticSpecificCoefficient = template.static_specific_coefficient_functions[TRANSITION] : transitionStaticSpecificCoefficient = transitionStaticSpecificCoefficient
-    # isnothing(receiveTransitionStaticSpecificCoefficient) ? receiveTransitionStaticSpecificCoefficient = template.static_specific_coefficient_functions[RECEIVE_TRANSITION] : receiveTransitionStaticSpecificCoefficient = receiveTransitionStaticSpecificCoefficient
-    # isnothing(receiveContactStaticSpecificCoefficient) ? receiveContactStaticSpecificCoefficient = template.static_specific_coefficient_functions[RECEIVE_CONTACT] : receiveContactStaticSpecificCoefficient = receiveContactStaticSpecificCoefficient
-    # isnothing(intrahostFitnessStaticSpecificCoefficient) ? intrahostFitnessStaticSpecificCoefficient = template.static_specific_coefficient_functions[INTRAHOST_FITNESS] : intrahostFitnessStaticSpecificCoefficient = intrahostFitnessStaticSpecificCoefficient
-    # isnothing(mutationsUponInfectionStaticSpecificCoefficient) ? mutationsUponInfectionStaticSpecificCoefficient = template.static_specific_coefficient_functions[MUTATIONS_UPON_INFECTION] : mutationsUponInfectionStaticSpecificCoefficient = mutationsUponInfectionStaticSpecificCoefficient
-    # isnothing(recombinationsUponInfectionStaticSpecificCoefficient) ? recombinationsUponInfectionStaticSpecificCoefficient = template.static_specific_coefficient_functions[RECOMBINATIONS_UPON_INFECTION] : recombinationsUponInfectionStaticSpecificCoefficient = recombinationsUponInfectionStaticSpecificCoefficient
-    # isnothing(inoculumStaticSpecificCoefficient) ? inoculumStaticSpecificCoefficient = template.static_specific_coefficient_functions[INOCULUM] : inoculumStaticSpecificCoefficient = inoculumStaticSpecificCoefficient
-    # isnothing(transmissionEfficiencyStaticSpecificCoefficient) ? transmissionEfficiencyStaticSpecificCoefficient = template.static_specific_coefficient_functions[TRANSMISSION_EFFICIENCY] : transmissionEfficiencyStaticSpecificCoefficient = transmissionEfficiencyStaticSpecificCoefficient
-    # isnothing(verticalTransmissionStaticSpecificCoefficient) ? verticalTransmissionStaticSpecificCoefficient = template.static_specific_coefficient_functions[VERTICAL_TRANSMISSION] : verticalTransmissionStaticSpecificCoefficient = verticalTransmissionStaticSpecificCoefficient
-    # isnothing(responseAcquisitionUponClearanceStaticSpecificCoefficient) ? responseAcquisitionUponClearanceStaticSpecificCoefficient = template.static_specific_coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceStaticSpecificCoefficient = responseAcquisitionUponClearanceStaticSpecificCoefficient
     isnothing(responseInheritanceStaticSpecificCoefficient) ? responseInheritanceStaticSpecificCoefficient = template.static_specific_coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceStaticSpecificCoefficient = responseInheritanceStaticSpecificCoefficient
-    # isnothing(hostMutationsUponBirthStaticSpecificCoefficient) ? hostMutationsUponBirthStaticSpecificCoefficient = template.static_specific_coefficient_functions[HOST_MUTATIONS_UPON_BIRTH] : hostMutationsUponBirthStaticSpecificCoefficient = hostMutationsUponBirthStaticSpecificCoefficient
-    # isnothing(hostRecombinationsUponBirthStaticSpecificCoefficient) ? hostRecombinationsUponBirthStaticSpecificCoefficient = template.static_specific_coefficient_functions[HOST_RECOMBINATIONS_UPON_BIRTH] : hostRecombinationsUponBirthStaticSpecificCoefficient = hostRecombinationsUponBirthStaticSpecificCoefficient
 
     isnothing(mutantEstablishmentInteractionSpecificCoefficient) ? mutantEstablishmentInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[MUTANT_ESTABLISHMENT] : mutantEstablishmentInteractionSpecificCoefficient = mutantEstablishmentInteractionSpecificCoefficient
     isnothing(clearanceInteractionSpecificCoefficient) ? clearanceInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[CLEARANCE] : clearanceInteractionSpecificCoefficient = clearanceInteractionSpecificCoefficient
@@ -274,8 +212,6 @@ function newResponseType(
     isnothing(verticalTransmissionInteractionSpecificCoefficient) ? verticalTransmissionInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[VERTICAL_TRANSMISSION] : verticalTransmissionInteractionSpecificCoefficient = verticalTransmissionInteractionSpecificCoefficient
     isnothing(responseAcquisitionUponClearanceInteractionSpecificCoefficient) ? responseAcquisitionUponClearanceInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceInteractionSpecificCoefficient = responseAcquisitionUponClearanceInteractionSpecificCoefficient
     isnothing(responseInheritanceInteractionSpecificCoefficient) ? responseInheritanceInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceInteractionSpecificCoefficient = responseInheritanceInteractionSpecificCoefficient
-    # isnothing(hostMutationsUponBirthInteractionSpecificCoefficient) ? hostMutationsUponBirthInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[HOST_MUTATIONS_UPON_BIRTH] : hostMutationsUponBirthInteractionSpecificCoefficient = hostMutationsUponBirthInteractionSpecificCoefficient
-    # isnothing(hostRecombinationsUponBirthInteractionSpecificCoefficient) ? hostRecombinationsUponBirthInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[HOST_RECOMBINATIONS_UPON_BIRTH] : hostRecombinationsUponBirthInteractionSpecificCoefficient = hostRecombinationsUponBirthInteractionSpecificCoefficient
 
     isnothing(mutantEstablishmentStaticHostwideCoefficient) ? mutantEstablishmentStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[MUTANT_ESTABLISHMENT] : mutantEstablishmentStaticHostwideCoefficient = mutantEstablishmentStaticHostwideCoefficient
     isnothing(clearanceStaticHostwideCoefficient) ? clearanceStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[CLEARANCE] : clearanceStaticHostwideCoefficient = clearanceStaticHostwideCoefficient
@@ -325,16 +261,10 @@ function newResponseType(
         id,
         reactivityCoefficient,
         SA[ # order defined in COEFFICIENTS
-            # mutantEstablishmentStaticSpecificCoefficient, clearanceStaticSpecificCoefficient, responseAcquisitionStaticSpecificCoefficient,
-            # recombinantEstablishmentStaticSpecificCoefficient, contactStaticSpecificCoefficient,
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
             (hos_g::String, imp_g::String, mat_g::String)->1.0,
             responseLossStaticSpecificCoefficient,
-            # birthStaticSpecificCoefficient, deathStaticSpecificCoefficient, transitionStaticSpecificCoefficient,
-            # receiveTransitionStaticSpecificCoefficient, receiveContactStaticSpecificCoefficient, intrahostFitnessStaticSpecificCoefficient,
-            # mutationsUponInfectionStaticSpecificCoefficient, recombinationsUponInfectionStaticSpecificCoefficient, inoculumStaticSpecificCoefficient,
-            # transmissionEfficiencyStaticSpecificCoefficient, verticalTransmissionStaticSpecificCoefficient, responseAcquisitionUponClearanceStaticSpecificCoefficient,
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
@@ -342,17 +272,9 @@ function newResponseType(
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
             responseInheritanceStaticSpecificCoefficient,
-            # hostMutationsUponBirthStaticSpecificCoefficient, hostRecombinationsUponBirthStaticSpecificCoefficient,
             (hos_g::String, imp_g::String, mat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String)->1.0,
         ],
         SA[ # order defined in COEFFICIENTS
-            # mutantEstablishmentInteractionSpecificCoefficient, clearanceInteractionSpecificCoefficient, responseAcquisitionInteractionSpecificCoefficient,
-            # recombinantEstablishmentInteractionSpecificCoefficient, contactInteractionSpecificCoefficient, responseLossInteractionSpecificCoefficient,
-            # birthInteractionSpecificCoefficient, deathInteractionSpecificCoefficient, transitionInteractionSpecificCoefficient,
-            # receiveTransitionInteractionSpecificCoefficient, receiveContactInteractionSpecificCoefficient, intrahostFitnessInteractionSpecificCoefficient,
-            # mutationsUponInfectionInteractionSpecificCoefficient, recombinationsUponInfectionInteractionSpecificCoefficient, inoculumInteractionSpecificCoefficient,
-            # transmissionEfficiencyInteractionSpecificCoefficient, verticalTransmissionInteractionSpecificCoefficient, responseAcquisitionUponClearanceInteractionSpecificCoefficient,
-            # responseInheritanceInteractionSpecificCoefficient,
             (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
             (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
             (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0, (hos_g::String, imp_g::String, mat_g::String, pat_g::String)->1.0,
