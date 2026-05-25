@@ -18,13 +18,14 @@ function run(seed::Int64, t_vec::Vector{Float64})
     # Parameters
     start_genome = "AAAA"
     optimal_genome = "BBBB"
+    genome_length = length(optimal_genome)
 
     pat_type = jOpqua.newPathogenType(
         "pat_type",
-        num_loci=4,
+        num_loci=genome_length,
         possible_alleles="AB",
-        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (length(optimal_genome) - hamming(s, optimal_genome)) / length(optimal_genome)),
-        receiveContactHostwideCoefficient=s::String -> 0.0,
+        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (genome_length - hamming(s, optimal_genome)) / genome_length),
+        receiveContactHostwideCoefficient=s::String -> 0.0, # makes infected hosts immune to superinfection
     )
 
     hos_type = jOpqua.newHostType("hos_type")
@@ -34,7 +35,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         clearance_coefficient=1.0,
         contact_coefficient=1.05,
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.0004,
+        mutations_per_generation_coefficient=0.0004,
         inoculum_coefficient=1.0,
         # death_coefficient=0.001,
         # birth_coefficient=0.001,
@@ -83,8 +84,8 @@ end
 
 run(1, collect(0.0:2.0:4.0)) # compile
 @time run(0, collect(0.0:2.0:1500.0))
-# Total events: 2512533
-#   6.236305 seconds (59.62 M allocations: 7.569 GiB, 15.45% gc time, 9.03% compilation time: <1% of which was recompilation)
+# Total events: 2426811
+#   6.185076 seconds (58.45 M allocations: 7.413 GiB, 17.52% gc time, 9.38% compilation time: <1% of which was recompilation)
 # 25 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
 
 # @profview run(2, collect(0.0:2.0:1500.0))

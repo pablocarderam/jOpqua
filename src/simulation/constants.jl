@@ -3,39 +3,40 @@ using StaticArrays
 # 1. Sampling variables and events
 # 1.1 Pathogen events, zooming out in scale (order matters)
 # 1.1.1 Single pathogen, single host
-const MUTANT_ESTABLISHMENT = 1
+const LINEAGE_ESTABLISHMENT = 1
 const CLEARANCE = 2
 const RESPONSE_ACQUISITION = 3
-# 1.1.2 Two pathogens (symmetrical), single host
-const RECOMBINANT_ESTABLISHMENT = 4
-# 1.1.3 Single pathogen, two hosts (asymmetrical)
-const CONTACT = 5
+# # 1.1.2 Two pathogens (symmetrical), single host
+# const RECOMBINANT_ESTABLISHMENT = 4
+# 1.1.2 Single pathogen, two hosts (asymmetrical)
+const CONTACT = 4
 
 # 1.2 Response events
 # 1.2.1 Single response, single host
-const RESPONSE_LOSS = 6
+const RESPONSE_LOSS = 5
 
 # 1.3 Host events
 # 1.3.1 Single host, single population
-const BIRTH = 7
-const DEATH = 8
+const BIRTH = 6
+const DEATH = 7
 # 1.3.2 Single host, two populations (asymmetrical)
-const TRANSITION = 9
+const TRANSITION = 8
 
 # 1.4 Choice modifiers and second entity samplers, zooming in in scale (order matters)
 # 1.4.1 Population choice
-const RECEIVE_TRANSITION = 10
+const RECEIVE_TRANSITION = 9
 
 # 1.4.2 Host choice
-const RECEIVE_CONTACT = 11
+const RECEIVE_CONTACT = 10
 
 # 1.4.3 Pathogen choice
-const INTRAHOST_FITNESS = 12
+const INTRAHOST_FITNESS = 11
 
 # 2. Non-sampling variables and sub-events, zooming out in scale
 # 2.1 Pathogen-interaction sub-events
-const MUTATIONS_UPON_INFECTION = 13
-const RECOMBINATIONS_UPON_INFECTION = 14
+const GENERATIONS_PER_TRANSMISSION = 12
+const MUTATIONS_PER_GENERATION = 13
+const RECOMBINATIONS_PER_GENERATION = 14
 const INOCULUM = 15
 const TRANSMISSION_EFFICIENCY = 16
 const VERTICAL_TRANSMISSION = 17
@@ -50,8 +51,7 @@ const HOST_RECOMBINATIONS_UPON_BIRTH = 21
 
 # Global trackers
 const PATHOGEN_EVENTS = SA[
-    MUTANT_ESTABLISHMENT, CLEARANCE, RESPONSE_ACQUISITION,
-    RECOMBINANT_ESTABLISHMENT, CONTACT
+    LINEAGE_ESTABLISHMENT, CLEARANCE, RESPONSE_ACQUISITION, CONTACT
 ]
 const NUM_PATHOGEN_EVENTS = length(PATHOGEN_EVENTS)
 
@@ -73,7 +73,8 @@ const SAMPLING_COEFFICIENTS = SA[EVENTS..., CHOICE_MODIFIERS...]
 const NUM_SAMPLING_COEFFICIENTS = length(SAMPLING_COEFFICIENTS)
 
 const PATHOGEN_NONSAMPLING_COEFFICIENTS = SA[
-    MUTATIONS_UPON_INFECTION, RECOMBINATIONS_UPON_INFECTION, INOCULUM,
+    GENERATIONS_PER_TRANSMISSION,
+    MUTATIONS_PER_GENERATION, RECOMBINATIONS_PER_GENERATION, INOCULUM,
     TRANSMISSION_EFFICIENCY, VERTICAL_TRANSMISSION,
     RESPONSE_ACQUISITION_UPON_CLEARANCE
 ]

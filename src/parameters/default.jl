@@ -105,8 +105,8 @@ const DEFAULT_POPULATION_TYPE = PopulationType(
     SA[ # order defined in COEFFICIENTS
         0.0, 0.0, 0.0,
         0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0,
         0.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
         0.0, 0.0, 1.0,
         1.0, 0.0, 0.0,
         0.0, 0.0, 0.0,

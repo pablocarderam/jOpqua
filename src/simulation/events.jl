@@ -34,7 +34,7 @@ function mutantPathogen!(pathogen::Pathogen, host::Host, population::Population,
     seq = mutantSequence!(
         pathogen.sequence, pathogen.type.num_loci, pathogen.type.possible_alleles,
         nonsamplingValue(
-            MUTATIONS_UPON_INFECTION, pathogen, host, population
+            MUTATIONS_PER_GENERATION, pathogen, host, population
         )
     )
 
@@ -85,12 +85,12 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, host:
     children = recombinantSequences(
         pathogen_1.sequence, pathogen_2.sequence, pathogen_1.type.num_loci,
         nonsamplingValue(
-            RECOMBINATIONS_UPON_INFECTION, pathogen_1, host, population
-            #TODO: RECOMBINATIONS_UPON_INFECTION?
+            RECOMBINATIONS_PER_GENERATION, pathogen_1, host, population
+            #TODO: RECOMBINATIONS_PER_GENERATION?
         ),
         nonsamplingValue(
-            RECOMBINATIONS_UPON_INFECTION, pathogen_2, host, population
-            #TODO: RECOMBINATIONS_UPON_INFECTION?
+            RECOMBINATIONS_PER_GENERATION, pathogen_2, host, population
+            #TODO: RECOMBINATIONS_PER_GENERATION?
         )
     )
 
@@ -355,8 +355,8 @@ end
 
 # Model events
 
-function establishMutant!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx = choosePathogen(MUTANT_ESTABLISHMENT, model, rand_n)
+function establishLineage!(model::Model, rand_n::Float64)
+    pathogen_idx, host_idx, pop_idx = choosePathogen(LINEAGE_ESTABLISHMENT, model, rand_n)
 
     mut = mutantPathogen!(
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
@@ -411,8 +411,8 @@ function acquireResponse!(pathogen_idx::Int64, host_idx::Int64, pop_idx::Int64, 
 end
 
 function establishRecombinant!(model::Model, rand_n::Float64)
-    pathogen_idx_1, host_idx, pop_idx, rand_n = choosePathogen(RECOMBINANT_ESTABLISHMENT, model, rand_n)
-    pathogen_idx_2, rand_n = choosePathogen(host_idx, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
+    pathogen_idx_1, host_idx, pop_idx, rand_n = choosePathogen(RECOMBINATIONS_PER_GENERATION, model, rand_n)
+    pathogen_idx_2, rand_n = choosePathogen(host_idx, pop_idx, RECOMBINATIONS_PER_GENERATION, model, rand_n)
 
     if pathogen_idx_1 != pathogen_idx_2 && model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1].type == model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2].type
         recombinant = recombinantPathogens!(
@@ -460,7 +460,7 @@ function hostContact!(
                 mut_prob = min(
                     1.0, 1.0 - exp(
                         -nonsamplingValue(
-                            MUTATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
+                            MUTATIONS_PER_GENERATION, host1.pathogens[p_idx], host1,
                             model.populations[pop_idx_1]
                         )
                     )
@@ -471,7 +471,7 @@ function hostContact!(
                     rec_prob = min(
                         1.0, 1.0 - exp(
                             -nonsamplingValue(
-                                RECOMBINATIONS_UPON_INFECTION, host1.pathogens[p_idx], host1,
+                                RECOMBINATIONS_PER_GENERATION, host1.pathogens[p_idx], host1,
                                 model.populations[pop_idx_1]
                             )
                         )
@@ -498,8 +498,8 @@ function hostContact!(
                     )
                 end
                 for _ in 1:num_rec
-                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand())
-                    #TODO: RECOMBINATIONS_UPON_INFECTION?
+                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
+                    #TODO: RECOMBINATIONS_PER_GENERATION?
 
                     if p_idx != p_idx_2 && (
                         host1.pathogens[p_idx].type ==
@@ -517,8 +517,8 @@ function hostContact!(
                     end
                 end
                 for _ in 1:num_mut_rec
-                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand())
-                    #TODO: RECOMBINATIONS_UPON_INFECTION?
+                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
+                    #TODO: RECOMBINATIONS_PER_GENERATION?
 
                     if p_idx != p_idx_2
                         recombinant = recombinantPathogens!(
@@ -715,7 +715,7 @@ function transition!(model::Model, rand_n::Float64)
 end
 
 const EVENT_FUNCTIONS = SA[
-    establishMutant!, clearPathogen!, acquireResponse!,
-    establishRecombinant!, hostContact!, loseResponse!,
+    establishLineage!, clearPathogen!, acquireResponse!,
+    hostContact!, loseResponse!,
     birth!, death!, transition!
 ]

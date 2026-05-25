@@ -20,27 +20,21 @@ diversity of genetic variability from the donor, and a subsequent intrahost bott
 presumably due to overcoming first line host defenses results in a single lineage founder
 event for the infection. Intrahost selection can act at that bottleneck. We could build this
 into the transmission event function by sampling based on fitness within the new host.
-- Within-host dynamics are currently modeled as stochastic processes with events depending on 
+- Within-host dynamics are currently approximated as stochastic Poisson processes with variable 
 rates or through the use of compartment models (e.g. Exposed and Infected compartments in an
 SEIR-type model) by using separate `Population` entities for each compartment and setting 
 transition rates between them. However, detailed `Pathogen` and `Response` population changes 
 within individual hosts are not currently captured.
 
 ### TODO:
-- Change `MUTATIONS_UPON_INFECTION` to `MUTATIONS_PER_GENERATION` and 
-`RECOMBINATIONS_UPON_INFECTION` to `RECOMBINATIONS_PER_GENERATION`
-- Remove `RECOMBINANT_ESTABLISHMENT` as a coefficient type
-- Add `GENERATIONS_PER_INFECTION` as a `Pathogen`-specific non-sampling variable 
-within the model coefficients
-- Change `MUTANT_ESTABLISHMENT` to `LINEAGE_ESTABLISHMENT`, make establishment an event in 
-which recombination and a certain number of mutations may happen; number of mutations and 
-recombinations are calculated based on number of generations elapsed; number of generations 
-elapsed before establishment is obtained based on relative rates of lineage establishment
-and infection (or rather the inverse, time to establishment and time to infection) along with
-the number of generations per infection
+- Change mutant establishment to be an event in which recombination and a certain number of 
+mutations may happen; number of mutations and recombinations are calculated based on number 
+of generations elapsed; number of generations elapsed before establishment is obtained based 
+on relative rates of lineage establishment and infection (or rather the inverse, time to 
+establishment and time to infection) along with the number of generations per transmission
 - Change transmission event function to add receiver-side bottleneck option
-- Change ancestor search so that you can choose to get only a fraction of ancestors (improves
-the function's runtime for simulations with long timelines)
+- Change ancestor search so that you can choose to get only a fraction of ancestors 
+(improves the function's runtime for simulations with long timelines)
 - Try explicitly-declared max host population size in instance of population change,
 dynamically resize if max population exceeded
 
@@ -60,6 +54,12 @@ recombination upon birth
 sequences
 - Fixed syntax errors in `establishRecombinant!()`
 - Started testing recombination, realized problems explained above
+- Change `MUTATIONS_UPON_INFECTION` to `MUTATIONS_PER_GENERATION` and 
+`RECOMBINATIONS_UPON_INFECTION` to `RECOMBINATIONS_PER_GENERATION`
+- Remove `RECOMBINANT_ESTABLISHMENT` as a coefficient type
+- Add `GENERATIONS_PER_TRANSMISSION` as a `Pathogen`-specific non-sampling variable 
+within the model coefficients
+- Change `MUTANT_ESTABLISHMENT` to `LINEAGE_ESTABLISHMENT`
 
 ### 24 May 2026
 Major update solving multiple important bugs related to transitions and contacts. 

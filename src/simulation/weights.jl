@@ -131,16 +131,16 @@ function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int
         # instead, we assume the rate of loss compounds
         # (could be inversely proportional to fraction?)
         # host.pathogen_weights[evt, p] = host.pathogen_weights[evt, p]
-    elseif evt == RECOMBINANT_ESTABLISHMENT && length(host.pathogens) < 2
-        # if nobody to recombine with, no recombination happens
-        host.pathogen_weights[evt, p] = 0.0
-        #TODO: regarding recombination and mutation establishment, each of these
-        # depend on other parameters within Pathogen (mean_mutations_per_replication
-        # and mean_recombination_crossovers); since in the current version we don't
-        # consider intrahost population sizes or replication rates, then it's
-        # pointless to incorporate these parameters in weight calculation here, but
-        # eventually in a future version with better intrahost dynamics and popgen
-        # this will be the case
+    # elseif evt == RECOMBINANT_ESTABLISHMENT && length(host.pathogens) < 2
+    #     # if nobody to recombine with, no recombination happens
+    #     host.pathogen_weights[evt, p] = 0.0
+    #     #TODO: regarding recombination and mutation establishment, each of these
+    #     # depend on other parameters within Pathogen (mean_mutations_per_replication
+    #     # and mean_recombination_crossovers); since in the current version we don't
+    #     # consider intrahost population sizes or replication rates, then it's
+    #     # pointless to incorporate these parameters in weight calculation here, but
+    #     # eventually in a future version with better intrahost dynamics and popgen
+    #     # this will be the case
     else
         # All other pathogen event likelihoods are proportional to intrahost fraction
         host.pathogen_weights[evt, p] =
