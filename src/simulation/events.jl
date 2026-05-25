@@ -64,13 +64,13 @@ function recombinantSequences(
         for l in loci
             temp_child_1 = children[1]
             children[1] = children[1][1:l-1] + children[2][l:end]
-            children[2] = children[1][1:l-1] + temp_child_1[l:end]
+            children[2] = children[2][1:l-1] + temp_child_1[l:end]
         end
     else
         num_evts = 0
     end
 
-    children = MVector{2,String}([split(seq, CHROMOSOME_SEPARATOR) for seq in children])
+    children = MVector{2,Vector{String}}([split(seq, CHROMOSOME_SEPARATOR) for seq in children])
     parent = rand(0:1, length(children[1]))
 
     children = SVector{2,String}([
@@ -86,9 +86,11 @@ function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, host:
         pathogen_1.sequence, pathogen_2.sequence, pathogen_1.type.num_loci,
         nonsamplingValue(
             RECOMBINATIONS_UPON_INFECTION, pathogen_1, host, population
+            #TODO: RECOMBINATIONS_UPON_INFECTION?
         ),
         nonsamplingValue(
             RECOMBINATIONS_UPON_INFECTION, pathogen_2, host, population
+            #TODO: RECOMBINATIONS_UPON_INFECTION?
         )
     )
 
@@ -410,9 +412,9 @@ end
 
 function establishRecombinant!(model::Model, rand_n::Float64)
     pathogen_idx_1, host_idx, pop_idx, rand_n = choosePathogen(RECOMBINANT_ESTABLISHMENT, model, rand_n)
-    pathogen_idx_2 = choosePathogen(host_idx, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
+    pathogen_idx_2, rand_n = choosePathogen(host_idx, pop_idx, RECOMBINANT_ESTABLISHMENT, model, rand_n)
 
-    if pathogen_idx_1 != pathogen_idx_2 && pathogen_idx_1.type == pathogen_idx_2.type
+    if pathogen_idx_1 != pathogen_idx_2 && model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1].type == model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2].type
         recombinant = recombinantPathogens!(
             model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1],
             model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2],
@@ -497,6 +499,7 @@ function hostContact!(
                 end
                 for _ in 1:num_rec
                     p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand())
+                    #TODO: RECOMBINATIONS_UPON_INFECTION?
 
                     if p_idx != p_idx_2 && (
                         host1.pathogens[p_idx].type ==
@@ -515,6 +518,7 @@ function hostContact!(
                 end
                 for _ in 1:num_mut_rec
                     p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINANT_ESTABLISHMENT, model, rand())
+                    #TODO: RECOMBINATIONS_UPON_INFECTION?
 
                     if p_idx != p_idx_2
                         recombinant = recombinantPathogens!(

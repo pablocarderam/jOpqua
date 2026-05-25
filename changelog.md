@@ -3,7 +3,7 @@
 ## Known Issues:
 
 ### Known bugs:
-None at the moment.
+- Inter-population contact rates are higher than intra-population contact rates
 
 ### Known performance issues:
 - Garbage collection time is higher than expected for 100k host simulations, suspected type
@@ -11,7 +11,9 @@ instabilities in weights/immunity changes
 - Births/deaths result in significant slowdown due to dynamically resizing (thus re-declaring)
 host weight matrices, as well as garbage collection (probably associated to the former)
 
-### Mechanistic/biological limitations:
+### Mechanistic/biological issues and limitations:
+- Mutations and recombinations upon infection should count mutations and recombinations,
+not mutants and recombinants. RECOMBINATIONS_UPON_INFECTION is being misused.
 - [New paper](https://www.biorxiv.org/content/10.1101/2023.11.19.567585v3) shows transmission 
 bottlenecking is more complex than thought: an initial infection period captures a high
 diversity of genetic variability from the donor, and a subsequent intrahost bottleneck
@@ -25,6 +27,17 @@ transition rates between them. However, detailed `Pathogen` and `Response` popul
 within individual hosts are not currently captured.
 
 ### TODO:
+- Change `MUTATIONS_UPON_INFECTION` to `MUTATIONS_PER_GENERATION` and 
+`RECOMBINATIONS_UPON_INFECTION` to `RECOMBINATIONS_PER_GENERATION`
+- Remove `RECOMBINANT_ESTABLISHMENT` as a coefficient type
+- Add `GENERATIONS_PER_INFECTION` as a `Pathogen`-specific non-sampling variable 
+within the model coefficients
+- Change `MUTANT_ESTABLISHMENT` to `LINEAGE_ESTABLISHMENT`, make establishment an event in 
+which recombination and a certain number of mutations may happen; number of mutations and 
+recombinations are calculated based on number of generations elapsed; number of generations 
+elapsed before establishment is obtained based on relative rates of lineage establishment
+and infection (or rather the inverse, time to establishment and time to infection) along with
+the number of generations per infection
 - Change transmission event function to add receiver-side bottleneck option
 - Change ancestor search so that you can choose to get only a fraction of ancestors (improves
 the function's runtime for simulations with long timelines)
@@ -36,9 +49,17 @@ Debug the following:
 - Recombinant establishment
 - Recombination upon contact
 - Diploid `Host` genomes/homologous chromosome separators
+- `Host` birth events: vertical transmission, `Response` inheritance, mutation and 
+recombination upon birth
 - Interventions
 
 ## Changelog:
+
+## 25 May 2026
+- Fixed bugs in `recombinantSequences()` that affected proper generation of recombinant 
+sequences
+- Fixed syntax errors in `establishRecombinant!()`
+- Started testing recombination, realized problems explained above
 
 ### 24 May 2026
 Major update solving multiple important bugs related to transitions and contacts. 

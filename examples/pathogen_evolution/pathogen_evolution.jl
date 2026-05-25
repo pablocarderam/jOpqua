@@ -23,11 +23,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "pat_type",
         num_loci=4,
         possible_alleles="AB",
-        # mean_effective_inoculum=1.0,
-        # mean_mutations_per_replication=0.001,
-        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (4.0 - hamming(s, optimal_genome)) / 4.0),
+        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (length(optimal_genome) - hamming(s, optimal_genome)) / length(optimal_genome)),
         receiveContactHostwideCoefficient=s::String -> 0.0,
-
     )
 
     hos_type = jOpqua.newHostType("hos_type")
@@ -86,7 +83,8 @@ end
 
 run(1, collect(0.0:2.0:4.0)) # compile
 @time run(0, collect(0.0:2.0:1500.0))
-# 5.787028 seconds (58.44 M allocations: 7.414 GiB, 18.69% gc time, 9.27% compilation time: <1% of which was recompilation)
-# 24 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
+# Total events: 2512533
+#   6.236305 seconds (59.62 M allocations: 7.569 GiB, 15.45% gc time, 9.03% compilation time: <1% of which was recompilation)
+# 25 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
 
 # @profview run(2, collect(0.0:2.0:1500.0))
