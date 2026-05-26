@@ -1,5 +1,5 @@
 # Run from base jOpqua directory as
-# julia --project=. examples/pathogen_evolution/pathogen_evolution.jl
+# julia --project=. examples/pathogen_evolution/pathogen_evolution_recombination_test.jl
 # unless viewing flamegraph, then run from console
 
 # using Revise
@@ -18,14 +18,14 @@ function run(seed::Int64, t_vec::Vector{Float64})
     # Parameters
     start_genome = "AAAAAAAA"
     optimal_genome = "BBBBBBBB"
+    genome_length = length(optimal_genome)
 
     pat_type = jOpqua.newPathogenType(
         "pat_type",
-        num_loci=length(optimal_genome),
+        num_loci=genome_length,
         possible_alleles="AB",
-        # contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (length(optimal_genome) - hamming(s, optimal_genome)) / length(optimal_genome)),
-        # receiveContactHostwideCoefficient=s::String -> 0.0,
-
+        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (genome_length - hamming(s, optimal_genome)) / genome_length),
+        # receiveContactHostwideCoefficient=s::String -> 0.0, # makes infected hosts immune to superinfection
     )
 
     hos_type = jOpqua.newHostType("hos_type")
@@ -35,9 +35,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         clearance_coefficient=1.0,
         contact_coefficient=1.05,
         receive_contact_coefficient=1.0,
-        # mutations_upon_infection_coefficient=0.0005,
-        # mutant_establishment_coefficient=0.0004,
-        recombinant_establishment_coefficient=0.1,
+        mutations_per_generation_coefficient=0.0000,
+        recombinations_per_generation_coefficient=0.0001,
         inoculum_coefficient=1.0,
         # death_coefficient=0.001,
         # birth_coefficient=0.001,
@@ -58,7 +57,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
     for h in 1:num_infected
         jOpqua.addPathogenToHost!(pat, h, pop, model)
     end
-    for h in num_infected+1:2*num_infected
+    for h in num_infected+1:num_infected*2
         jOpqua.addPathogenToHost!(pat2, h, pop, model)
     end
 
@@ -90,8 +89,8 @@ end
 
 run(1, collect(0.0:2.0:4.0)) # compile
 @time run(0, collect(0.0:2.0:1500.0))
-# Total events: 3173812
-# 7.122476 seconds (71.25 M allocations: 8.838 GiB, 16.15% gc time, 7.82% compilation time: <1% of which was recompilation)
-# 24 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
+# Total events: 15557559
+#  43.074621 seconds (399.54 M allocations: 101.135 GiB, 27.90% gc time, 0.76% compilation time: <1% of which was recompilation)
+# 25 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
 
 # @profview run(2, collect(0.0:2.0:1500.0))

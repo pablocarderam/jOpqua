@@ -30,12 +30,11 @@ function mutantSequence!(
     return join(chromosomes, CHROMOSOME_SEPARATOR)
 end
 
-function mutantPathogen!(pathogen::Pathogen, host::Host, population::Population, birth_time::Float64)
+function mutantPathogen!(
+        pathogen::Pathogen, host::Host, population::Population, birth_time::Float64, expected_mutations::Float64)
     seq = mutantSequence!(
         pathogen.sequence, pathogen.type.num_loci, pathogen.type.possible_alleles,
-        nonsamplingValue(
-            MUTATIONS_PER_GENERATION, pathogen, host, population
-        )
+        expected_mutations
     )
 
     if haskey(population.pathogens, seq)
@@ -56,15 +55,16 @@ function recombinantSequences(
     children = MVector{2,String}(seq_1, seq_2)
 
     if mean_recombination_crossovers_1 > 0.0 && mean_recombination_crossovers_2 > 0.0
-        num_evts = zeroTruncatedPoisson(mean(
-            mean_recombination_crossovers_1,
+        num_evts = zeroTruncatedPoisson((
+            mean_recombination_crossovers_1 +
             mean_recombination_crossovers_2
-        ))
+        ) / 2.0 )
         loci = rand(1:num_loci, num_evts)
         for l in loci
             temp_child_1 = children[1]
-            children[1] = children[1][1:l-1] + children[2][l:end]
-            children[2] = children[2][1:l-1] + temp_child_1[l:end]
+            children = MVector{2,String}(children[1][1:l-1] * children[2][l:end], children[2])
+            children = MVector{2,String}(children[1], children[2][1:l-1] * temp_child_1[l:end])
+            # MVector of Strings could not be indexed-set
         end
     else
         num_evts = 0
@@ -81,30 +81,13 @@ function recombinantSequences(
     return children
 end
 
-function recombinantPathogens!(pathogen_1::Pathogen, pathogen_2::Pathogen, host::Host, population::Population, birth_time::Float64)
+function recombinantPathogens!(
+        pathogen_1::Pathogen, pathogen_2::Pathogen, host::Host, population::Population,
+        birth_time::Float64, mean_recombination_crossovers_1::Float64, mean_recombination_crossovers_2::Float64)
     children = recombinantSequences(
         pathogen_1.sequence, pathogen_2.sequence, pathogen_1.type.num_loci,
-        nonsamplingValue(
-            RECOMBINATIONS_PER_GENERATION, pathogen_1, host, population
-            #TODO: RECOMBINATIONS_PER_GENERATION?
-        ),
-        nonsamplingValue(
-            RECOMBINATIONS_PER_GENERATION, pathogen_2, host, population
-            #TODO: RECOMBINATIONS_PER_GENERATION?
-        )
+        mean_recombination_crossovers_1, mean_recombination_crossovers_2
     )
-
-    # for seq in children
-    #     if !haskey(population.pathogens, seq)
-    #         newPathogen!(
-    #             seq, population, pathogen_1.type,
-    #             parents=MVector{2, Union{Pathogen, Nothing}}([pathogen_1, pathogen_2]),
-    #             birth_time = birth_time
-    #         )
-    #     end
-    # end
-
-    # return SA[population.pathogens[children[1]], population.pathogens[children[2]]]
 
     if !haskey(population.pathogens, children[1])
         newPathogen!(
@@ -356,14 +339,54 @@ end
 # Model events
 
 function establishLineage!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx = choosePathogen(LINEAGE_ESTABLISHMENT, model, rand_n)
+    pathogen_idx, host_idx, pop_idx, rand_n = choosePathogen(LINEAGE_ESTABLISHMENT, model, rand_n)
 
-    mut = mutantPathogen!(
-        model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
-        model.populations[pop_idx].hosts[host_idx], model.populations[pop_idx], model.time
-    )
+    population = model.populations[pop_idx]
+    host = population.hosts[host_idx]
+    pathogen = population.pathogens[pathogen_idx]
 
-    attemptInfection!(mut, host_idx, pop_idx, model)
+    # We're not multiplying by generations as explained below, but if we were, here's the math:
+    # generations = nonsamplingValue(
+    #     GENERATIONS_PER_TRANSMISSION, pathogen, host, population
+    # ) * nonsamplingValue(
+    #     CONTACT, pathogen, host, population
+    # ) / nonsamplingValue(
+    #     LINEAGE_ESTABLISHMENT, pathogen, host, population
+    # )
+
+    # First decide whether the event was triggered by a mutation or a recombination, then do it
+    mutations = nonsamplingValue(MUTATIONS_PER_GENERATION, pathogen, host, population)
+    recombinations = nonsamplingValue(RECOMBINATIONS_PER_GENERATION, pathogen, host, population)
+    if length(host.pathogens) == 1 || rand_n < (mutations / max(mutations + recombinations, 1.0))
+        new_lineage = mutantPathogen!(
+            pathogen, host, population, model.time, mutations
+            # we don't multiply by generations here assuming the established lineage is
+            # the center of a mutant cloud, so we account for only a single generation's worth
+            # of mutations at a time
+            # We also don't add recombinations for the same reason
+        )
+        attemptInfection!(new_lineage, host_idx, pop_idx, model)
+    else
+        # This assumes recombination rates are not symmetrical:
+        # once a lineage has decided to recombine, its partner is chosen based on
+        # pathogen fraction, not recombination frequency
+        p_idx_2, rand_n = randChoose(rand_n, @views(host.pathogen_fractions), 1.0, regenerate_rand=true)
+        # p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
+        pathogen_2 = host.pathogens[p_idx_2]
+        num_recombinations = (
+        ) / 2.0 # assumption: net recombination rate is the average of the two pathogens
+        new_lineage = recombinantPathogens!(
+            pathogen, host, population, model.time, recombinations,
+            nonsamplingValue(
+                RECOMBINATIONS_PER_GENERATION, pathogen_2, host, population
+            )
+            # we don't multiply by generations here assuming the established lineage is
+            # the center of a mutant cloud, so we account for only a single generation's worth
+            # of recombinations at a time
+            # We also don't add mutations for the same reason
+        )
+        attemptInfection!(new_lineage, host_idx, pop_idx, model)
+    end
 end
 
 function clearPathogen!(model::Model, rand_n::Float64)
@@ -410,23 +433,6 @@ function acquireResponse!(pathogen_idx::Int64, host_idx::Int64, pop_idx::Int64, 
     end
 end
 
-function establishRecombinant!(model::Model, rand_n::Float64)
-    pathogen_idx_1, host_idx, pop_idx, rand_n = choosePathogen(RECOMBINATIONS_PER_GENERATION, model, rand_n)
-    pathogen_idx_2, rand_n = choosePathogen(host_idx, pop_idx, RECOMBINATIONS_PER_GENERATION, model, rand_n)
-
-    if pathogen_idx_1 != pathogen_idx_2 && model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1].type == model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2].type
-        recombinant = recombinantPathogens!(
-            model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_1],
-            model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx_2],
-            model.populations[pop_idx].hosts[host_idx],
-            model.populations[pop_idx],
-            model.time
-        )
-
-        attemptInfection!(recombinant, host_idx, pop_idx, model)
-    end
-end
-
 function hostContact!(model::Model, rand_n::Float64)
     host_idx_1, pop_idx_1, rand_n = chooseHost(CONTACT, model, rand_n)
     pop_idx_2, rand_n = choosePopulationReceiveContact(pop_idx_1, model, rand_n)
@@ -456,13 +462,23 @@ function hostContact!(
         end
 
         for p_idx in eachindex(inocula)
+            generations = nonsamplingValue(
+                GENERATIONS_PER_TRANSMISSION, host1.pathogens[p_idx],
+                host1, model.populations[pop_idx_1]
+            )
+            mutations = nonsamplingValue(
+                MUTATIONS_PER_GENERATION, host1.pathogens[p_idx], host1,
+                model.populations[pop_idx_1]
+            ) * generations
+            recombinations = nonsamplingValue(
+                RECOMBINATIONS_PER_GENERATION, host1.pathogens[p_idx], host1,
+                model.populations[pop_idx_1]
+            ) * generations
+
             if inocula[p_idx] > 0
                 mut_prob = min(
                     1.0, 1.0 - exp(
-                        -nonsamplingValue(
-                            MUTATIONS_PER_GENERATION, host1.pathogens[p_idx], host1,
-                            model.populations[pop_idx_1]
-                        )
+                        -mutations
                     )
                 )
                 # probability from Poisson PMF with k=0
@@ -470,10 +486,7 @@ function hostContact!(
                 if length(host1.pathogens) > 1
                     rec_prob = min(
                         1.0, 1.0 - exp(
-                            -nonsamplingValue(
-                                RECOMBINATIONS_PER_GENERATION, host1.pathogens[p_idx], host1,
-                                model.populations[pop_idx_1]
-                            )
+                            -recombinations
                         )
                     )
                     # probability from Poisson PMF with k=0
@@ -493,13 +506,19 @@ function hostContact!(
                             host1.pathogens[p_idx],
                             host1,
                             model.populations[pop_idx_1],
-                            model.time
+                            model.time,
+                            mutations
                         ), host_idx_2, pop_idx_2, model
                     )
                 end
                 for _ in 1:num_rec
-                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
-                    #TODO: RECOMBINATIONS_PER_GENERATION?
+                    # This assumes recombination rates are not symmetrical:
+                    # once a lineage has decided to recombine, its partner is chosen based on
+                    # pathogen fraction, not recombination frequency
+                    p_idx_2, rand_n = randChoose(
+                        rand_n, @views(host1.pathogen_fractions), 1.0, regenerate_rand=true
+                    )
+                    # p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
 
                     if p_idx != p_idx_2 && (
                         host1.pathogens[p_idx].type ==
@@ -511,14 +530,25 @@ function hostContact!(
                                 host1.pathogens[p_idx_2],
                                 host1,
                                 model.populations[pop_idx_1],
-                                model.time
+                                model.time,
+                                recombinations,
+                                nonsamplingValue(
+                                    RECOMBINATIONS_PER_GENERATION,
+                                    host1.pathogens[p_idx_2],
+                                    host1, model.populations[pop_idx_1]
+                                )
                             ), host_idx_2, pop_idx_2, model
                         )
                     end
                 end
                 for _ in 1:num_mut_rec
-                    p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
-                    #TODO: RECOMBINATIONS_PER_GENERATION?
+                    # This assumes recombination rates are not symmetrical:
+                    # once a lineage has decided to recombine, its partner is chosen based on
+                    # pathogen fraction, not recombination frequency
+                    p_idx_2, rand_n = randChoose(
+                        rand_n, @views(host1.pathogen_fractions), 1.0, regenerate_rand=true
+                    )
+                    # p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
 
                     if p_idx != p_idx_2
                         recombinant = recombinantPathogens!(
@@ -526,13 +556,19 @@ function hostContact!(
                             host1.pathogens[p_idx_2],
                             host1,
                             model.populations[pop_idx_1],
-                            model.time
+                            model.time,
+                            recombinations,
+                            nonsamplingValue(
+                                RECOMBINATIONS_PER_GENERATION, host1.pathogens[p_idx_2],
+                                host1, model.populations[pop_idx_1]
+                            )
                         )
 
                         attemptInfection!(
                             mutantPathogen!(
                                 recombinant, host1,
-                                model.populations[pop_idx_1], model.time
+                                model.populations[pop_idx_1], model.time,
+                                mutations
                             ),
                             host_idx_2, pop_idx_2, model
                         )
@@ -542,7 +578,8 @@ function hostContact!(
                                 host1.pathogens[p_idx],
                                 host1,
                                 model.populations[pop_idx_1],
-                                model.time
+                                model.time,
+                                mutations
                             ),
                             host_idx_2, pop_idx_2, model
                         )
@@ -607,8 +644,8 @@ function birth!(model::Model, rand_n::Float64)
                     )
                 ),
                 parents[1].type.num_loci,
-                parents[1].mean_recombination_crossovers,
-                parents[1].mean_recombination_crossovers
+                parents[1].mean_recombination_crossovers, #TODO: this parameter doesn't exist anymore?
+                parents[1].mean_recombination_crossovers, #TODO: this parameter doesn't exist anymore?
             )
             if !isnothing(parents[2])
                 parent_gametes[2] = recombinantSequences(
@@ -624,8 +661,8 @@ function birth!(model::Model, rand_n::Float64)
                         )
                     ),
                     parents[2].type.num_loci,
-                    parents[2].mean_recombination_crossovers,
-                    parents[2].mean_recombination_crossovers
+                    parents[2].mean_recombination_crossovers, #TODO: this parameter doesn't exist anymore?
+                    parents[2].mean_recombination_crossovers #TODO: this parameter doesn't exist anymore?
                 )
             end
             child_sequence = generateZygote(parent_gametes[1], parent_gametes[2])

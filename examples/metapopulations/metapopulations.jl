@@ -70,7 +70,8 @@ end
 
 run(1, collect(0.0:2.0:4.0)) # compile
 @time run(0, collect(0.0:2.0:1500.0))
-# 2.416264 seconds (17.57 M allocations: 1.969 GiB, 12.63% gc time)
-# 24 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
+# Total events: 1728203
+#   4.460974 seconds (55.20 M allocations: 7.560 GiB, 15.71% gc time, 1.58% compilation time)
+# 25 May 2026 Julia 1.12.6 Apple M3 Max 128 GB RAM
 
 # @profview run(2, collect(0.0:2.0:1500.0))

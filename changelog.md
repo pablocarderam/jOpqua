@@ -4,6 +4,9 @@
 
 ### Known bugs:
 - Inter-population contact rates are higher than intra-population contact rates
+- Strange increase in infected population towards end of simulation in 
+`pathogen_evolution_recombination_test.jl`
+- Host birth recombinations are broken and use deprecated parameters
 
 ### Known performance issues:
 - Garbage collection time is higher than expected for 100k host simulations, suspected type
@@ -12,8 +15,6 @@ instabilities in weights/immunity changes
 host weight matrices, as well as garbage collection (probably associated to the former)
 
 ### Mechanistic/biological issues and limitations:
-- Mutations and recombinations upon infection should count mutations and recombinations,
-not mutants and recombinants. RECOMBINATIONS_UPON_INFECTION is being misused.
 - [New paper](https://www.biorxiv.org/content/10.1101/2023.11.19.567585v3) shows transmission 
 bottlenecking is more complex than thought: an initial infection period captures a high
 diversity of genetic variability from the donor, and a subsequent intrahost bottleneck
@@ -25,13 +26,11 @@ rates or through the use of compartment models (e.g. Exposed and Infected compar
 SEIR-type model) by using separate `Population` entities for each compartment and setting 
 transition rates between them. However, detailed `Pathogen` and `Response` population changes 
 within individual hosts are not currently captured.
+- Similarly, within-host lineage establishment events in which multiple mutations and/or 
+recombinations co-occur do not take into account the fitness of intermediate genotypes and 
+may be inaccurate.
 
 ### TODO:
-- Change mutant establishment to be an event in which recombination and a certain number of 
-mutations may happen; number of mutations and recombinations are calculated based on number 
-of generations elapsed; number of generations elapsed before establishment is obtained based 
-on relative rates of lineage establishment and infection (or rather the inverse, time to 
-establishment and time to infection) along with the number of generations per transmission
 - Change transmission event function to add receiver-side bottleneck option
 - Change ancestor search so that you can choose to get only a fraction of ancestors 
 (improves the function's runtime for simulations with long timelines)
@@ -41,7 +40,6 @@ dynamically resize if max population exceeded
 Debug the following:
 - Mutant establishment
 - Recombinant establishment
-- Recombination upon contact
 - Diploid `Host` genomes/homologous chromosome separators
 - `Host` birth events: vertical transmission, `Response` inheritance, mutation and 
 recombination upon birth
@@ -52,14 +50,47 @@ recombination upon birth
 ## 25 May 2026
 - Fixed bugs in `recombinantSequences()` that affected proper generation of recombinant 
 sequences
-- Fixed syntax errors in `establishRecombinant!()`
-- Started testing recombination, realized problems explained above
-- Change `MUTATIONS_UPON_INFECTION` to `MUTATIONS_PER_GENERATION` and 
+- Fixed syntax errors in `establishRecombinant!()` (later removed)
+- Fixed Julia syntax error for `String` concatenation in `recombinantSequences()` and 
+fixed bug with `String`-based `MVector`s not being able to be index-set
+
+Made lineage establishment to be an event in which recombination and a certain number of 
+mutations may happen. This required a medium overhaul:
+- Changed `MUTATIONS_UPON_INFECTION` to `MUTATIONS_PER_GENERATION` and 
 `RECOMBINATIONS_UPON_INFECTION` to `RECOMBINATIONS_PER_GENERATION`
-- Remove `RECOMBINANT_ESTABLISHMENT` as a coefficient type
-- Add `GENERATIONS_PER_TRANSMISSION` as a `Pathogen`-specific non-sampling variable 
+- Removed `RECOMBINANT_ESTABLISHMENT` as a coefficient type
+- Added `GENERATIONS_PER_TRANSMISSION` as a `Pathogen`-specific non-sampling variable 
 within the model coefficients
-- Change `MUTANT_ESTABLISHMENT` to `LINEAGE_ESTABLISHMENT`
+- Changed `MUTANT_ESTABLISHMENT` to `LINEAGE_ESTABLISHMENT`
+- Changed `DEFAULT_POPULATION_TYPE` to have a starting base coefficient of `1.0` for 
+`GENERATIONS_PER_TRANSMISSION`
+- Changed `pathogenWeights!()` to adjust the `LINEAGE_ESTABLISHMENT` weight in cases in 
+which there is a single pathogen within the host and effective recombination is not 
+possible
+- Changed `mutantPathogen!()` and `recombinantPathogens!()` to accept parameters with 
+the expected number of mutations and recombinations per generation
+- Created `establishLineage!()` based on `establishMutant!()` to handle lineage 
+establishment events from either mutation or recombination
+- Removed `establishRecombinant!()`
+- Changed `hostContact!()` to correctly use syntax of new `mutantPathogen!()` and 
+`recombinantPathogens!()` functions, and to account for the number of generations 
+elapsed before transmission
+
+Originally, I considered calculating the number of mutations and recombinations based on 
+the number of generations elapsed before establishment, which itself can be obtained 
+based on relative rates of lineage establishment and infection (or rather the inverse, 
+time to establishment and time to infection) along with the number of generations per 
+transmission. However, we are choosing a different approach, at least for lineage 
+establishment: if we establish a new lineage, we assume the new genotype is the center 
+of a mutant cloud, so we only consider lineage establishment with the mutations and 
+recombinations accumulated in a single generation at a time.
+
+We also assume that the rate of lineage establishment comprehends both the rate of 
+establishment of a new lineage and the rate of lineage emergence through both mutation 
+and recombination in a host with a perfectly diverse pathogen population (i.e., one 
+within which any recombination is effective recombination). This allows us to subtract
+the fraction of lineage establishment that occurs from recombination in hosts with 
+only a single pathogen.
 
 ### 24 May 2026
 Major update solving multiple important bugs related to transitions and contacts. 
