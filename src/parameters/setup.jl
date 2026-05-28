@@ -9,7 +9,7 @@ function newPathogenType(
     possible_alleles::Union{Nothing,String}=nothing,
 
     # Each element takes seq argument, returns Float64
-    lineageEstablishmentSpecificCoefficient::Union{Nothing,Function}=nothing,
+    pathogenEstablishmentSpecificCoefficient::Union{Nothing,Function}=nothing,
     clearanceSpecificCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionSpecificCoefficient::Union{Nothing,Function}=nothing,
     contactSpecificCoefficient::Union{Nothing,Function}=nothing,
@@ -23,7 +23,7 @@ function newPathogenType(
     responseAcquisitionUponClearanceSpecificCoefficient::Union{Nothing,Function}=nothing,
 
     # Each element takes seq argument, returns Float64
-    lineageEstablishmentHostwideCoefficient::Union{Nothing,Function}=nothing,
+    pathogenEstablishmentHostwideCoefficient::Union{Nothing,Function}=nothing,
     clearanceHostwideCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionHostwideCoefficient::Union{Nothing,Function}=nothing,
     contactHostwideCoefficient::Union{Nothing,Function}=nothing,
@@ -49,7 +49,7 @@ function newPathogenType(
     isnothing(num_loci) ? num_loci = template.num_loci : num_loci = num_loci
     isnothing(possible_alleles) ? possible_alleles = template.possible_alleles : possible_alleles = possible_alleles
 
-    isnothing(lineageEstablishmentSpecificCoefficient) ? lineageEstablishmentSpecificCoefficient = template.specific_coefficient_functions[LINEAGE_ESTABLISHMENT] : lineageEstablishmentSpecificCoefficient = lineageEstablishmentSpecificCoefficient
+    isnothing(pathogenEstablishmentSpecificCoefficient) ? pathogenEstablishmentSpecificCoefficient = template.specific_coefficient_functions[PATHOGEN_ESTABLISHMENT] : pathogenEstablishmentSpecificCoefficient = pathogenEstablishmentSpecificCoefficient
     isnothing(clearanceSpecificCoefficient) ? clearanceSpecificCoefficient = template.specific_coefficient_functions[CLEARANCE] : clearanceSpecificCoefficient = clearanceSpecificCoefficient
     isnothing(responseAcquisitionSpecificCoefficient) ? responseAcquisitionSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionSpecificCoefficient = responseAcquisitionSpecificCoefficient
     isnothing(contactSpecificCoefficient) ? contactSpecificCoefficient = template.specific_coefficient_functions[CONTACT] : contactSpecificCoefficient = contactSpecificCoefficient
@@ -62,7 +62,7 @@ function newPathogenType(
     isnothing(verticalTransmissionSpecificCoefficient) ? verticalTransmissionSpecificCoefficient = template.specific_coefficient_functions[VERTICAL_TRANSMISSION] : verticalTransmissionSpecificCoefficient = verticalTransmissionSpecificCoefficient
     isnothing(responseAcquisitionUponClearanceSpecificCoefficient) ? responseAcquisitionUponClearanceSpecificCoefficient = template.specific_coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceSpecificCoefficient = responseAcquisitionUponClearanceSpecificCoefficient
 
-    isnothing(lineageEstablishmentHostwideCoefficient) ? lineageEstablishmentHostwideCoefficient = template.hostwide_coefficient_functions[LINEAGE_ESTABLISHMENT] : lineageEstablishmentHostwideCoefficient = lineageEstablishmentHostwideCoefficient
+    isnothing(pathogenEstablishmentHostwideCoefficient) ? pathogenEstablishmentHostwideCoefficient = template.hostwide_coefficient_functions[PATHOGEN_ESTABLISHMENT] : pathogenEstablishmentHostwideCoefficient = pathogenEstablishmentHostwideCoefficient
     isnothing(clearanceHostwideCoefficient) ? clearanceHostwideCoefficient = template.hostwide_coefficient_functions[CLEARANCE] : clearanceHostwideCoefficient = clearanceHostwideCoefficient
     isnothing(responseAcquisitionHostwideCoefficient) ? responseAcquisitionHostwideCoefficient = template.hostwide_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionHostwideCoefficient = responseAcquisitionHostwideCoefficient
     isnothing(contactHostwideCoefficient) ? contactHostwideCoefficient = template.hostwide_coefficient_functions[CONTACT] : contactHostwideCoefficient = contactHostwideCoefficient
@@ -90,7 +90,7 @@ function newPathogenType(
         num_loci,
         possible_alleles,
         SA[ # order defined in COEFFICIENTS
-            lineageEstablishmentSpecificCoefficient, clearanceSpecificCoefficient, responseAcquisitionSpecificCoefficient, contactSpecificCoefficient,
+            pathogenEstablishmentSpecificCoefficient, clearanceSpecificCoefficient, responseAcquisitionSpecificCoefficient, contactSpecificCoefficient,
             g::String->1.0, g::String->1.0, g::String->1.0, g::String->1.0, g::String->1.0, g::String->1.0,
             intrahostFitnessSpecificCoefficient, generationsPerTransmissionSpecificCoefficient,
             mutationsPerGenerationSpecificCoefficient, recombinationsPerGenerationSpecificCoefficient, inoculumSpecificCoefficient,
@@ -98,7 +98,7 @@ function newPathogenType(
             g::String->1.0, g::String->1.0, g::String->1.0,
         ],
         SA[ # order defined in COEFFICIENTS
-            lineageEstablishmentHostwideCoefficient, clearanceHostwideCoefficient, responseAcquisitionHostwideCoefficient,
+            pathogenEstablishmentHostwideCoefficient, clearanceHostwideCoefficient, responseAcquisitionHostwideCoefficient,
             contactHostwideCoefficient, responseLossHostwideCoefficient,
             birthHostwideCoefficient, deathHostwideCoefficient, transitionHostwideCoefficient,
             receiveTransitionHostwideCoefficient, receiveContactHostwideCoefficient, intrahostFitnessHostwideCoefficient,
@@ -121,7 +121,7 @@ function newResponseType(
     responseInheritanceStaticSpecificCoefficient::Union{Nothing,Function}=nothing,
 
     # Each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    lineageEstablishmentInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
+    pathogenEstablishmentInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
     clearanceInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
     contactInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
@@ -142,7 +142,7 @@ function newResponseType(
     responseInheritanceInteractionSpecificCoefficient::Union{Nothing,Function}=nothing,
 
     # Each takes host, imprinted, matured sequences and returns Float64 coefficient
-    lineageEstablishmentStaticHostwideCoefficient::Union{Nothing,Function}=nothing,
+    pathogenEstablishmentStaticHostwideCoefficient::Union{Nothing,Function}=nothing,
     clearanceStaticHostwideCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionStaticHostwideCoefficient::Union{Nothing,Function}=nothing,
     contactStaticHostwideCoefficient::Union{Nothing,Function}=nothing,
@@ -165,7 +165,7 @@ function newResponseType(
     hostRecombinationsUponBirthStaticHostwideCoefficient::Union{Nothing,Function}=nothing,
 
     # Each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    lineageEstablishmentInteractionHostwideCoefficient::Union{Nothing,Function}=nothing,
+    pathogenEstablishmentInteractionHostwideCoefficient::Union{Nothing,Function}=nothing,
     clearanceInteractionHostwideCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionInteractionHostwideCoefficient::Union{Nothing,Function}=nothing,
     contactInteractionHostwideCoefficient::Union{Nothing,Function}=nothing,
@@ -193,7 +193,7 @@ function newResponseType(
     isnothing(responseLossStaticSpecificCoefficient) ? responseLossStaticSpecificCoefficient = template.static_specific_coefficient_functions[RESPONSE_LOSS] : responseLossStaticSpecificCoefficient = responseLossStaticSpecificCoefficient
     isnothing(responseInheritanceStaticSpecificCoefficient) ? responseInheritanceStaticSpecificCoefficient = template.static_specific_coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceStaticSpecificCoefficient = responseInheritanceStaticSpecificCoefficient
 
-    isnothing(lineageEstablishmentInteractionSpecificCoefficient) ? lineageEstablishmentInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[LINEAGE_ESTABLISHMENT] : lineageEstablishmentInteractionSpecificCoefficient = lineageEstablishmentInteractionSpecificCoefficient
+    isnothing(pathogenEstablishmentInteractionSpecificCoefficient) ? pathogenEstablishmentInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[PATHOGEN_ESTABLISHMENT] : pathogenEstablishmentInteractionSpecificCoefficient = pathogenEstablishmentInteractionSpecificCoefficient
     isnothing(clearanceInteractionSpecificCoefficient) ? clearanceInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[CLEARANCE] : clearanceInteractionSpecificCoefficient = clearanceInteractionSpecificCoefficient
     isnothing(responseAcquisitionInteractionSpecificCoefficient) ? responseAcquisitionInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionInteractionSpecificCoefficient = responseAcquisitionInteractionSpecificCoefficient
     isnothing(contactInteractionSpecificCoefficient) ? contactInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[CONTACT] : contactInteractionSpecificCoefficient = contactInteractionSpecificCoefficient
@@ -213,7 +213,7 @@ function newResponseType(
     isnothing(responseAcquisitionUponClearanceInteractionSpecificCoefficient) ? responseAcquisitionUponClearanceInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[RESPONSE_ACQUISITION_UPON_CLEARANCE] : responseAcquisitionUponClearanceInteractionSpecificCoefficient = responseAcquisitionUponClearanceInteractionSpecificCoefficient
     isnothing(responseInheritanceInteractionSpecificCoefficient) ? responseInheritanceInteractionSpecificCoefficient = template.interaction_specific_coefficient_functions[RESPONSE_INHERITANCE] : responseInheritanceInteractionSpecificCoefficient = responseInheritanceInteractionSpecificCoefficient
 
-    isnothing(lineageEstablishmentStaticHostwideCoefficient) ? lineageEstablishmentStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[LINEAGE_ESTABLISHMENT] : lineageEstablishmentStaticHostwideCoefficient = lineageEstablishmentStaticHostwideCoefficient
+    isnothing(pathogenEstablishmentStaticHostwideCoefficient) ? pathogenEstablishmentStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[PATHOGEN_ESTABLISHMENT] : pathogenEstablishmentStaticHostwideCoefficient = pathogenEstablishmentStaticHostwideCoefficient
     isnothing(clearanceStaticHostwideCoefficient) ? clearanceStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[CLEARANCE] : clearanceStaticHostwideCoefficient = clearanceStaticHostwideCoefficient
     isnothing(responseAcquisitionStaticHostwideCoefficient) ? responseAcquisitionStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionStaticHostwideCoefficient = responseAcquisitionStaticHostwideCoefficient
     isnothing(contactStaticHostwideCoefficient) ? contactStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[CONTACT] : contactStaticHostwideCoefficient = contactStaticHostwideCoefficient
@@ -235,7 +235,7 @@ function newResponseType(
     isnothing(hostMutationsUponBirthStaticHostwideCoefficient) ? hostMutationsUponBirthStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[HOST_MUTATIONS_UPON_BIRTH] : hostMutationsUponBirthStaticHostwideCoefficient = hostMutationsUponBirthStaticHostwideCoefficient
     isnothing(hostRecombinationsUponBirthStaticHostwideCoefficient) ? hostRecombinationsUponBirthStaticHostwideCoefficient = template.static_hostwide_coefficient_functions[HOST_RECOMBINATIONS_UPON_BIRTH] : hostRecombinationsUponBirthStaticHostwideCoefficient = hostRecombinationsUponBirthStaticHostwideCoefficient
 
-    isnothing(lineageEstablishmentInteractionHostwideCoefficient) ? lineageEstablishmentInteractionHostwideCoefficient = template.interaction_hostwide_coefficient_functions[LINEAGE_ESTABLISHMENT] : lineageEstablishmentInteractionHostwideCoefficient = lineageEstablishmentInteractionHostwideCoefficient
+    isnothing(pathogenEstablishmentInteractionHostwideCoefficient) ? pathogenEstablishmentInteractionHostwideCoefficient = template.interaction_hostwide_coefficient_functions[PATHOGEN_ESTABLISHMENT] : pathogenEstablishmentInteractionHostwideCoefficient = pathogenEstablishmentInteractionHostwideCoefficient
     isnothing(clearanceInteractionHostwideCoefficient) ? clearanceInteractionHostwideCoefficient = template.interaction_hostwide_coefficient_functions[CLEARANCE] : clearanceInteractionHostwideCoefficient = clearanceInteractionHostwideCoefficient
     isnothing(responseAcquisitionInteractionHostwideCoefficient) ? responseAcquisitionInteractionHostwideCoefficient = template.interaction_hostwide_coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionInteractionHostwideCoefficient = responseAcquisitionInteractionHostwideCoefficient
     isnothing(contactInteractionHostwideCoefficient) ? contactInteractionHostwideCoefficient = template.interaction_hostwide_coefficient_functions[CONTACT] : contactInteractionHostwideCoefficient = contactInteractionHostwideCoefficient
@@ -287,7 +287,7 @@ function newResponseType(
             hostMutationsUponBirthInteractionSpecificCoefficient, hostRecombinationsUponBirthInteractionSpecificCoefficient,
         ],
         SA[ # order defined in COEFFICIENTS
-            lineageEstablishmentStaticHostwideCoefficient, clearanceStaticHostwideCoefficient, responseAcquisitionStaticHostwideCoefficient,
+            pathogenEstablishmentStaticHostwideCoefficient, clearanceStaticHostwideCoefficient, responseAcquisitionStaticHostwideCoefficient,
             contactStaticHostwideCoefficient, responseLossStaticHostwideCoefficient,
             birthStaticHostwideCoefficient, deathStaticHostwideCoefficient, transitionStaticHostwideCoefficient,
             receiveTransitionStaticHostwideCoefficient, receiveContactStaticHostwideCoefficient, intrahostFitnessStaticHostwideCoefficient,
@@ -296,7 +296,7 @@ function newResponseType(
             responseInheritanceStaticHostwideCoefficient, hostMutationsUponBirthStaticHostwideCoefficient, hostRecombinationsUponBirthStaticHostwideCoefficient,
         ],
         SA[ # order defined in COEFFICIENTS
-            lineageEstablishmentInteractionHostwideCoefficient, clearanceInteractionHostwideCoefficient, responseAcquisitionInteractionHostwideCoefficient,
+            pathogenEstablishmentInteractionHostwideCoefficient, clearanceInteractionHostwideCoefficient, responseAcquisitionInteractionHostwideCoefficient,
             generationsPerTransmissionInteractionHostwideCoefficient, contactInteractionHostwideCoefficient, responseLossInteractionHostwideCoefficient,
             birthInteractionHostwideCoefficient, deathInteractionHostwideCoefficient, transitionInteractionHostwideCoefficient,
             receiveTransitionInteractionHostwideCoefficient, receiveContactInteractionHostwideCoefficient, intrahostFitnessInteractionHostwideCoefficient,
@@ -314,7 +314,7 @@ function newHostType(
     possible_alleles::Union{Nothing,String}=nothing,
 
     # Each element takes seq argument, returns Float64
-    lineageEstablishmentCoefficient::Union{Nothing,Function}=nothing,
+    pathogenEstablishmentCoefficient::Union{Nothing,Function}=nothing,
     clearanceCoefficient::Union{Nothing,Function}=nothing,
     responseAcquisitionCoefficient::Union{Nothing,Function}=nothing,
     contactCoefficient::Union{Nothing,Function}=nothing,
@@ -340,7 +340,7 @@ function newHostType(
     isnothing(num_loci) ? num_loci = template.num_loci : num_loci = num_loci
     isnothing(possible_alleles) ? possible_alleles = template.possible_alleles : possible_alleles = possible_alleles
 
-    isnothing(lineageEstablishmentCoefficient) ? lineageEstablishmentCoefficient = template.coefficient_functions[LINEAGE_ESTABLISHMENT] : lineageEstablishmentCoefficient = lineageEstablishmentCoefficient
+    isnothing(pathogenEstablishmentCoefficient) ? pathogenEstablishmentCoefficient = template.coefficient_functions[PATHOGEN_ESTABLISHMENT] : pathogenEstablishmentCoefficient = pathogenEstablishmentCoefficient
     isnothing(clearanceCoefficient) ? clearanceCoefficient = template.coefficient_functions[CLEARANCE] : clearanceCoefficient = clearanceCoefficient
     isnothing(responseAcquisitionCoefficient) ? responseAcquisitionCoefficient = template.coefficient_functions[RESPONSE_ACQUISITION] : responseAcquisitionCoefficient = responseAcquisitionCoefficient
     isnothing(contactCoefficient) ? contactCoefficient = template.coefficient_functions[CONTACT] : contactCoefficient = contactCoefficient
@@ -367,7 +367,7 @@ function newHostType(
         num_loci,
         possible_alleles,
         SA[ # order defined in COEFFICIENTS
-            lineageEstablishmentCoefficient, clearanceCoefficient, responseAcquisitionCoefficient,
+            pathogenEstablishmentCoefficient, clearanceCoefficient, responseAcquisitionCoefficient,
             contactCoefficient, responseLossCoefficient,
             birthCoefficient, deathCoefficient, transitionCoefficient,
             receiveTransitionCoefficient, receiveContactCoefficient, intrahostFitnessCoefficient,
@@ -388,7 +388,7 @@ function newPopulationType(
     hostSexualCompatibility::Union{Nothing,Function}=nothing,
 
     # Rate coefficients:
-    lineage_establishment_coefficient::Union{Nothing,Float64}=nothing,
+    pathogen_establishment_coefficient::Union{Nothing,Float64}=nothing,
     clearance_coefficient::Union{Nothing,Float64}=nothing,
     response_acquisition_coefficient::Union{Nothing,Float64}=nothing,
     contact_coefficient::Union{Nothing,Float64}=nothing,
@@ -440,7 +440,7 @@ function newPopulationType(
 
     isnothing(hostSexualCompatibility) ? hostSexualCompatibility = template.hostSexualCompatibility : hostSexualCompatibility = hostSexualCompatibility
 
-    isnothing(lineage_establishment_coefficient) ? lineage_establishment_coefficient = template.base_coefficients[LINEAGE_ESTABLISHMENT] : lineage_establishment_coefficient = lineage_establishment_coefficient
+    isnothing(pathogen_establishment_coefficient) ? pathogen_establishment_coefficient = template.base_coefficients[PATHOGEN_ESTABLISHMENT] : pathogen_establishment_coefficient = pathogen_establishment_coefficient
     isnothing(clearance_coefficient) ? clearance_coefficient = template.base_coefficients[CLEARANCE] : clearance_coefficient = clearance_coefficient
     isnothing(response_acquisition_coefficient) ? response_acquisition_coefficient = template.base_coefficients[RESPONSE_ACQUISITION] : response_acquisition_coefficient = response_acquisition_coefficient
     isnothing(contact_coefficient) ? contact_coefficient = template.base_coefficients[CONTACT] : contact_coefficient = contact_coefficient
@@ -477,7 +477,7 @@ function newPopulationType(
         host_sexual_reproduction,
         hostSexualCompatibility,
         SA[ # order defined in COEFFICIENTS
-            lineage_establishment_coefficient, clearance_coefficient, response_acquisition_coefficient,
+            pathogen_establishment_coefficient, clearance_coefficient, response_acquisition_coefficient,
             contact_coefficient, response_loss_coefficient,
             birth_coefficient, death_coefficient, transition_coefficient,
             receive_transition_coefficient, receive_contact_coefficient, intrahost_fitness_coefficient,

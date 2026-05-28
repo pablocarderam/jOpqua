@@ -126,13 +126,28 @@ end
 
 function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int64)
     host.pathogen_weights[evt, p] = host.pathogens[p].specific_coefficients[evt]
-    if evt == CLEARANCE || evt in PATHOGEN_NONSAMPLING_COEFFICIENTS
+    if length(host.responses) > 0
+        host.pathogen_weights[evt, p] =
+            host.pathogen_weights[evt, p] * population.parameters.weightedInteractionPathogen(
+                host.pathogens[p], host, evt
+            )
+    end
+    if evt in PATHOGEN_NONSAMPLING_COEFFICIENTS
+        # PATHOGEN_NONSAMPLING_COEFFICIENTS don't require host-level aggregation
+    elseif evt == CLEARANCE
         # Clearance likelihoods are not proportional to intrahost fraction,
         # instead, we assume the rate of loss compounds
         # (could be inversely proportional to fraction?)
-        # host.pathogen_weights[evt, p] = host.pathogen_weights[evt, p]
-    elseif evt == LINEAGE_ESTABLISHMENT && length(host.pathogens) == 1
-        # if nobody to recombine with, no recombination lineages can establish
+        if !haskey(host.type_clearance_numbers, host.pathogens[p].type.id)
+            host.type_clearance_numbers[host.pathogens[p].type.id] = MVector{3,Float64}(zeros(Float64, 3))
+        end
+        host.type_clearance_numbers[host.pathogens[p].type.id][1] += host.pathogen_weights[evt, p]
+        host.type_clearance_numbers[host.pathogens[p].type.id][2] += 1.0
+        host.pathogen_weights[evt, p] += pathogenClearanceThroughDriftWeight(host.pathogens[p], host, population)
+        host.type_clearance_numbers[host.pathogens[p].type.id][3] += host.pathogen_weights[evt, p]
+    elseif evt == PATHOGEN_ESTABLISHMENT && length(host.pathogens) == 1
+        # if nobody to recombine with, no recombination lineages can establish, so we
+        # subtract the fraction of the weight that came from recombinations
         host.pathogen_weights[evt, p] =
             host.pathogen_weights[evt, p] *
             host.pathogen_fractions[p] -
@@ -153,32 +168,32 @@ function pathogenWeights!(p::Int64, host::Host, population::Population, evt::Int
             host.pathogen_weights[evt, p] *
             host.pathogen_fractions[p]
     end
-    if length(host.responses) > 0
-        host.pathogen_weights[evt, p] =
-            host.pathogen_weights[evt, p] * population.parameters.weightedInteractionPathogen(
-                host.pathogens[p], host, evt
-            )
-    end
 end
 
 function hostWeightsPathogen!(host_idx::Int64, population::Population, evt::Int64)
     population.host_weights[evt, host_idx] = 0.0
-    if evt == CLEARANCE
-        for p in 1:length(population.hosts[host_idx].pathogens)
-            pathogenWeights!(p, population.hosts[host_idx], population, evt)
-            if population.hosts[host_idx].pathogen_weights[evt, p] > population.host_weights[evt, host_idx]
-                population.host_weights[evt, host_idx] = population.hosts[host_idx].pathogen_weights[evt, p]
-            end
-            # For clearance, we take the maximum rate
-        end
-    else
-        for p in 1:length(population.hosts[host_idx].pathogens)
-            pathogenWeights!(p, population.hosts[host_idx], population, evt)
-            population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
-            # we sum here because we have already weighted by fraction
-            # (for everything except clearance, see above)
-        end
+    for p in 1:length(population.hosts[host_idx].pathogens)
+        pathogenWeights!(p, population.hosts[host_idx], population, evt)
+        population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
+        # we sum here because we have already weighted by fraction
+        # (for everything except clearance, see above)
     end
+    # if evt == CLEARANCE
+    #     for p in 1:length(population.hosts[host_idx].pathogens)
+    #         pathogenWeights!(p, population.hosts[host_idx], population, evt)
+    #         if population.hosts[host_idx].pathogen_weights[evt, p] > population.host_weights[evt, host_idx]
+    #             population.host_weights[evt, host_idx] = population.hosts[host_idx].pathogen_weights[evt, p]
+    #         end
+    #         # For clearance, we take the maximum rate
+    #     end
+    # else
+    #     for p in 1:length(population.hosts[host_idx].pathogens)
+    #         pathogenWeights!(p, population.hosts[host_idx], population, evt)
+    #         population.host_weights[evt, host_idx] += population.hosts[host_idx].pathogen_weights[evt, p]
+    #         # we sum here because we have already weighted by fraction
+    #         # (for everything except clearance, see above)
+    #     end
+    # end
 
     population.host_weights[evt, host_idx] = (
         population.host_weights[evt, host_idx] *

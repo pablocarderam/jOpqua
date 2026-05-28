@@ -16,16 +16,16 @@ using ProfileView
 # Model setup
 function run(seed::Int64, t_vec::Vector{Float64})
     # Parameters
-    start_genome = "AAAAAAAA"
-    optimal_genome = "BBBBBBBB"
+    start_genome = "AA"
+    optimal_genome = "BB"
     genome_length = length(optimal_genome)
 
     pat_type = jOpqua.newPathogenType(
         "pat_type",
         num_loci=genome_length,
         possible_alleles="AB",
-        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (genome_length - hamming(s, optimal_genome)) / genome_length),
-        # receiveContactHostwideCoefficient=s::String -> 0.0, # makes infected hosts immune to superinfection
+        # contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (genome_length - hamming(s, optimal_genome)) / genome_length),
+        receiveContactHostwideCoefficient=s::String -> 0.0, # makes infected hosts immune to superinfection
     )
 
     hos_type = jOpqua.newHostType("hos_type")
@@ -36,7 +36,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         contact_coefficient=1.05,
         receive_contact_coefficient=1.0,
         mutations_per_generation_coefficient=0.0000,
-        recombinations_per_generation_coefficient=0.0001,
+        recombinations_per_generation_coefficient=0.000,
         inoculum_coefficient=1.0,
         # death_coefficient=0.001,
         # birth_coefficient=0.001,
@@ -53,13 +53,23 @@ function run(seed::Int64, t_vec::Vector{Float64})
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop, model)
     pat = jOpqua.newPathogen!(start_genome, pop, pat_type)
     pat2 = jOpqua.newPathogen!(optimal_genome, pop, pat_type)
+    pat3 = jOpqua.newPathogen!("BA", pop, pat_type)
+    pat4 = jOpqua.newPathogen!("AB", pop, pat_type)
 
     for h in 1:num_infected
         jOpqua.addPathogenToHost!(pat, h, pop, model)
     end
-    for h in num_infected+1:num_infected*2
+    for h in 1:num_infected#num_infected+1:num_infected*2
         jOpqua.addPathogenToHost!(pat2, h, pop, model)
     end
+    # for h in 1:num_infected#num_infected+1:num_infected*2
+    #     jOpqua.addPathogenToHost!(pat3, h, pop, model)
+    # end
+    # for h in 1:num_infected#num_infected+1:num_infected*2
+    #     jOpqua.addPathogenToHost!(pat4, h, pop, model)
+    # end
+
+    println((model.populations[1].compartment_vars,model.event_rates))
 
     # Simulate
     Random.seed!(seed)
@@ -78,13 +88,13 @@ function run(seed::Int64, t_vec::Vector{Float64})
     )
     jOpqua.plotComposition(
         composition_data, "examples/pathogen_evolution/composition_pathogen_evolution.png",
-        normalized=true, ylabel="Fraction",
+        normalized=false, ylabel="Fraction",
     )
 
-    nwks = jOpqua.saveNewick(output, "examples/pathogen_evolution/pathogen_newick_pathogen_evolution.nwk", branch_length="Time", info_separator=" ")
-    for nwk in nwks
-        jOpqua.plotPhylogeny(nwk, "examples/pathogen_evolution/pathogen_newick_pathogen_evolution.png")
-    end
+    # nwks = jOpqua.saveNewick(output, "examples/pathogen_evolution/pathogen_newick_pathogen_evolution.nwk", branch_length="Time", info_separator=" ")
+    # for nwk in nwks
+    #     jOpqua.plotPhylogeny(nwk, "examples/pathogen_evolution/pathogen_newick_pathogen_evolution.png")
+    # end
 end
 
 run(1, collect(0.0:2.0:4.0)) # compile

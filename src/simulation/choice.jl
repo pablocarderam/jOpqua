@@ -48,6 +48,15 @@ function choosePathogen(host_idx::Int64, population_idx::Int64, weight::Int64, m
     )
 end
 
+function choosePathogenFromPopulationFraction(host_idx::Int64, population_idx::Int64, model::Model, rand_n::Float64)
+    return randChoose(
+        rand_n,
+        @views(model.populations[population_idx].hosts[host_idx].pathogen_fractions),
+        1.0,
+        regenerate_rand=true
+    )
+end
+
 function chooseResponse(host_idx::Int64, population_idx::Int64, weight::Int64, model::Model, rand_n::Float64)
     return randChoose(
         rand_n,

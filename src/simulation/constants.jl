@@ -3,7 +3,7 @@ using StaticArrays
 # 1. Sampling variables and events
 # 1.1 Pathogen events, zooming out in scale (order matters)
 # 1.1.1 Single pathogen, single host
-const LINEAGE_ESTABLISHMENT = 1
+const PATHOGEN_ESTABLISHMENT = 1
 const CLEARANCE = 2
 const RESPONSE_ACQUISITION = 3
 # # 1.1.2 Two pathogens (symmetrical), single host
@@ -51,7 +51,7 @@ const HOST_RECOMBINATIONS_UPON_BIRTH = 21
 
 # Global trackers
 const PATHOGEN_EVENTS = SA[
-    LINEAGE_ESTABLISHMENT, CLEARANCE, RESPONSE_ACQUISITION, CONTACT
+    PATHOGEN_ESTABLISHMENT, CLEARANCE, RESPONSE_ACQUISITION, CONTACT
 ]
 const NUM_PATHOGEN_EVENTS = length(PATHOGEN_EVENTS)
 

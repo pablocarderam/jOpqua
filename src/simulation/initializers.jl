@@ -45,6 +45,7 @@ function newHost!(sequence::String, type::HostType, population::Population, mode
             sequence,
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
+            Dict{String,MVector{3,Float64}}(),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
             hostSequenceCoefficients(sequence, type),

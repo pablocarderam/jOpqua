@@ -47,3 +47,18 @@ function pathogenFractionsProportionalFitness(host::Host, weightedInteractionPat
 
     return fracs
 end
+
+function pathogenClearanceThroughDriftWeight(p::Pathogen, host::Host, population::Population)
+    #TODO:
+    # competitor_fitness = maxFitness(host)
+    # s = 1.0 - p.fitness / competitor_fitness
+    # generation_time = x
+    # return generation_time/s
+    #
+    # competitor_fitness = maxFitness(host)
+    # s = 1.0 - competitor_fitness / p.fitness
+    # generation_time = x
+    # effective_pop_size = n
+    # return generation_time * s/ln(effective_pop_size)
+    return 0.0
+end

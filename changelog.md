@@ -47,6 +47,127 @@ recombination upon birth
 
 ## Changelog:
 
+## 26 May 2026
+- Created `choosePathogenFromPopulationFraction()` as a function in `choice.jl` to 
+remove `randChoose()` function calls from `events.jl`
+- Renamed `LINEAGE_ESTABLISHMENT` to `PATHOGEN_ESTABLISHMENT` and all associated 
+parameters
+
+Another overhaul of clearances:
+
+- Changed `hostWeights()` to compute `Host`-level `CLEARANCE` rate to be sum of 
+`Pathogen`-level `CLEARANCE` rates and thus avoid long coinfection duration
+- Added `Host` property `type_clearance_numbers` to store a dictionary 
+where each `PathogenType` is mapped to the sum of total clearance weights 
+of all `Pathogens` with and without the extinction rate due to drift and 
+the count of `Pathogens` of each `PathogenType`
+- Changed computation of `CLEARANCE` within `pathogenWeights()` to store the 
+above information for each `PathogenType` and also add the rate of extinction 
+due to drift
+- Changed `hostWeightsPathogen()` to compute `CLEARANCE` weights the same as 
+other weights
+- Changed `clearPathogen()` to check whether a whole `PathogenType` is 
+to be cleared and execute it if so
+- Added `pathogenClearanceThroughDriftWeight()` to compute the clearance weight 
+due to drift for a `Pathogen`, currently just a placeholder that returns 0.0
+
+This breaks the assumption of "splitting the immune response" from earlier; 
+cross-immunity should handle this. Considered whether to implement cross-immunity 
+check at clearance, but decided the best way to handle this is to sum clearance 
+rates of different pathogens within a `Host` (representative of their smaller 
+within-host population fraction and increased extinction likelihood through 
+drift/competitive exclusion). What should definitely not sum and remain proportional 
+to pathogen population fraction is the `RESPONSE_ACQUISITION` rate. When a 
+`Response` is acquired, then we have cross-immunity and the clearing rates of 
+different pathogens within a `Host` may become correlated.
+
+I'm not convinced by this, though. It's worth pointing out that there are different 
+types of clearance: 
+- Clearance of all `Pathogens` of the same `PathogenType` within a `Host`, which may 
+be due to non-specific, innate immunity or general changes in `Host` environment
+and would be computed by weighting `Pathogen` `CLEARANCE` coefficients by the 
+within-host population fraction (weighted average of infecting `Pathogens`) of the 
+same type (which itself would involve one fraction count per `PathogenType` within
+each `Host`; pretty impractical)
+- Extinction of a specific `Pathogen` due to drift and exclusion by other `Pathogens` 
+of the same `PathogenType` within the `Host`, which is a function of the total
+niche size for that `PathogenType` and may be affected by the same non-specific, 
+innate immunity and general changes in `Host` environment mentioned above, and 
+would have a total per `Host` rate equal to the sum of rates for each `Pathogen` 
+within it
+- Clearance of a specific `Pathogen` due to acquired immunity effects specific to 
+that `Pathogen`, determined by `Response` entities within the `Host`, which also
+would have a total per `Host` rate equal to the sum of rates for each `Pathogen` 
+within it
+
+We can choose to handle them all as separate events, but that's innacurate because 
+they actually act in concert with each other: specific immune effects can affect 
+the population fraction of a `Pathogen` lineage and increase the likelihood that 
+it's lost to drift, for example. This could be accounted for through hostwide 
+coefficients in `Response` entities, though. It would imply adding two new types 
+of coefficients and events to the simulation, though. Additionally, the multiple 
+within-host fraction counts sounds like a terrible idea, especially when 
+considering different degrees of niche-sharing between different `PathogenTypes`.
+
+Instead, since all this was prompted specifically because of the problem of 
+complex infections having lower clearance rates than single pathogen infections, 
+I'm choosing to use the following approximation:
+
+Clearances are considered to be a single type of event that selects a specific 
+`Pathogen` in a `Host`. The total per `Host` clearance weight is equal to the 
+straight sum of `CLEARANCE` weights for each `Pathogen` within it (not 
+weighted by population fraction because fraction could affect the weight in 
+different ways, either increasing `CLEARANCE` weight due to low populations or 
+decreasing it due to low immune profile). Each `Pathogen`'s clearance weight 
+is equal to the sum of two components: 
+1. The product of its base clearance coefficient with all `Pathogen` and 
+`Response` effect factors present within the `Host`
+2. The weight (or rate) of extinction due to drift, computed from population 
+genetics based on population size, generation time, and fitness (equal to 
+zero in cases of single infections)
+
+Each `Host` computes a number reflecting the mean of all `Pathogen` clearance 
+weights not associated with drift (and therefore not just an consequence of 
+the basic notion of coinfection, i.e. the mean of all weights from 
+Point 1 above) for each `PathogenType`. This is what the total clearance 
+weight (that is, leading to the loss of all pathogens of that `PathogenType`)
+would be if we treated them as a single population of pathogens, which makes 
+sense as an assumption since they're all presumably sharing similar resources 
+and affected by the same non-specific immune responses at least to some degree.
+In other words, to solve the discrepancy in the total clearance times of 
+simple and complex infections, this is what the total clearance weight should 
+be. That number is then divided by the sum of all `Pathogen` clearance 
+weights for the given `PathogenType` (including the part of each weight 
+derived from drift). This quotient is then stored for each `PathogenType` 
+present in the `Host`, or even just for each `Pathogen`, even if it's 
+repetitive information. Call it `type_clearance_probability[pathogen]`.
+
+To make the timelines of complex and simple infections align, each `CLEARANCE` 
+event begins with a check of probability `type_clearance_probability[pathogen]`
+(with `type` being the chosen `Pathogen`'s `PathogenType`). If the 
+check succeeds, all `Pathogens` of the chosen `PathogenType` within the `Host` 
+are cleared. Otherwise, only the specific `Pathogen` chosen in the event is 
+cleared. This guarantees that at every point in time, the net, total clearance 
+rate for any `PathogenType` within the `Host` is equal to the mean clearance 
+rate for that `PathogenType`. Despite this, `Pathogen`-specific variation 
+due to intrinsic clearance coefficient, `Pathogen` and `Response` effects, and 
+extinction through drift is preserved.
+
+Admittedly, this approach may result in unexpectedly fast clearance times when 
+two `Pathogens` of the same `PathogenType` but vastly different `CLEARANCE` 
+weights infect the same `Host` simultaneously. One could expect the total 
+time to be more strongly determined by the longer-lived `Pathogen`. However,
+the assumption here is that the `Pathogen` with the higher `CLEARANCE` weight 
+is consuming more of the `Host`'s resources shared with the longer-lived 
+`Pathogen` and triggering a stronger innate response that also affects the 
+longer-lived `Pathogen`. A helpful analogy is to consider `DEATH` events, 
+which do not have a wait time determined by the longest-lived `Pathogen`
+but by the fraction-weighted average of all infecting `Pathogens` (in the 
+case of `CLEARANCE` events, no fraction weighting is applied as explained
+above, however).
+
+I'm also considering alternative approaches though. This will update soon.
+
 ## 25 May 2026
 - Fixed bugs in `recombinantSequences()` that affected proper generation of recombinant 
 sequences
@@ -1130,7 +1251,8 @@ matured one
 ### 16 Dec 2024
 - Some quick bug fixes
 - Added quick rundown of model structure to README
-To do: `Immunity` is currently just a sequence, can be just a reference to the corresponding pathogen.
+To do: `Immunity` is currently just a sequence, can be just a reference to the corresponding 
+pathogen.
 
 ### 15 Dec 2024
 - Made fitness into a pathogen-level coefficient

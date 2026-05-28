@@ -85,6 +85,8 @@ mutable struct Host
     responses::Vector{Response} # size MAX_RESPONSES
 
     pathogen_fractions::Vector{Float64} # size MAX_PATHOGENS
+    type_clearance_numbers::Dict{String,MVector{3,Float64}}
+    # PathogenType.id => [sum rates without drift, count, sum rates with drift]
 
     pathogen_weights::Matrix{Float64} # size NUM_PATHOGEN_EVENTS x MAX_PATHOGENS
     response_weights::Matrix{Float64} # size NUM_RESPONSE_EVENTS x MAX_RESPONSES

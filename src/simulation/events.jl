@@ -271,6 +271,7 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
             host_sequence,
             Vector{Pathogen}(undef, 0), Vector{Response}(undef, 0),
             Vector{Float64}(undef, 0),
+            Dict{String,MVector{3,Float64}}(),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
             host_coefficients,
@@ -338,8 +339,8 @@ end
 
 # Model events
 
-function establishLineage!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx, rand_n = choosePathogen(LINEAGE_ESTABLISHMENT, model, rand_n)
+function establishPathogen!(model::Model, rand_n::Float64)
+    pathogen_idx, host_idx, pop_idx, rand_n = choosePathogen(PATHOGEN_ESTABLISHMENT, model, rand_n)
 
     population = model.populations[pop_idx]
     host = population.hosts[host_idx]
@@ -351,7 +352,7 @@ function establishLineage!(model::Model, rand_n::Float64)
     # ) * nonsamplingValue(
     #     CONTACT, pathogen, host, population
     # ) / nonsamplingValue(
-    #     LINEAGE_ESTABLISHMENT, pathogen, host, population
+    #     PATHOGEN_ESTABLISHMENT, pathogen, host, population
     # )
 
     # First decide whether the event was triggered by a mutation or a recombination, then do it
@@ -370,7 +371,7 @@ function establishLineage!(model::Model, rand_n::Float64)
         # This assumes recombination rates are not symmetrical:
         # once a lineage has decided to recombine, its partner is chosen based on
         # pathogen fraction, not recombination frequency
-        p_idx_2, rand_n = randChoose(rand_n, @views(host.pathogen_fractions), 1.0, regenerate_rand=true)
+        p_idx_2, rand_n = choosePathogenFromPopulationFraction(host_idx, pop_idx, model, rand_n)
         # p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
         pathogen_2 = host.pathogens[p_idx_2]
         num_recombinations = (
@@ -390,8 +391,29 @@ function establishLineage!(model::Model, rand_n::Float64)
 end
 
 function clearPathogen!(model::Model, rand_n::Float64)
-    pathogen_idx, host_idx, pop_idx = choosePathogen(CLEARANCE, model, rand_n)
+    pathogen_idx, host_idx, pop_idx, rand_n = choosePathogen(CLEARANCE, model, rand_n)
 
+    host = model.populations[pop_idx].hosts[host_idx]
+    pathogen = model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx]
+
+    if rand_n < host.type_clearance_numbers[pathogen.type.id][1] / (
+            host.type_clearance_numbers[pathogen.type.id][2] *
+            host.type_clearance_numbers[pathogen.type.id][3]
+        )
+        num_pathogens = length(host.pathogens)
+        for p in 1:num_pathogens
+                # check from back to front by indexing with num_pathogens+1-p
+                # to avoid indexing errors as length(host.pathogens) changes
+            if model.populations[pop_idx].hosts[host_idx].pathogens[num_pathogens+1-p].type == pathogen.type
+                removePathogen!(num_pathogens+1-p, host_idx, pop_idx, model, rand())
+            end
+        end
+    else
+        removePathogen!(pathogen_idx, host_idx, pop_idx, model, rand())
+    end
+end
+
+function removePathogen!(pathogen_idx::Int64, host_idx::Int64, pop_idx::Int64, model::Model, rand_n::Float64)
     resp_acq = nonsamplingValue(
         RESPONSE_ACQUISITION_UPON_CLEARANCE,
         model.populations[pop_idx].hosts[host_idx].pathogens[pathogen_idx],
@@ -457,7 +479,7 @@ function hostContact!(
             for p_idx in 1:length(host1.pathogens)
         ])
         if all(inocula .== 0.0) # had originally written !any(inocula .!= 0.0), don't know if that's actually faster
-            idx, rand_n = randChoose(rand_n, host1.pathogen_fractions, 1.0)
+            idx, rand_n = choosePathogenFromPopulationFraction(host_idx_1, pop_idx_1, model, rand_n)
             inocula[idx] += 1
         end
 
@@ -515,9 +537,7 @@ function hostContact!(
                     # This assumes recombination rates are not symmetrical:
                     # once a lineage has decided to recombine, its partner is chosen based on
                     # pathogen fraction, not recombination frequency
-                    p_idx_2, rand_n = randChoose(
-                        rand_n, @views(host1.pathogen_fractions), 1.0, regenerate_rand=true
-                    )
+                    p_idx_2, rand_n = choosePathogenFromPopulationFraction(host_idx_1, pop_idx_1, model, rand_n)
                     # p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
 
                     if p_idx != p_idx_2 && (
@@ -545,9 +565,7 @@ function hostContact!(
                     # This assumes recombination rates are not symmetrical:
                     # once a lineage has decided to recombine, its partner is chosen based on
                     # pathogen fraction, not recombination frequency
-                    p_idx_2, rand_n = randChoose(
-                        rand_n, @views(host1.pathogen_fractions), 1.0, regenerate_rand=true
-                    )
+                    p_idx_2, rand_n = p_idx_2, rand_n = choosePathogenFromPopulationFraction(host_idx_1, pop_idx_1, model, rand_n)
                     # p_idx_2, rand_n = choosePathogen(host_idx_1, pop_idx_1, RECOMBINATIONS_PER_GENERATION, model, rand())
 
                     if p_idx != p_idx_2
@@ -752,7 +770,7 @@ function transition!(model::Model, rand_n::Float64)
 end
 
 const EVENT_FUNCTIONS = SA[
-    establishLineage!, clearPathogen!, acquireResponse!,
+    establishPathogen!, clearPathogen!, acquireResponse!,
     hostContact!, loseResponse!,
     birth!, death!, transition!
 ]
