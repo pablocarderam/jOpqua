@@ -42,8 +42,8 @@ Debug the following:
 - Mutant establishment
 - Recombinant establishment
 - Diploid `Host` genomes/homologous chromosome separators
-- `Host` birth events: vertical transmission, `Response` inheritance, mutation and 
-recombination upon birth
+- `Host` birth events: vertical transmission, `Response` inheritance, mutation 
+and recombination upon birth
 - Interventions
 
 ## Changelog:
@@ -51,14 +51,23 @@ recombination upon birth
 ## 4 Jun 2026
 - Changed argument order for immunity sequence functions
 - Played around with immunity examples
-- Make `Pathogen` sequence coefficient functions take `Population` ID as additional argument
-- Make `Response` sequence coefficient functions take `Population` ID as additional argument
-- Make `Host` sequence coefficient functions take `Population` ID as additional argument
+- Make `Pathogen` sequence coefficient functions take `Population` ID as 
+additional argument
+- Make `Response` sequence coefficient functions take `Population` ID as 
+additional argument
+- Make `Host` sequence coefficient functions take `Population` ID as 
+additional argument
 
 Considered making `Pathogen` sequence coefficient functions take `Host` genome 
 as an additional argument. However, decided against it to preserve 
 `Pathogen`-level coefficients as intrinsic. If we want effects specific to 
 different `Host` genomes, we use `Response` entities.
+
+Considered moving `pathogenFractions`, `weightedInteractionPathogen`, 
+`weightedInteractionResponse`, `weightedInteractionHostwide`, 
+`developResponses`, and `response_types` into `HostType` fields with 
+additional `Population` ID as argument, but not technically possible because 
+of circular definition in `HostType` and `Host`
 
 ## 28 May 2026
 - Fixed argument bug in `newResponseType()`
