@@ -31,6 +31,7 @@ recombinations co-occur do not take into account the fitness of intermediate gen
 may be inaccurate.
 
 ### TODO:
+- Reexamine clearance rate time correction
 - Change transmission event function to add receiver-side bottleneck option
 - Change ancestor search so that you can choose to get only a fraction of ancestors 
 (improves the function's runtime for simulations with long timelines)
@@ -47,7 +48,22 @@ recombination upon birth
 
 ## Changelog:
 
-## 26 May 2026
+## 4 Jun 2026
+- Changed argument order for immunity sequence functions
+- Played around with immunity examples
+- Make `Pathogen` sequence coefficient functions take `Population` ID as additional argument
+- Make `Response` sequence coefficient functions take `Population` ID as additional argument
+- Make `Host` sequence coefficient functions take `Population` ID as additional argument
+
+Considered making `Pathogen` sequence coefficient functions take `Host` genome 
+as an additional argument. However, decided against it to preserve 
+`Pathogen`-level coefficients as intrinsic. If we want effects specific to 
+different `Host` genomes, we use `Response` entities.
+
+## 28 May 2026
+- Fixed argument bug in `newResponseType()`
+
+## 27 May 2026
 - Created `choosePathogenFromPopulationFraction()` as a function in `choice.jl` to 
 remove `randChoose()` function calls from `events.jl`
 - Renamed `LINEAGE_ESTABLISHMENT` to `PATHOGEN_ESTABLISHMENT` and all associated 

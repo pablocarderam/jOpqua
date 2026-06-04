@@ -12,24 +12,24 @@ struct PathogenType
     num_loci::Int64
     possible_alleles::String
 
-    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
-    hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
-    # Each element takes seq argument, returns Float64
+    specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String}}}
+    hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String}}}
+    # Each element takes Pathogen seq and Population ID as arguments, returns Float64
 end
 
 struct ResponseType
     id::String
 
-    reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String}}
-    # takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    static_specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
-    # each takes host, imprinted, matured sequences and returns Float64 coefficient
-    interaction_specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
-    # each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
-    static_hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String}}}
-    # each takes host, imprinted, matured sequences and returns Float64 coefficient
-    interaction_hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
-    # each takes host, imprinted, matured, and infecting sequences and returns Float64 coefficient
+    reactivityCoefficient::FunctionWrapper{Float64,Tuple{String,String,String,String,String}}
+    # takes infecting, imprinted, matured, and host sequences and population ID as arguments, and returns Float64 coefficient
+    static_specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
+    # each takes imprinted, matured, and host sequences and population ID as arguments, and returns Float64 coefficient
+    interaction_specific_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String,String}}}
+    # each takes infecting, imprinted, matured, and host sequences and population ID as arguments, and returns Float64 coefficient
+    static_hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String}}}
+    # each takes imprinted, matured, and host sequences and population ID as arguments, and returns Float64 coefficient
+    interaction_hostwide_coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String,String,String,String}}}
+    # each takes infecting, imprinted, matured, and host sequences and population ID as arguments, and returns Float64 coefficient
 end
 
 struct HostType
@@ -38,8 +38,8 @@ struct HostType
     num_loci::Int64
     possible_alleles::String
 
-    coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String}}}
-    # Each element takes seq argument, returns Float64
+    coefficient_functions::SVector{NUM_COEFFICIENTS,FunctionWrapper{Float64,Tuple{String,String}}}
+    # Each element takes seq and Population ID as arguments, returns Float64
 end
 
 # Model entities:

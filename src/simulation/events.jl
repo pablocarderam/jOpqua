@@ -262,7 +262,7 @@ function addHostsToPopulation!(num_hosts::Int64, host_sequence::String, type::Ho
     end
 
     num_starting_hosts = length(population.hosts)
-    host_coefficients = hostSequenceCoefficients(host_sequence, type)
+    host_coefficients = hostSequenceCoefficients(host_sequence, population.id, type)
     for i in 1:num_hosts
         push!(population.hosts, Host(
             length(population.hosts) + 1,

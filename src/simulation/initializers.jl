@@ -9,7 +9,8 @@ function newPathogen!(
     birth_time::Float64=0.0)
     population.pathogens[sequence] = Pathogen(
         parents, birth_time, sequence,
-        pathogenSequenceSpecificCoefficients(sequence, type), pathogenSequenceHostwideCoefficients(sequence, type),
+        pathogenSequenceSpecificCoefficients(sequence, population.id, type),
+        pathogenSequenceHostwideCoefficients(sequence, population.id, type),
         type
     )
 
@@ -24,14 +25,14 @@ function newResponse!(
     isnothing(imprinted_pathogen) ? imprinted_seq = "" : imprinted_seq = imprinted_pathogen.sequence
     isnothing(matured_pathogen) ? matured_seq = "" : matured_seq = matured_pathogen.sequence
 
-    existing_responses[(host_sequence, imprinted_seq, matured_seq, type.id)] = Response(
+    existing_responses[(imprinted_seq, matured_seq, host_sequence, type.id)] = Response(
         parents, birth_time, host_sequence, imprinted_pathogen, matured_pathogen,
-        responseStaticSpecificCoefficients(host_sequence, imprinted_seq, matured_seq, type),
-        responseStaticHostwideCoefficients(host_sequence, imprinted_seq, matured_seq, type),
+        responseStaticSpecificCoefficients(imprinted_seq, matured_seq, host_sequence, population.id, type),
+        responseStaticHostwideCoefficients(imprinted_seq, matured_seq, host_sequence, population.id, type),
         type
     )
 
-    return existing_responses[(host_sequence, imprinted_seq, matured_seq, type.id)]
+    return existing_responses[(imprinted_seq, matured_seq, host_sequence, type.id)]
 end
 
 function newHost!(sequence::String, type::HostType, population::Population, model::Model;
@@ -48,7 +49,7 @@ function newHost!(sequence::String, type::HostType, population::Population, mode
             Dict{String,MVector{3,Float64}}(),
             Matrix{Float64}(undef, NUM_PATHOGEN_EVENTS, 0),
             Matrix{Float64}(undef, NUM_RESPONSE_EVENTS, 0),
-            hostSequenceCoefficients(sequence, type),
+            hostSequenceCoefficients(sequence, population.id, type),
             type,
         ),
         population, model

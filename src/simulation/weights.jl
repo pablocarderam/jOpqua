@@ -6,67 +6,72 @@ using Flexle
 # Bottom-level coefficients (Response and Pathogen)
 
 function responseStaticSpecificCoefficients(
-    host_sequence::String, imprinted_pathogen_sequence::String,
-    matured_pathogen_sequence::String, type::ResponseType)
+    imprinted_pathogen_sequence::String, matured_pathogen_sequence::String,
+    host_sequence::String, population_id::String, type::ResponseType)
     return [
         type.static_specific_coefficient_functions[evt_id](
-            host_sequence, imprinted_pathogen_sequence, matured_pathogen_sequence
+            imprinted_pathogen_sequence, matured_pathogen_sequence, host_sequence, population_id
         )
         for evt_id in 1:NUM_COEFFICIENTS
     ]
 end
 
 function responseStaticHostwideCoefficients(
-    host_sequence::String, imprinted_pathogen_sequence::String,
-    matured_pathogen_sequence::String, type::ResponseType)
+    imprinted_pathogen_sequence::String, matured_pathogen_sequence::String,
+    host_sequence::String, population_id::String, type::ResponseType)
     return [
         type.static_hostwide_coefficient_functions[evt_id](
-            host_sequence, imprinted_pathogen_sequence, matured_pathogen_sequence
+            imprinted_pathogen_sequence, matured_pathogen_sequence, host_sequence, population_id
         )
         for evt_id in 1:NUM_COEFFICIENTS
     ]
 end
 
-function responseStaticSpecificCoefficient(response::Response, host::Host, coefficient::Int64)
+function responseStaticSpecificCoefficient(response::Response, host::Host, population::Population, coefficient::Int64)
     return response.type.static_specific_coefficient_functions[coefficient](
-        host.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+        host.sequence,
+        population.id
     )
 end
 
-function responseInteractionSpecificCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
+function responseInteractionSpecificCoefficient(pathogen::Pathogen, response::Response, host::Host, population::Population, coefficient::Int64)
     return response.type.interaction_specific_coefficient_functions[coefficient](
-        host.sequence,
+        pathogen.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-        pathogen.sequence
+        host.sequence,
+        population.id
     )
 end
 
-function responseStaticHostwideCoefficient(response::Response, host::Host, coefficient::Int64)
+function responseStaticHostwideCoefficient(response::Response, host::Host, population::Population, coefficient::Int64)
     return response.type.static_hostwide_coefficient_functions[coefficient](
-        host.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
+        host.sequence,
+        population.id
     )
 end
 
-function responseInteractionHostwideCoefficient(pathogen::Pathogen, response::Response, host::Host, coefficient::Int64)
+function responseInteractionHostwideCoefficient(pathogen::Pathogen, response::Response, host::Host, population::Population, coefficient::Int64)
     return response.type.interaction_hostwide_coefficient_functions[coefficient](
-        host.sequence,
+        pathogen.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-        pathogen.sequence
+        host.sequence,
+        population.id
     )
 end
 
-function reactivityCoefficient(pathogen::Pathogen, response::Response, host::Host)
+function reactivityCoefficient(pathogen::Pathogen, response::Response, host::Host, population::Population)
     return response.type.reactivityCoefficient(
-        host.sequence,
+        pathogen.sequence,
         isnothing(response.imprinted_pathogen) ? "" : response.imprinted_pathogen.sequence,
         isnothing(response.matured_pathogen) ? "" : response.matured_pathogen.sequence,
-        pathogen.sequence
+        host.sequence,
+        population.id
     )
 end
 
@@ -86,23 +91,23 @@ function nonsamplingValue(coef::Int64, response::Response, host::Host, populatio
            ) * host.coefficients[coef] * hostwideNetCoefficient(host, population, coef) * population.parameters.base_coefficients[coef]
 end
 
-function pathogenSequenceSpecificCoefficients(sequence::String, type::PathogenType)
+function pathogenSequenceSpecificCoefficients(sequence::String, population_id::String, type::PathogenType)
     return [
-        type.specific_coefficient_functions[evt_id](sequence)
+        type.specific_coefficient_functions[evt_id](sequence, population_id)
         for evt_id in 1:NUM_COEFFICIENTS
     ]
 end
 
-function pathogenSequenceHostwideCoefficients(sequence::String, type::PathogenType)
+function pathogenSequenceHostwideCoefficients(sequence::String, population_id::String, type::PathogenType)
     return [
-        type.hostwide_coefficient_functions[evt_id](sequence)
+        type.hostwide_coefficient_functions[evt_id](sequence, population_id)
         for evt_id in 1:NUM_COEFFICIENTS
     ]
 end
 
-function hostSequenceCoefficients(sequence::String, type::HostType)
+function hostSequenceCoefficients(sequence::String, population_id::String, type::HostType)
     return MVector{NUM_COEFFICIENTS,Float64}([
-        type.coefficient_functions[evt_id](sequence)
+        type.coefficient_functions[evt_id](sequence, population_id)
         for evt_id in 1:NUM_COEFFICIENTS
     ])
 end

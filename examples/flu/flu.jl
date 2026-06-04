@@ -206,7 +206,7 @@ function setup()
         response_acquisition_upon_clearance_coefficient=1.0,
         response_loss_coefficient=(14e-3 / 365.0) + (0.1 / 365.0),#1/(8*79),#1.0 / (8 * 79),#(14e-3 / 365.0) + (1.1 / 365.0), # 3.3e-5 birth rate
         receive_contact_coefficient=1.0,
-        mutations_upon_infection_coefficient=0.161, #0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
+        mutations_per_generation_coefficient=0.161, #0.161 * 1.0, # 0.161 = 566 aa * 3 nt/codon * (1-1/(21 mut aa - 1 WT)) * (1-(1-(1/100000 mut per site per replication))^(10 rounds of replication before transmission) )
         inoculum_coefficient=1.0,
         pathogenFractions=jOpqua.pathogenFractionsProportionalFitness,
         response_types=Dict{String,jOpqua.ResponseType}([(res_type_spe.id => res_type_spe), (res_type_bro.id => res_type_bro)]),
@@ -340,7 +340,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     end
     font_scale = 2.0
     Plots.scalefontsizes(font_scale)
-    plot(t_vec, distances, xlabel="Time", ylabel="Mean distance from SN98 (aa)",
+    plot(t_vec, distances, xlabel="Time", ylabel="Mean distance from SN89 (aa)",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
@@ -361,7 +361,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
         end
     end
     # Plots.scalefontsizes(2.0)
-    plot(t_vec, distances, xlabel="Time", ylabel="Max distance from SN98 (aa)",
+    plot(t_vec, distances, xlabel="Time", ylabel="Max distance from SN89 (aa)",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
@@ -384,7 +384,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
     end
     font_scale = 2.0
     Plots.scalefontsizes(font_scale)
-    plot(t_vec, distances, xlabel="Time", ylabel="Mean cross-immunity to SN98",
+    plot(t_vec, distances, xlabel="Time", ylabel="Mean cross-immunity to SN89",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)
@@ -405,7 +405,7 @@ function analyze(output::jOpqua.Output, t_vec::Vector{Float64}; ha_sn89::String=
         end
     end
     # Plots.scalefontsizes(2.0)
-    plot(t_vec, distances, xlabel="Time", ylabel="Min cross-immunity to SN98",
+    plot(t_vec, distances, xlabel="Time", ylabel="Min cross-immunity to SN89",
         legend=false,
         linewidth=3.0, thickness_scaling=1.0,
         grid=false,)

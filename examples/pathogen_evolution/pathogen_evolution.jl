@@ -24,8 +24,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "pat_type",
         num_loci=genome_length,
         possible_alleles="AB",
-        contactSpecificCoefficient=s::String -> 1.0 + (0.1 * (genome_length - hamming(s, optimal_genome)) / genome_length),
-        receiveContactHostwideCoefficient=s::String -> 0.0, # makes infected hosts immune to superinfection
+        contactSpecificCoefficient=(s::String,pop_id::String) -> 1.0 + (0.1 * (genome_length - hamming(s, optimal_genome)) / genome_length),
+        receiveContactHostwideCoefficient=(s::String,pop_id::String) -> 0.0, # makes infected hosts immune to superinfection
     )
 
     hos_type = jOpqua.newHostType("hos_type")
