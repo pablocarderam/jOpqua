@@ -51,11 +51,11 @@ and recombination upon birth
 ## 4 Jun 2026
 - Changed argument order for immunity sequence functions
 - Played around with immunity examples
-- Make `Pathogen` sequence coefficient functions take `Population` ID as 
+- Made `Pathogen` sequence coefficient functions take `Population` ID as 
 additional argument
-- Make `Response` sequence coefficient functions take `Population` ID as 
+- Made `Response` sequence coefficient functions take `Population` ID as 
 additional argument
-- Make `Host` sequence coefficient functions take `Population` ID as 
+- Made `Host` sequence coefficient functions take `Population` ID as 
 additional argument
 
 Considered making `Pathogen` sequence coefficient functions take `Host` genome 
@@ -68,6 +68,9 @@ Considered moving `pathogenFractions`, `weightedInteractionPathogen`,
 `developResponses`, and `response_types` into `HostType` fields with 
 additional `Population` ID as argument, but not technically possible because 
 of circular definition in `HostType` and `Host`
+
+Added `test.jl` to test out possible algorithms to handle clearance events; 
+this is just a scratchpad for experimenting.
 
 ## 28 May 2026
 - Fixed argument bug in `newResponseType()`

@@ -23,7 +23,7 @@ function run(seed::Int64, t_vec::Vector{Float64})
         "pat_type",
         num_loci=4,
         possible_alleles="AB",
-        receiveContactHostwideCoefficient=s::String -> 0.0,
+        receiveContactHostwideCoefficient=(s::String,pop_id::String) -> 0.0,
     )
 
     hos_type = jOpqua.newHostType("hos_type")
@@ -46,8 +46,8 @@ function run(seed::Int64, t_vec::Vector{Float64})
     model = jOpqua.newModel()
     pop1 = jOpqua.newPopulation!("pop1", pop_type, model)
     pop2 = jOpqua.newPopulation!("pop2", pop_type, model)
-    jOpqua.setPopulationContactCoefficient!(pop1, pop2, 1.0, model)
-    jOpqua.setPopulationTransitionCoefficient!(pop2, pop1, 1.0, model)
+    # jOpqua.setPopulationContactCoefficient!(pop1, pop2, 1.0, model)
+    # jOpqua.setPopulationTransitionCoefficient!(pop2, pop1, 1.0, model)
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop1, model)
     jOpqua.addHostsToPopulation!(num_hosts, host_genome, hos_type, pop2, model)
     pat = jOpqua.newPathogen!(start_genome, pop1, pat_type)
